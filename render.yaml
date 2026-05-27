@@ -3,7 +3,7 @@ services:
     name: houseland
     runtime: node
     plan: free
-    buildCommand: npm install && npm run build && npx prisma migrate deploy
+    buildCommand: npm install && npm run build
     startCommand: npm start
     envVars:
       - key: NODE_ENV

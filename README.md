@@ -51,9 +51,13 @@ npm run dev
 | `VITE_API_URL` | Leave **empty** (same-origin `/api`) |
 | `NODE_ENV` | `production` |
 
-3. **Build command:** `npm install && npm run build && npx prisma migrate deploy`  
-4. **Start command:** `npm start`  
-5. In Supabase Auth, add redirect URL: `https://YOUR-APP.onrender.com/auth/callback`
+3. **Build command:** `npm install && npm run build`  
+4. **Start command:** `npm start` (runs migrations, then the server)  
+5. **`DATABASE_URL` on Render** — paste the pooler URI **without** extra quotes:
+   - Must start with `postgresql://`
+   - Example shape: `postgresql://postgres.REF:ENCODED_PASS@aws-1-ap-south-1.pooler.supabase.com:5432/postgres?sslmode=require`
+   - Do **not** paste `"postgresql://..."` (no `"` characters)
+6. In Supabase Auth, add redirect URL: `https://YOUR-APP.onrender.com/auth/callback`
 
 ## Admin access
 

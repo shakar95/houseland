@@ -9,7 +9,7 @@
     "dev:server": "tsx watch server/index.ts",
     "postinstall": "prisma generate",
     "build": "tsc -p tsconfig.json --noEmit && vite build && tsc -p tsconfig.server.json",
-    "start": "node dist-server/index.js",
+    "start": "prisma migrate deploy && node dist-server/index.js",
     "preview": "vite preview",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
@@ -17,7 +17,7 @@
     "db:seed": "tsx prisma/seed.ts"
   },
   "engines": {
-    "node": ">=20"
+    "node": "22.x"
   },
   "dependencies": {
     "@prisma/client": "^6.5.0",
