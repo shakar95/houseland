@@ -32,6 +32,13 @@ const en: TranslationDict = {
     orGoogle: 'Or continue with Google',
     invalidCredentials: 'Invalid email or password',
     checkEmail: 'Please confirm your email first',
+    notInAuth:
+      'User not in Supabase Auth (only in database). Click the button below or run npm run db:seed:auth',
+    setupHint: 'First time: create test users in Supabase Auth',
+    setupButton: 'Create test users',
+    setupSuccess: 'Ready! You can sign in now (see Readme.txt)',
+    setupFailed: 'Setup failed',
+    noServiceKey: 'Add SUPABASE_SERVICE_ROLE_KEY to .env',
   },
   hero: {
     tag: 'Sulaymaniyah · Kurdistan',

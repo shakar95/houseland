@@ -32,6 +32,13 @@ const ku: TranslationDict = {
     orGoogle: 'یان بە گووگڵ',
     invalidCredentials: 'ئیمەیڵ یان وشەی نهێنی هەڵەیە',
     checkEmail: 'ئیمەیڵەکەت پشتڕاست بکەرەوە',
+    notInAuth:
+      'بەکارهێنەر لە Supabase Auth نییە (تەنها لە داتابەیسە). دوگمەی خوارەوە بگرە یان npm run db:seed:auth بکە.',
+    setupHint: 'یەکەم جار: بەکارهێنەری تاقیکردنەوە لە Supabase دروست بکە',
+    setupButton: 'دروستکردنی بەکارهێنەری تاقیکردنەوە',
+    setupSuccess: 'ئامادەیە! ئێستا لۆگین بکە (Readme.txt)',
+    setupFailed: 'شکستی دروستکردن',
+    noServiceKey: 'SUPABASE_SERVICE_ROLE_KEY لە .env زیاد بکە',
   },
   hero: {
     tag: 'سلێمانی · کوردستان',

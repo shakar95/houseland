@@ -32,6 +32,13 @@ const ar: TranslationDict = {
     orGoogle: 'أو عبر Google',
     invalidCredentials: 'بريد أو كلمة مرور غير صحيحة',
     checkEmail: 'يرجى تأكيد بريدك الإلكتروني',
+    notInAuth:
+      'المستخدم غير موجود في Supabase Auth (موجود فقط في قاعدة البيانات). اضغط الزر أدناه أو شغّل npm run db:seed:auth',
+    setupHint: 'أول مرة: إنشاء مستخدمي الاختبار في Supabase',
+    setupButton: 'إنشاء مستخدمي الاختبار',
+    setupSuccess: 'جاهز! سجّل الدخول الآن (Readme.txt)',
+    setupFailed: 'فشل الإعداد',
+    noServiceKey: 'أضف SUPABASE_SERVICE_ROLE_KEY إلى .env',
   },
   hero: {
     tag: 'السليمانية · كردستان',

@@ -1,38 +1,59 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { Mail, Lock, LogIn } from 'lucide-react';
+import { Mail, Lock, LogIn, Wrench } from 'lucide-react';
 import { signInWithGoogle, signInWithPassword } from '@/lib/supabase';
+import { getAuthErrorKey, getAuthErrorRaw } from '@/lib/authErrors';
+import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
+
+const isDev = import.meta.env.DEV;
 
 export function LoginPage() {
   const { t } = useLanguage();
   const { profile, loading, refreshProfile } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('admin@houseland.iq');
+  const [password, setPassword] = useState('HouselandAdmin2026!');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [settingUp, setSettingUp] = useState(false);
 
   if (!loading && profile) {
     return <Navigate to="/" replace />;
   }
 
+  const handleSetupTestUsers = async () => {
+    setError('');
+    setSuccess('');
+    setSettingUp(true);
+    try {
+      await api.post<{ ok: boolean }>('/api/dev/ensure-test-users', {});
+      setSuccess(t.auth.setupSuccess);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(msg.includes('SERVICE_ROLE') ? t.auth.noServiceKey : `${t.auth.setupFailed}: ${msg}`);
+    } finally {
+      setSettingUp(false);
+    }
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     setSubmitting(true);
     try {
       await signInWithPassword(email.trim(), password);
       await refreshProfile();
       navigate('/');
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setError(
-        msg.toLowerCase().includes('invalid') || msg.toLowerCase().includes('credentials')
-          ? t.auth.invalidCredentials
-          : msg,
-      );
+      const key = getAuthErrorKey(err);
+      if (key === 'notInAuth') setError(t.auth.notInAuth);
+      else if (key === 'checkEmail') setError(t.auth.checkEmail);
+      else if (key === 'invalidCredentials') setError(t.auth.invalidCredentials);
+      else setError(getAuthErrorRaw(err));
     } finally {
       setSubmitting(false);
     }
@@ -43,7 +64,22 @@ export function LoginPage() {
       <h1 className="text-center text-2xl font-bold text-gold-400">{t.auth.loginTitle}</h1>
       <p className="mt-2 text-center text-sm text-royal-400">{t.auth.loginSubtitle}</p>
 
-      <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+      {isDev && (
+        <div className="mt-6 rounded-xl border border-gold-500/30 bg-gold-500/10 p-4">
+          <p className="text-xs text-gold-200">{t.auth.setupHint}</p>
+          <button
+            type="button"
+            onClick={handleSetupTestUsers}
+            disabled={settingUp}
+            className="btn-outline-gold mt-3 w-full text-sm"
+          >
+            <Wrench className="h-4 w-4" />
+            {settingUp ? t.common.loading : t.auth.setupButton}
+          </button>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div>
           <label className="filter-label">{t.auth.email}</label>
           <div className="relative">
@@ -55,7 +91,6 @@ export function LoginPage() {
               className="input-app !ps-10"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@houseland.iq"
             />
           </div>
         </div>
@@ -75,6 +110,7 @@ export function LoginPage() {
         </div>
 
         {error && <p className="rounded-lg bg-red-500/15 px-3 py-2 text-sm text-red-300">{error}</p>}
+        {success && <p className="rounded-lg bg-emerald-500/15 px-3 py-2 text-sm text-emerald-300">{success}</p>}
 
         <button type="submit" disabled={submitting} className="btn-gold w-full">
           <LogIn className="h-4 w-4" />

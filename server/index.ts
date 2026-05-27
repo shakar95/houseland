@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import { prisma } from './prisma.js';
 import { requireAuth, requireRole, type AuthRequest } from './middleware/auth.js';
 import { generatePropertyCode } from './utils/propertyCode.js';
+import { ensureTestUsers } from './ensureTestUsers.js';
 import { PropertyStatus } from '@prisma/client';
 
 function param(value: string | string[]): string {
@@ -237,6 +238,18 @@ app.get('/api/me', requireAuth, async (req: AuthRequest, res) => {
 });
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
+
+if (process.env.NODE_ENV !== 'production') {
+  app.post('/api/dev/ensure-test-users', async (_req, res) => {
+    try {
+      const results = await ensureTestUsers(prisma);
+      res.json({ ok: true, results });
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Setup failed';
+      res.status(500).json({ error: message });
+    }
+  });
+}
 
 if (process.env.NODE_ENV === 'production') {
   const dist = path.join(path.dirname(fileURLToPath(import.meta.url)), '../dist');

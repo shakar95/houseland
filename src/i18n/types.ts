@@ -23,6 +23,12 @@ export type TranslationDict = {
     orGoogle: string;
     invalidCredentials: string;
     checkEmail: string;
+    notInAuth: string;
+    setupHint: string;
+    setupButton: string;
+    setupSuccess: string;
+    setupFailed: string;
+    noServiceKey: string;
   };
   hero: {
     tag: string;
