@@ -5,6 +5,7 @@ import { Layout } from '@/components/layout/Layout';
 import { ListingsPage } from '@/pages/ListingsPage';
 import { PropertyDetailPage } from '@/pages/PropertyDetailPage';
 import { SubmitPropertyPage } from '@/pages/SubmitPropertyPage';
+import { LoginPage } from '@/pages/LoginPage';
 import { AboutPage } from '@/pages/AboutPage';
 import { AuthCallbackPage } from '@/pages/AuthCallbackPage';
 import { DashboardLayout } from '@/pages/dashboard/DashboardLayout';
@@ -25,6 +26,7 @@ export default function App() {
               <Route path="/listings" element={<Navigate to="/" replace />} />
               <Route path="/property/:code" element={<PropertyDetailPage />} />
               <Route path="/submit" element={<SubmitPropertyPage />} />
+              <Route path="/login" element={<LoginPage />} />
               <Route path="/about" element={<AboutPage />} />
             </Route>
             <Route path="/auth/callback" element={<AuthCallbackPage />} />

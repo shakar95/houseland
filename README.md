@@ -64,20 +64,31 @@ npm run dev
 
 The public site supports **Kurdish (default)**, **Arabic**, and **English** via the header language switcher. Kurdish and Arabic use RTL layout.
 
-## Demo data
+## Demo data & test login
+
+1. In **Supabase → Authentication → Providers**, enable **Email** (email + password).
+
+2. Add `SUPABASE_SERVICE_ROLE_KEY` to `.env` (Project Settings → API → `service_role`).
+
+3. Run:
 
 ```bash
-npm run db:seed
+npm run db:seed:all
 ```
 
-Creates **9 demo properties** (8 approved + 1 pending) and two profile records:
+This creates:
+- **9 demo properties** (`SULI-001` … `SULI-009`)
+- **2 Supabase Auth users** with email/password
+- Credentials in **`Readme.txt`** (gitignored — see `Readme.example.txt`)
 
-| Role | Email | Notes |
-|------|-------|--------|
-| ADMIN | `admin@houseland.iq` | Sign in with Google using this email to get admin access |
-| CLIENT | `client@houseland.iq` | Regular user for testing submissions |
+| Role | Email | Password (default from seed) |
+|------|-------|------------------------------|
+| ADMIN | `admin@houseland.iq` | `HouselandAdmin2026!` |
+| CLIENT | `client@houseland.iq` | `HouselandClient2026!` |
 
-Property titles/descriptions switch with the selected language (codes `SULI-001` … `SULI-009`).
+Sign in at **`/login`** (email/password or Google).
+
+Property titles/descriptions switch with the selected language.
 
 ## Admin access
 

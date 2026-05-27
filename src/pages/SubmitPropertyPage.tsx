@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
+import { Link } from 'react-router-dom';
 import { signInWithGoogle } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
@@ -42,7 +43,10 @@ export function SubmitPropertyPage() {
       <div className="app-page py-16 text-center">
         <h1 className="font-display text-3xl text-gold-400">{t.submit.signInTitle}</h1>
         <p className="mt-4 text-royal-300">{t.submit.signInDesc}</p>
-        <button type="button" onClick={() => signInWithGoogle()} className="btn-gold mt-8">
+        <Link to="/login" className="btn-gold mt-6 inline-flex">
+          {t.auth.signIn}
+        </Link>
+        <button type="button" onClick={() => signInWithGoogle()} className="btn-outline-gold mt-3 w-full max-w-xs">
           {t.submit.continueGoogle}
         </button>
       </div>

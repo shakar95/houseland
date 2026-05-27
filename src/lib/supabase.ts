@@ -20,6 +20,26 @@ export async function signInWithGoogle() {
   });
 }
 
+export async function signInWithPassword(email: string, password: string) {
+  if (!supabaseConfigured) throw new Error('Supabase not configured');
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  return data;
+}
+
+export async function signUpWithPassword(email: string, password: string, fullName?: string) {
+  if (!supabaseConfigured) throw new Error('Supabase not configured');
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { full_name: fullName ?? email.split('@')[0] },
+    },
+  });
+  if (error) throw error;
+  return data;
+}
+
 export async function signOut() {
   if (supabaseConfigured) await supabase.auth.signOut();
 }

@@ -12,7 +12,18 @@ export type TranslationDict = {
     clearFilters: string;
     all: string;
   };
-  auth: { signIn: string; signOut: string };
+  auth: {
+    signIn: string;
+    signOut: string;
+    email: string;
+    password: string;
+    loginTitle: string;
+    loginSubtitle: string;
+    loginButton: string;
+    orGoogle: string;
+    invalidCredentials: string;
+    checkEmail: string;
+  };
   hero: {
     tag: string;
     title: string;

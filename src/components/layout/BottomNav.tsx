@@ -14,8 +14,8 @@ export function BottomNav() {
     { to: '/submit', label: t.nav.add, icon: PlusCircle, highlight: true },
     { to: '/about', label: t.nav.about, icon: Info },
     {
-      to: isStaff ? '/dashboard' : '/submit',
-      label: isStaff ? t.nav.dashboard : t.nav.profile,
+      to: isStaff ? '/dashboard' : profile ? '/submit' : '/login',
+      label: isStaff ? t.nav.dashboard : profile ? t.nav.profile : t.auth.signIn,
       icon: User,
     },
   ];
