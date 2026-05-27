@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev": "cross-env NODE_ENV=development concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "install:all": "cross-env NODE_ENV=development npm install",
     "dev:client": "vite",
     "dev:server": "tsx watch server/index.ts",
     "postinstall": "prisma generate",
@@ -51,9 +52,9 @@
     "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "^4.3.4",
     "concurrently": "^9.1.2",
+    "cross-env": "^10.1.0",
     "tailwindcss": "^4.0.9",
     "tsx": "^4.19.3",
-    "@types/ws": "^8.18.1",
     "typescript": "~5.7.3",
     "vite": "^6.2.0"
   }
