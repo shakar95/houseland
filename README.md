@@ -49,10 +49,11 @@ npm run dev
 | `VITE_SUPABASE_URL` | Supabase project URL |
 | `VITE_SUPABASE_ANON_KEY` | Supabase anon key |
 | `VITE_API_URL` | Leave **empty** (same-origin `/api`) |
-| `NODE_ENV` | `production` |
 
-3. **Build command:** `npm install && npm run build`  
-4. **Start command:** `npm start` (runs migrations, then the server)  
+**Do not set `NODE_ENV` on Render** — it makes `npm install` skip Vite/TypeScript and the build fails.
+
+3. **Build command:** `npm run build:render`  
+4. **Start command:** `npm start` (migrations + server; sets `NODE_ENV=production` automatically)  
 5. **`DATABASE_URL` on Render** — paste the pooler URI **without** extra quotes:
    - Must start with `postgresql://`
    - Example shape: `postgresql://postgres.REF:ENCODED_PASS@aws-1-ap-south-1.pooler.supabase.com:5432/postgres?sslmode=require`
