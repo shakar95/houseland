@@ -1,8 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
-import { createClient } from '@supabase/supabase-js';
 import { prisma } from '../prisma.js';
+import { createSupabaseServerClient } from '../supabaseAdmin.js';
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
 
 export interface AuthRequest extends Request {
@@ -14,11 +13,11 @@ export async function requireAuth(req: AuthRequest, res: Response, next: NextFun
   const token = req.headers.authorization?.replace('Bearer ', '');
   if (!token) return res.status(401).json({ error: 'Unauthorized' });
 
-  if (!supabaseUrl || !supabaseKey) {
+  if (!supabaseKey) {
     return res.status(503).json({ error: 'Auth not configured' });
   }
 
-  const supabase = createClient(supabaseUrl, supabaseKey);
+  const supabase = createSupabaseServerClient(supabaseKey);
   const { data, error } = await supabase.auth.getUser(token);
   if (error || !data.user) return res.status(401).json({ error: 'Invalid token' });
 
