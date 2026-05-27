@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+@theme {
+  --color-royal-50: #eef2ff;
+  --color-royal-100: #dce4ff;
+  --color-royal-200: #b8c9ff;
+  --color-royal-300: #8aa3f5;
+  --color-royal-400: #5b7ae8;
+  --color-royal-500: #3d5fd4;
+  --color-royal-600: #2a4499;
+  --color-royal-700: #1e3270;
+  --color-royal-800: #152550;
+  --color-royal-900: #0c1835;
+  --color-royal-950: #060d1f;
+  --color-gold-50: #fdf8eb;
+  --color-gold-100: #f9edd0;
+  --color-gold-200: #f0d89a;
+  --color-gold-300: #e4bc5c;
+  --color-gold-400: #d4a017;
+  --color-gold-500: #b8860b;
+  --color-gold-600: #946b09;
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+body {
+  @apply bg-royal-950 text-white font-sans antialiased;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.btn-gold {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-gold-400 to-gold-500 px-5 py-2.5 font-semibold text-royal-950 shadow-lg shadow-gold-500/20 transition hover:from-gold-300 hover:to-gold-400;
+}
+
+.btn-outline-gold {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg border border-gold-400/60 px-5 py-2.5 font-medium text-gold-300 transition hover:bg-gold-400/10;
+}
+
+.card-luxury {
+  @apply rounded-2xl border border-royal-700/50 bg-gradient-to-br from-royal-900/80 to-royal-950/90 shadow-xl backdrop-blur;
+}
+
+.input-luxury {
+  @apply w-full rounded-lg border border-royal-600 bg-royal-900/60 px-4 py-2.5 text-white placeholder:text-royal-400 focus:border-gold-400 focus:outline-none focus:ring-1 focus:ring-gold-400/50;
+}
+
+.leaflet-container {
+  @apply rounded-xl z-0;
+}
