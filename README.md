@@ -53,7 +53,7 @@ npm run dev
 **Do not set `NODE_ENV` on Render** — it makes `npm install` skip Vite/TypeScript and the build fails.
 
 3. **Build command:** `npm run build:render`  
-4. **Start command:** `npm start` (migrations + server; sets `NODE_ENV=production` automatically)  
+4. **Start command:** `npm start` (syncs DB via `prisma db push`, then runs the server)  
 5. **`DATABASE_URL` on Render** — paste the pooler URI **without** extra quotes:
    - Must start with `postgresql://`
    - Example shape: `postgresql://postgres.REF:ENCODED_PASS@aws-1-ap-south-1.pooler.supabase.com:5432/postgres?sslmode=require`

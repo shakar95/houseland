@@ -1,34 +1,41 @@
 import { spawnSync } from 'node:child_process';
 
-function sanitizeDatabaseUrl() {
-  const raw = process.env.DATABASE_URL;
-  if (!raw) {
-    console.error(
-      'DATABASE_URL is missing. Add it in Render → Environment (no quotes around the value).',
-    );
-    process.exit(1);
-  }
+function sanitizeEnvUrl(name) {
+  const raw = process.env[name];
+  if (!raw) return null;
   const url = raw.trim().replace(/^["']+|["']+$/g, '');
   if (!url.startsWith('postgresql://') && !url.startsWith('postgres://')) {
     console.error(
-      'DATABASE_URL must start with postgresql:// — remove surrounding " quotes in Render.',
+      `[houseland] ${name} must start with postgresql:// (remove " quotes in Render).`,
     );
-    console.error('First characters received:', JSON.stringify(url.slice(0, 20)));
+    console.error(`[houseland] Got: ${JSON.stringify(url.slice(0, 24))}...`);
     process.exit(1);
   }
-  process.env.DATABASE_URL = url;
+  process.env[name] = url;
+  return url;
 }
 
-sanitizeDatabaseUrl();
+console.log('[houseland] Starting production...');
+
+if (!sanitizeEnvUrl('DATABASE_URL')) {
+  console.error('[houseland] DATABASE_URL is missing. Set it in Render → Environment.');
+  process.exit(1);
+}
+
+sanitizeEnvUrl('DIRECT_URL');
 process.env.NODE_ENV = 'production';
 
-const migrate = spawnSync('npx', ['prisma', 'migrate', 'deploy'], {
+console.log('[houseland] Syncing database (prisma db push)...');
+const db = spawnSync('npx', ['prisma', 'db', 'push', '--skip-generate'], {
   stdio: 'inherit',
   env: process.env,
-  shell: true,
 });
-if (migrate.status !== 0) process.exit(migrate.status ?? 1);
+if (db.status !== 0) {
+  console.error('[houseland] prisma db push failed.');
+  process.exit(db.status ?? 1);
+}
 
+console.log('[houseland] Starting server on port', process.env.PORT || 3001);
 const server = spawnSync('node', ['dist-server/index.js'], {
   stdio: 'inherit',
   env: process.env,
