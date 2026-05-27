@@ -29,14 +29,17 @@ npx prisma db push
 npm run db:seed
 ```
 
-4. Run dev (client + API):
+4. Run dev (client + API — **both** required):
 
 ```bash
 npm run dev
 ```
 
 - Site: http://localhost:5173  
-- API: http://localhost:3001  
+- API: http://localhost:3002 (default; change `PORT` in `.env`)  
+- Leave `VITE_API_URL` **empty** in `.env` so `/api` goes through Vite proxy  
+
+If you see **404 on `/api/properties`**, another app may be using port 3001 — use `PORT=3002` or stop that app.
 
 ## Deploy on Render
 

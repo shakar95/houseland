@@ -13,7 +13,7 @@ function param(value: string | string[]): string {
 }
 
 const app = express();
-const PORT = Number(process.env.PORT) || 3001;
+const PORT = Number(process.env.PORT) || 3002;
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
