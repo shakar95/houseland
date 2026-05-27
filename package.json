@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "install:all": "cross-env NODE_ENV=development npm install",
+    "clean:install": "powershell -ExecutionPolicy Bypass -File scripts/clean-install.ps1",
     "dev:client": "vite",
     "dev:server": "tsx watch server/index.ts",
     "postinstall": "prisma generate",
