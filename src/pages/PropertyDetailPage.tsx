@@ -35,7 +35,7 @@ export function PropertyDetailPage() {
   const wa = agency?.whatsapp?.replace(/\D/g, '') ?? '';
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10">
+    <div className="app-page pb-6">
       <div className="grid gap-8 lg:grid-cols-2">
         <div className="space-y-4">
           {property.images.map((img, i) => (

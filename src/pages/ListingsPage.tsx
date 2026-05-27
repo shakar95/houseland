@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { api } from '@/lib/api';
 import { PropertyCard } from '@/components/PropertyCard';
-import { PropertyFiltersPanel } from '@/components/PropertyFilters';
+import { PropertyFilterBar } from '@/components/PropertyFilterBar';
 import { useLanguage } from '@/context/LanguageContext';
 import type { Property, PropertyFilters } from '@/types';
 
@@ -32,23 +32,26 @@ export function ListingsPage() {
   }, [query]);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10">
-      <h1 className="font-display text-4xl text-gold-400">{t.listings.title}</h1>
-      <p className="mt-2 text-royal-300">{t.listings.subtitle}</p>
-      <div className="mt-8">
-        <PropertyFiltersPanel filters={filters} onChange={setFilters} />
+    <div className="app-page">
+      <div className="sticky top-0 z-30 -mx-4 border-b border-royal-800/80 bg-royal-950/95 px-4 py-3 backdrop-blur-md sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
+        <PropertyFilterBar filters={filters} onChange={setFilters} resultCount={loading ? undefined : properties.length} />
       </div>
-      {loading ? (
-        <p className="mt-12 text-center text-royal-400">{t.listings.loading}</p>
-      ) : properties.length === 0 ? (
-        <p className="mt-12 text-center text-royal-400">{t.listings.empty}</p>
-      ) : (
-        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {properties.map((p) => (
-            <PropertyCard key={p.id} property={p} />
-          ))}
-        </div>
-      )}
+
+      <div className="app-feed">
+        {loading ? (
+          <div className="app-feed-loading">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="property-card-skeleton" />
+            ))}
+          </div>
+        ) : properties.length === 0 ? (
+          <div className="app-empty">
+            <p>{t.listings.empty}</p>
+          </div>
+        ) : (
+          properties.map((p) => <PropertyCard key={p.id} property={p} />)
+        )}
+      </div>
     </div>
   );
 }

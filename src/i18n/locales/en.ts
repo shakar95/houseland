@@ -8,6 +8,18 @@ const en: TranslationDict = {
     submit: 'Submit Property',
     about: 'About',
     dashboard: 'Dashboard',
+    properties: 'Properties',
+    add: 'Add',
+    profile: 'Account',
+  },
+  app: {
+    searchPlaceholder: 'Search by code...',
+    moreFilters: 'More filters',
+    hideFilters: 'Hide',
+    results: 'properties',
+    addProperty: 'Add property',
+    clearFilters: 'Clear filters',
+    all: 'All',
   },
   auth: { signIn: 'Sign in', signOut: 'Sign out' },
   hero: {

@@ -39,7 +39,7 @@ export function SubmitPropertyPage() {
 
   if (!profile) {
     return (
-      <div className="mx-auto max-w-lg px-4 py-20 text-center">
+      <div className="app-page py-16 text-center">
         <h1 className="font-display text-3xl text-gold-400">{t.submit.signInTitle}</h1>
         <p className="mt-4 text-royal-300">{t.submit.signInDesc}</p>
         <button type="button" onClick={() => signInWithGoogle()} className="btn-gold mt-8">
@@ -66,7 +66,7 @@ export function SubmitPropertyPage() {
         videoLink: form.videoLink || null,
       });
       setMessage('Submitted! Your listing is pending admin approval.');
-      setTimeout(() => navigate('/listings'), 2000);
+      setTimeout(() => navigate('/'), 2000);
     } catch (err) {
       setMessage(err instanceof Error ? err.message : 'Submission failed');
     } finally {
@@ -75,8 +75,8 @@ export function SubmitPropertyPage() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <h1 className="font-display text-4xl text-gold-400">Submit a Property</h1>
+    <div className="app-page pb-6">
+      <h1 className="text-xl font-bold text-gold-400">{t.nav.submit}</h1>
       <p className="mt-2 text-royal-300">
         Listings stay private until approved. Contact details will show agency numbers only.
       </p>

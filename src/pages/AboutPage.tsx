@@ -12,7 +12,7 @@ export function AboutPage() {
   }, []);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10">
+    <div className="app-page pb-4">
       <h1 className="font-display text-4xl text-gold-400">{t.about.title}</h1>
       <p className="mt-4 max-w-3xl text-lg text-royal-200">{t.about.intro}</p>
       <h2 className="mt-12 font-display text-2xl text-gold-400">{t.about.team}</h2>

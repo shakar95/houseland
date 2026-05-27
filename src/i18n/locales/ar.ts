@@ -8,6 +8,18 @@ const ar: TranslationDict = {
     submit: 'إضافة عقار',
     about: 'من نحن',
     dashboard: 'لوحة التحكم',
+    properties: 'العقارات',
+    add: 'إضافة',
+    profile: 'حسابي',
+  },
+  app: {
+    searchPlaceholder: 'بحث بالرمز...',
+    moreFilters: 'مزيد من الفلاتر',
+    hideFilters: 'إخفاء',
+    results: 'عقار',
+    addProperty: 'أضف عقارك',
+    clearFilters: 'مسح الفلاتر',
+    all: 'الكل',
   },
   auth: { signIn: 'تسجيل الدخول', signOut: 'تسجيل الخروج' },
   hero: {

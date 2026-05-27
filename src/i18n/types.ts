@@ -2,7 +2,16 @@ export type Lang = 'ku' | 'ar' | 'en';
 
 export type TranslationDict = {
   lang: { ku: string; ar: string; en: string };
-  nav: { home: string; listings: string; submit: string; about: string; dashboard: string };
+  nav: { home: string; listings: string; submit: string; about: string; dashboard: string; properties: string; add: string; profile: string };
+  app: {
+    searchPlaceholder: string;
+    moreFilters: string;
+    hideFilters: string;
+    results: string;
+    addProperty: string;
+    clearFilters: string;
+    all: string;
+  };
   auth: { signIn: string; signOut: string };
   hero: {
     tag: string;

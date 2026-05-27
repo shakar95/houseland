@@ -1,8 +1,7 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext';
 import { LanguageProvider } from '@/context/LanguageContext';
 import { Layout } from '@/components/layout/Layout';
-import { HomePage } from '@/pages/HomePage';
 import { ListingsPage } from '@/pages/ListingsPage';
 import { PropertyDetailPage } from '@/pages/PropertyDetailPage';
 import { SubmitPropertyPage } from '@/pages/SubmitPropertyPage';
@@ -20,23 +19,23 @@ export default function App() {
     <LanguageProvider>
       <AuthProvider>
         <BrowserRouter>
-        <Routes>
-          <Route element={<Layout />}>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/listings" element={<ListingsPage />} />
-            <Route path="/property/:code" element={<PropertyDetailPage />} />
-            <Route path="/submit" element={<SubmitPropertyPage />} />
-            <Route path="/about" element={<AboutPage />} />
-          </Route>
-          <Route path="/auth/callback" element={<AuthCallbackPage />} />
-          <Route path="/dashboard" element={<DashboardLayout />}>
-            <Route index element={<AnalyticsPage />} />
-            <Route path="properties" element={<PropertiesPage />} />
-            <Route path="crm" element={<CrmPage />} />
-            <Route path="settings" element={<SettingsPage />} />
-            <Route path="staff" element={<StaffPage />} />
-          </Route>
-        </Routes>
+          <Routes>
+            <Route element={<Layout />}>
+              <Route path="/" element={<ListingsPage />} />
+              <Route path="/listings" element={<Navigate to="/" replace />} />
+              <Route path="/property/:code" element={<PropertyDetailPage />} />
+              <Route path="/submit" element={<SubmitPropertyPage />} />
+              <Route path="/about" element={<AboutPage />} />
+            </Route>
+            <Route path="/auth/callback" element={<AuthCallbackPage />} />
+            <Route path="/dashboard" element={<DashboardLayout />}>
+              <Route index element={<AnalyticsPage />} />
+              <Route path="properties" element={<PropertiesPage />} />
+              <Route path="crm" element={<CrmPage />} />
+              <Route path="settings" element={<SettingsPage />} />
+              <Route path="staff" element={<StaffPage />} />
+            </Route>
+          </Routes>
         </BrowserRouter>
       </AuthProvider>
     </LanguageProvider>

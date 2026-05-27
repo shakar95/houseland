@@ -8,6 +8,18 @@ const ku: TranslationDict = {
     submit: 'تۆمارکردنی موڵک',
     about: 'دەربارە',
     dashboard: 'داشبۆرد',
+    properties: 'موڵکەکان',
+    add: 'زیادکردن',
+    profile: 'هەژمار',
+  },
+  app: {
+    searchPlaceholder: 'گەڕان بە کۆد...',
+    moreFilters: 'فلتەری زیاتر',
+    hideFilters: 'شاردنەوە',
+    results: 'موڵک',
+    addProperty: 'موڵک زیاد بکە',
+    clearFilters: 'سڕینەوەی فلتەر',
+    all: 'هەموو',
   },
   auth: { signIn: 'چوونەژوورەوە', signOut: 'دەرچوون' },
   hero: {

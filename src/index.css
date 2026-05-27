@@ -25,6 +25,7 @@
 
 body {
   @apply bg-royal-950 text-white font-sans antialiased;
+  overscroll-behavior-y: none;
 }
 
 html[dir='rtl'] body {
@@ -35,12 +36,188 @@ html[dir='rtl'] body {
   font-family: var(--font-display);
 }
 
+/* ——— App shell ——— */
+.app-shell {
+  @apply mx-auto flex min-h-[100dvh] max-w-lg flex-col bg-royal-950;
+  box-shadow: 0 0 0 1px rgb(21 37 80 / 0.5);
+}
+
+@media (min-width: 640px) {
+  .app-shell {
+    @apply my-4 min-h-[calc(100dvh-2rem)] max-w-2xl rounded-3xl border border-royal-800/60 shadow-2xl shadow-black/40;
+  }
+}
+
+.app-header {
+  @apply sticky top-0 z-40 flex items-center justify-between border-b border-royal-800/80 bg-royal-950/95 px-4 py-3 backdrop-blur-md;
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+}
+
+.app-main {
+  @apply flex-1 overflow-y-auto px-4;
+  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+}
+
+.app-page {
+  @apply py-3;
+}
+
+.app-feed {
+  @apply mt-3 flex flex-col gap-3;
+}
+
+.app-feed-loading {
+  @apply flex flex-col gap-3;
+}
+
+.app-empty {
+  @apply rounded-2xl border border-dashed border-royal-700 bg-royal-900/40 py-16 text-center text-royal-400;
+}
+
+/* ——— Bottom navigation ——— */
+.bottom-nav {
+  @apply fixed bottom-0 left-1/2 z-50 flex w-full max-w-lg -translate-x-1/2 items-end justify-around border-t border-royal-800/90 bg-royal-950/98 px-2 backdrop-blur-lg;
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  height: calc(4.25rem + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 640px) {
+  .bottom-nav {
+    @apply rounded-b-3xl;
+  }
+}
+
+.bottom-nav-item {
+  @apply flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium text-royal-400 transition;
+}
+
+.bottom-nav-item-active {
+  @apply text-gold-400;
+}
+
+.bottom-nav-fab {
+  @apply -mt-5 flex flex-col items-center;
+}
+
+/* ——— Filter bar ——— */
+.filter-bar {
+  @apply space-y-2.5;
+}
+
+.filter-bar-row {
+  @apply flex gap-2;
+}
+
+.filter-search {
+  @apply min-w-0 flex-1 rounded-xl border border-royal-700 bg-royal-900/80 px-4 py-2.5 text-sm text-white placeholder:text-royal-500 focus:border-gold-400 focus:outline-none focus:ring-1 focus:ring-gold-400/40;
+}
+
+.filter-toggle {
+  @apply flex shrink-0 items-center gap-1.5 rounded-xl border border-royal-700 bg-royal-900/80 px-3 py-2.5 text-sm text-royal-200 transition;
+}
+
+.filter-toggle-active {
+  @apply border-gold-500/50 bg-gold-500/15 text-gold-300;
+}
+
+.filter-chips {
+  @apply flex gap-2 overflow-x-auto pb-1 scrollbar-none;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.filter-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-chip {
+  @apply shrink-0 rounded-full border border-royal-700 bg-royal-900/60 px-3.5 py-1.5 text-xs font-medium text-royal-200 transition active:scale-95;
+}
+
+.filter-chip-active {
+  @apply border-gold-500/60 bg-gold-500/20 text-gold-300;
+}
+
+.filter-chip-clear {
+  @apply flex items-center gap-1 border-royal-600 text-royal-400;
+}
+
+.filter-expanded {
+  @apply rounded-2xl border border-royal-800 bg-royal-900/50 p-3;
+}
+
+.filter-expanded-grid {
+  @apply grid gap-3 sm:grid-cols-2;
+}
+
+.filter-label {
+  @apply mb-1 block text-[10px] font-medium uppercase tracking-wide text-royal-500;
+}
+
+.filter-count {
+  @apply text-xs text-royal-500;
+}
+
+.input-app {
+  @apply w-full rounded-lg border border-royal-700 bg-royal-950/80 px-3 py-2 text-sm text-white focus:border-gold-400 focus:outline-none;
+}
+
+/* ——— Property cards ——— */
+.property-card {
+  @apply flex overflow-hidden rounded-2xl border border-royal-800/80 bg-royal-900/40 transition active:scale-[0.99];
+}
+
+.property-card-image {
+  @apply relative w-[38%] min-w-[120px] max-w-[140px] shrink-0 overflow-hidden sm:w-[140px];
+}
+
+.property-card-image img {
+  @apply h-full min-h-[120px] w-full object-cover;
+}
+
+.property-card-badge {
+  @apply absolute left-2 top-2 rounded-md bg-royal-950/85 px-1.5 py-0.5 text-[10px] font-bold text-gold-400;
+}
+
+.property-card-type {
+  @apply absolute bottom-2 left-2 rounded-md bg-gold-500 px-1.5 py-0.5 text-[10px] font-bold text-royal-950;
+}
+
+.property-card-body {
+  @apply flex min-w-0 flex-1 flex-col justify-center p-3;
+}
+
+.property-card-title {
+  @apply line-clamp-2 text-sm font-semibold leading-snug text-white;
+}
+
+.property-card-location {
+  @apply mt-1 flex items-center gap-1 text-xs text-royal-400;
+}
+
+.property-card-price {
+  @apply mt-2 text-base font-bold text-gold-400;
+}
+
+.property-card-stats {
+  @apply mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-royal-400;
+}
+
+.property-card-stats span {
+  @apply flex items-center gap-1;
+}
+
+.property-card-skeleton {
+  @apply h-[120px] animate-pulse rounded-2xl bg-royal-800/50;
+}
+
+/* ——— Legacy / shared ——— */
 .btn-gold {
-  @apply inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-gold-400 to-gold-500 px-5 py-2.5 font-semibold text-royal-950 shadow-lg shadow-gold-500/20 transition hover:from-gold-300 hover:to-gold-400;
+  @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-gold-400 to-gold-500 px-5 py-2.5 font-semibold text-royal-950 shadow-lg shadow-gold-500/20 transition active:scale-[0.98];
 }
 
 .btn-outline-gold {
-  @apply inline-flex items-center justify-center gap-2 rounded-lg border border-gold-400/60 px-5 py-2.5 font-medium text-gold-300 transition hover:bg-gold-400/10;
+  @apply inline-flex items-center justify-center gap-2 rounded-xl border border-gold-400/60 px-5 py-2.5 font-medium text-gold-300 transition active:scale-[0.98];
 }
 
 .card-luxury {
@@ -48,7 +225,7 @@ html[dir='rtl'] body {
 }
 
 .input-luxury {
-  @apply w-full rounded-lg border border-royal-600 bg-royal-900/60 px-4 py-2.5 text-white placeholder:text-royal-400 focus:border-gold-400 focus:outline-none focus:ring-1 focus:ring-gold-400/50;
+  @apply w-full rounded-xl border border-royal-600 bg-royal-900/60 px-4 py-2.5 text-white placeholder:text-royal-400 focus:border-gold-400 focus:outline-none focus:ring-1 focus:ring-gold-400/50;
 }
 
 .leaflet-container {
