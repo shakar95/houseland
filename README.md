@@ -38,6 +38,23 @@ npm run dev
 - Site: http://localhost:5173  
 - API: http://localhost:3001  
 
+## Deploy on Render
+
+1. Create a **Web Service** from this repo (or use `render.yaml`).
+2. **Environment variables** (required):
+
+| Variable | Notes |
+|----------|--------|
+| `DATABASE_URL` | Supabase **Session pooler** URI (encode `@` → `%40`, `#` → `%23`) |
+| `VITE_SUPABASE_URL` | Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | Supabase anon key |
+| `VITE_API_URL` | Leave **empty** (same-origin `/api`) |
+| `NODE_ENV` | `production` |
+
+3. **Build command:** `npm install && npm run build && npx prisma migrate deploy`  
+4. **Start command:** `npm start`  
+5. In Supabase Auth, add redirect URL: `https://YOUR-APP.onrender.com/auth/callback`
+
 ## Admin access
 
 After first Google sign-in, promote your user in the database:

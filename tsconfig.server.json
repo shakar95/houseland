@@ -7,7 +7,7 @@
     "strict": true,
     "skipLibCheck": true,
     "outDir": "dist-server",
-    "rootDir": "."
+    "rootDir": "server"
   },
-  "include": ["server/**/*", "prisma/**/*"]
+  "include": ["server/**/*"]
 }

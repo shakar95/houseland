@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { signInWithGoogle } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
-import { SULAYMANIYAH_NEIGHBORHOODS } from '@/lib/neighborhoods';
+import { SULAYMANIYAH_NEIGHBORHOODS, type Neighborhood } from '@/lib/neighborhoods';
 import { LocationPicker } from '@/components/maps/LocationPicker';
 
 const empty = {
@@ -21,7 +21,7 @@ const empty = {
   facing: '',
   latitude: 35.556,
   longitude: 45.432,
-  neighborhood: SULAYMANIYAH_NEIGHBORHOODS[0],
+  neighborhood: SULAYMANIYAH_NEIGHBORHOODS[0] as Neighborhood,
   images: [''],
   videoLink: '',
 };
@@ -117,7 +117,7 @@ export function SubmitPropertyPage() {
         <select
           className="input-luxury"
           value={form.neighborhood}
-          onChange={(e) => setForm({ ...form, neighborhood: e.target.value })}
+          onChange={(e) => setForm({ ...form, neighborhood: e.target.value as Neighborhood })}
         >
           {SULAYMANIYAH_NEIGHBORHOODS.map((n) => (
             <option key={n} value={n}>

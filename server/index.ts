@@ -1,10 +1,16 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { prisma } from './prisma.js';
 import { requireAuth, requireRole, type AuthRequest } from './middleware/auth.js';
 import { generatePropertyCode } from './utils/propertyCode.js';
 import { PropertyStatus } from '@prisma/client';
+
+function param(value: string | string[]): string {
+  return Array.isArray(value) ? value[0] : value;
+}
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3001;
@@ -46,12 +52,12 @@ app.post('/api/staff', requireAuth, requireRole('ADMIN'), async (req, res) => {
 });
 
 app.put('/api/staff/:id', requireAuth, requireRole('ADMIN'), async (req, res) => {
-  const staff = await prisma.staff.update({ where: { id: req.params.id }, data: req.body });
+  const staff = await prisma.staff.update({ where: { id: param(req.params.id) }, data: req.body });
   res.json(staff);
 });
 
 app.delete('/api/staff/:id', requireAuth, requireRole('ADMIN'), async (req, res) => {
-  await prisma.staff.update({ where: { id: req.params.id }, data: { active: false } });
+  await prisma.staff.update({ where: { id: param(req.params.id) }, data: { active: false } });
   res.json({ ok: true });
 });
 
@@ -104,7 +110,7 @@ app.get('/api/properties', async (req, res) => {
 });
 
 app.get('/api/properties/:idOrCode', async (req, res) => {
-  const key = req.params.idOrCode;
+  const key = param(req.params.idOrCode);
   const property = await prisma.property.findFirst({
     where: {
       OR: [{ id: key }, { code: key }],
@@ -141,7 +147,7 @@ app.post('/api/properties', requireAuth, async (req: AuthRequest, res) => {
 
 app.patch('/api/properties/:id', requireAuth, requireRole('ADMIN', 'STAFF'), async (req, res) => {
   const property = await prisma.property.update({
-    where: { id: req.params.id },
+    where: { id: param(req.params.id) },
     data: req.body,
   });
   res.json(property);
@@ -151,7 +157,7 @@ app.post('/api/properties/:id/analytics', async (req, res) => {
   const { event } = req.body as { event: 'phone' | 'whatsapp' };
   const field = event === 'phone' ? 'phoneClicks' : 'whatsappClicks';
   await prisma.analytics.update({
-    where: { propertyId: req.params.id },
+    where: { propertyId: param(req.params.id) },
     data: { [field]: { increment: 1 } },
   });
   res.json({ ok: true });
@@ -169,7 +175,7 @@ app.post('/api/crm', requireAuth, requireRole('ADMIN', 'STAFF'), async (req, res
 });
 
 app.patch('/api/crm/:id', requireAuth, requireRole('ADMIN', 'STAFF'), async (req, res) => {
-  const entry = await prisma.crmEntry.update({ where: { id: req.params.id }, data: req.body });
+  const entry = await prisma.crmEntry.update({ where: { id: param(req.params.id) }, data: req.body });
   res.json(entry);
 });
 
@@ -231,6 +237,15 @@ app.get('/api/me', requireAuth, async (req: AuthRequest, res) => {
 });
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
+
+if (process.env.NODE_ENV === 'production') {
+  const dist = path.join(path.dirname(fileURLToPath(import.meta.url)), '../dist');
+  app.use(express.static(dist));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+    res.sendFile(path.join(dist, 'index.html'));
+  });
+}
 
 app.listen(PORT, () => {
   console.log(`Houseland API running on http://localhost:${PORT}`);
