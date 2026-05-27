@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Phone, MapPin, MessageCircle } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useLanguage } from '@/context/LanguageContext';
 import type { AgencySettings } from '@/types';
 
 export function Footer() {
+  const { t } = useLanguage();
   const [agency, setAgency] = useState<AgencySettings | null>(null);
 
   useEffect(() => {
@@ -15,9 +17,7 @@ export function Footer() {
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 md:grid-cols-3">
         <div>
           <h3 className="font-display text-2xl text-gold-400">Houseland</h3>
-          <p className="mt-2 text-sm text-royal-300">
-            Premium real estate agency serving Sulaymaniyah and the Kurdistan Region.
-          </p>
+          <p className="mt-2 text-sm text-royal-300">{t.footer.tagline}</p>
         </div>
         <div className="space-y-3 text-sm text-royal-200">
           {agency?.phonePrimary && (
@@ -32,7 +32,7 @@ export function Footer() {
               className="flex items-center gap-2 hover:text-gold-400"
             >
               <MessageCircle className="h-4 w-4 text-gold-500" />
-              WhatsApp
+              {t.footer.whatsapp}
             </a>
           )}
           {agency?.address && (
@@ -43,7 +43,9 @@ export function Footer() {
           )}
         </div>
         <div className="text-sm text-royal-400">
-          <p>© {new Date().getFullYear()} Houseland. All rights reserved.</p>
+          <p>
+            © {new Date().getFullYear()} Houseland. {t.footer.rights}
+          </p>
         </div>
       </div>
     </footer>

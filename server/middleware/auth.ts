@@ -34,6 +34,11 @@ export async function requireAuth(req: AuthRequest, res: Response, next: NextFun
         googleAuthId: data.user.id,
       },
     });
+  } else if (profile && !profile.googleAuthId) {
+    profile = await prisma.profile.update({
+      where: { id: profile.id },
+      data: { googleAuthId: data.user.id },
+    });
   }
 
   if (!profile) return res.status(401).json({ error: 'Profile not found' });

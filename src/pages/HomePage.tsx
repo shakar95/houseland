@@ -3,34 +3,39 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Shield, MapPin, Sparkles } from 'lucide-react';
 import { api } from '@/lib/api';
 import { PropertyCard } from '@/components/PropertyCard';
+import { useLanguage } from '@/context/LanguageContext';
 import type { Property } from '@/types';
 
 export function HomePage() {
+  const { t } = useLanguage();
   const [featured, setFeatured] = useState<Property[]>([]);
 
   useEffect(() => {
-    api.get<Property[]>('/api/properties').then((list) => setFeatured(list.slice(0, 3))).catch(() => {});
+    api.get<Property[]>('/api/properties').then((list) => setFeatured(list.slice(0, 6))).catch(() => {});
   }, []);
+
+  const features = [
+    { icon: Sparkles, ...t.features.premium },
+    { icon: Shield, ...t.features.privacy },
+    { icon: MapPin, ...t.features.local },
+  ];
 
   return (
     <>
       <section className="relative overflow-hidden bg-gradient-to-b from-royal-900 to-royal-950 px-4 py-24">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gold-500/10 via-transparent to-transparent" />
         <div className="relative mx-auto max-w-4xl text-center">
-          <p className="text-sm font-medium uppercase tracking-widest text-gold-400">Sulaymaniyah · Kurdistan</p>
+          <p className="text-sm font-medium uppercase tracking-widest text-gold-400">{t.hero.tag}</p>
           <h1 className="mt-4 font-display text-5xl font-bold leading-tight text-white md:text-6xl">
-            Discover Your Next <span className="text-gold-400">Home</span>
+            {t.hero.title} <span className="text-gold-400">{t.hero.titleHighlight}</span>
           </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-royal-200">
-            Houseland is your trusted luxury real estate partner — curated villas, apartments, and commercial
-            properties across Sulaymaniyah.
-          </p>
+          <p className="mx-auto mt-6 max-w-2xl text-lg text-royal-200">{t.hero.subtitle}</p>
           <div className="mt-10 flex flex-wrap justify-center gap-4">
             <Link to="/listings" className="btn-gold">
-              Browse Listings <ArrowRight className="h-4 w-4" />
+              {t.hero.browse} <ArrowRight className="h-4 w-4" />
             </Link>
             <Link to="/submit" className="btn-outline-gold">
-              List Your Property
+              {t.hero.listProperty}
             </Link>
           </div>
         </div>
@@ -38,11 +43,7 @@ export function HomePage() {
 
       <section className="mx-auto max-w-7xl px-4 py-16">
         <div className="grid gap-8 md:grid-cols-3">
-          {[
-            { icon: Sparkles, title: 'Premium Listings', desc: 'Hand-reviewed properties with professional photography.' },
-            { icon: Shield, title: 'Privacy Protected', desc: 'Exact locations masked; agency contact only on listings.' },
-            { icon: MapPin, title: 'Local Expertise', desc: 'Deep knowledge of every neighborhood in Sulaymaniyah.' },
-          ].map(({ icon: Icon, title, desc }) => (
+          {features.map(({ icon: Icon, title, desc }) => (
             <div key={title} className="card-luxury p-6 text-center">
               <Icon className="mx-auto h-10 w-10 text-gold-400" />
               <h3 className="mt-4 font-display text-xl text-gold-300">{title}</h3>
@@ -53,10 +54,10 @@ export function HomePage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 pb-20">
-        <div className="mb-8 flex items-end justify-between">
-          <h2 className="font-display text-3xl text-gold-400">Featured Properties</h2>
-          <Link to="/listings" className="text-sm text-gold-400 hover:underline">
-            View all
+        <div className="mb-8 flex items-end justify-between gap-4">
+          <h2 className="font-display text-3xl text-gold-400">{t.home.featured}</h2>
+          <Link to="/listings" className="shrink-0 text-sm text-gold-400 hover:underline">
+            {t.home.viewAll}
           </Link>
         </div>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

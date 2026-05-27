@@ -27,6 +27,10 @@ body {
   @apply bg-royal-950 text-white font-sans antialiased;
 }
 
+html[dir='rtl'] body {
+  font-family: 'Noto Sans Arabic', 'Inter', system-ui, sans-serif;
+}
+
 .font-display {
   font-family: var(--font-display);
 }

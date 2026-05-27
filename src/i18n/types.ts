@@ -1,0 +1,47 @@
+export type Lang = 'ku' | 'ar' | 'en';
+
+export type TranslationDict = {
+  lang: { ku: string; ar: string; en: string };
+  nav: { home: string; listings: string; submit: string; about: string; dashboard: string };
+  auth: { signIn: string; signOut: string };
+  hero: {
+    tag: string;
+    title: string;
+    titleHighlight: string;
+    subtitle: string;
+    browse: string;
+    listProperty: string;
+  };
+  features: { premium: { title: string; desc: string }; privacy: { title: string; desc: string }; local: { title: string; desc: string } };
+  home: { featured: string; viewAll: string };
+  listings: { title: string; subtitle: string; loading: string; empty: string };
+  filters: {
+    code: string;
+    neighborhood: string;
+    type: string;
+    transaction: string;
+    minArea: string;
+    maxArea: string;
+    minPrice: string;
+    maxPrice: string;
+    floor: string;
+    allAreas: string;
+    allTypes: string;
+    saleRent: string;
+  };
+  about: { title: string; intro: string; team: string };
+  footer: { tagline: string; whatsapp: string; rights: string };
+  property: {
+    call: string;
+    whatsapp: string;
+    loading: string;
+    area: string;
+    location: string;
+    video: string;
+    privacyNote: string;
+  };
+  enums: Record<string, string>;
+  submit: { signInTitle: string; signInDesc: string; continueGoogle: string };
+  dashboard: { title: string; analytics: string; properties: string; crm: string; staff: string; settings: string };
+  common: { loading: string; sulaymaniyah: string };
+};

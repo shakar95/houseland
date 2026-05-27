@@ -60,9 +60,28 @@ npm run dev
    - Do **not** paste `"postgresql://..."` (no `"` characters)
 6. In Supabase Auth, add redirect URL: `https://YOUR-APP.onrender.com/auth/callback`
 
+## Languages
+
+The public site supports **Kurdish (default)**, **Arabic**, and **English** via the header language switcher. Kurdish and Arabic use RTL layout.
+
+## Demo data
+
+```bash
+npm run db:seed
+```
+
+Creates **9 demo properties** (8 approved + 1 pending) and two profile records:
+
+| Role | Email | Notes |
+|------|-------|--------|
+| ADMIN | `admin@houseland.iq` | Sign in with Google using this email to get admin access |
+| CLIENT | `client@houseland.iq` | Regular user for testing submissions |
+
+Property titles/descriptions switch with the selected language (codes `SULI-001` … `SULI-009`).
+
 ## Admin access
 
-After first Google sign-in, promote your user in the database:
+If you sign in with another Google account, promote it in Supabase SQL:
 
 ```sql
 UPDATE profiles SET role = 'ADMIN' WHERE email = 'your@email.com';

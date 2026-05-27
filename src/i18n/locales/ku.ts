@@ -1,0 +1,98 @@
+import type { TranslationDict } from '../types';
+
+const ku: TranslationDict = {
+  lang: { ku: 'کوردی', ar: 'عەرەبی', en: 'English' },
+  nav: {
+    home: 'سەرەکی',
+    listings: 'موڵکەکان',
+    submit: 'تۆمارکردنی موڵک',
+    about: 'دەربارە',
+    dashboard: 'داشبۆرد',
+  },
+  auth: { signIn: 'چوونەژوورەوە', signOut: 'دەرچوون' },
+  hero: {
+    tag: 'سلێمانی · کوردستان',
+    title: 'ماڵی داهاتووت',
+    titleHighlight: 'بدۆزەرەوە',
+    subtitle:
+      'هاوسلاند هاوبەشی متمانەپێکراوی خانووبەرەی لوکسە — ڤێلا، شوقە و موڵکی بازرگانی لە سەرانسەری سلێمانی.',
+    browse: 'بینینی موڵکەکان',
+    listProperty: 'موڵکەکەت بنووسە',
+  },
+  features: {
+    premium: { title: 'لیستی تایبەت', desc: 'موڵکی پێداچوونەوەکراو و وێنەی پیشەیی.' },
+    privacy: { title: 'پاراستنی تایبەتی', desc: 'شوێنی وردەکاری شاراوە؛ تەنها پەیوەندی ئەجەنس.' },
+    local: { title: 'شارەزایی خۆجێی', desc: 'زانیاری قووڵ لە هەموو گەڕەکەکانی سلێمانی.' },
+  },
+  home: { featured: 'موڵکی تایبەت', viewAll: 'هەمووی ببینە' },
+  listings: {
+    title: 'لیستی موڵکەکان',
+    subtitle: 'فلتەر بە کۆد، ڕووبەر، نرخ، گەڕەک و زیاتر.',
+    loading: 'چاوەڕوان بە...',
+    empty: 'هیچ موڵکێک ناگونجێت لەگەڵ فلتەرەکە.',
+  },
+  filters: {
+    code: 'کۆدی موڵک',
+    neighborhood: 'گەڕەک',
+    type: 'جۆری موڵک',
+    transaction: 'مامەڵە',
+    minArea: 'کەمترین ڕووبەر (م²)',
+    maxArea: 'زۆرترین ڕووبەر (م²)',
+    minPrice: 'کەمترین نرخ',
+    maxPrice: 'زۆرترین نرخ',
+    floor: 'نهۆم',
+    allAreas: 'هەموو گەڕەکەکان',
+    allTypes: 'هەموو جۆرەکان',
+    saleRent: 'فرۆشتن و کرێ',
+  },
+  about: {
+    title: 'دەربارەی هاوسلاند',
+    intro:
+      'هاوسلاند پێشەنگترین ئەجەنسی خانووبەرەی سلێمانییە — لە خانووی خێزانی لە سەرچنارەوە تا شوێنی بازرگانی لە ڕاپەڕین.',
+    team: 'تیمی ئێمە',
+  },
+  footer: {
+    tagline: 'ئەجەنسی خانووبەرەی لوکس لە سلێمانی و هەرێمی کوردستان.',
+    whatsapp: 'واتسئاپ',
+    rights: 'هەموو مافەکان پارێزراون.',
+  },
+  property: {
+    call: 'پەیوەندی ئەجەنس',
+    whatsapp: 'واتسئاپ',
+    loading: 'چاوەڕوان بە...',
+    area: 'شوێن (نزیک)',
+    location: 'شوێن (نزیک)',
+    video: 'گەڕانی ڤیدیۆ',
+    privacyNote: 'تەنها پەیوەندی ئەجەنس — زانیاری نێرەر پارێزراوە.',
+  },
+  enums: {
+    FOR_SALE: 'بۆ فرۆشتن',
+    FOR_RENT: 'بۆ کرێ',
+    HOUSE: 'خانوو',
+    APARTMENT: 'شوقە',
+    VILLA: 'ڤێلا',
+    LAND: 'زەوی',
+    COMMERCIAL: 'بازرگانی',
+    PENDING: 'چاوەڕوان',
+    APPROVED: 'پەسەندکراو',
+    REJECTED: 'ڕەتکراو',
+    SOLD: 'فرۆشراو',
+    RENTED: 'کرێدراو',
+  },
+  submit: {
+    signInTitle: 'بۆ تۆمارکردن بچۆرە ژوورەوە',
+    signInDesc: 'بە گووگڵ خۆت تۆمار بکە و موڵکەکەت بنێرە بۆ پێداچوونەوە.',
+    continueGoogle: 'بەردەوام بە لەگەڵ گووگڵ',
+  },
+  dashboard: {
+    title: 'داشبۆرد',
+    analytics: 'ئامار',
+    properties: 'موڵکەکان',
+    crm: 'CRM',
+    staff: 'ستاف',
+    settings: 'ڕێکخستن',
+  },
+  common: { loading: 'چاوەڕوان بە...', sulaymaniyah: 'سلێمانی · عێراق' },
+};
+
+export default ku;

@@ -1,0 +1,98 @@
+import type { TranslationDict } from '../types';
+
+const en: TranslationDict = {
+  lang: { ku: 'Kurdish', ar: 'Arabic', en: 'English' },
+  nav: {
+    home: 'Home',
+    listings: 'Listings',
+    submit: 'Submit Property',
+    about: 'About',
+    dashboard: 'Dashboard',
+  },
+  auth: { signIn: 'Sign in', signOut: 'Sign out' },
+  hero: {
+    tag: 'Sulaymaniyah · Kurdistan',
+    title: 'Discover Your Next',
+    titleHighlight: 'Home',
+    subtitle:
+      'Houseland is your trusted luxury real estate partner — villas, apartments, and commercial properties across Sulaymaniyah.',
+    browse: 'Browse Listings',
+    listProperty: 'List Your Property',
+  },
+  features: {
+    premium: { title: 'Premium Listings', desc: 'Hand-reviewed properties with professional photography.' },
+    privacy: { title: 'Privacy Protected', desc: 'Exact locations masked; agency contact only on listings.' },
+    local: { title: 'Local Expertise', desc: 'Deep knowledge of every neighborhood in Sulaymaniyah.' },
+  },
+  home: { featured: 'Featured Properties', viewAll: 'View all' },
+  listings: {
+    title: 'Property Listings',
+    subtitle: 'Filter by code, area, price, neighborhood, and more.',
+    loading: 'Loading...',
+    empty: 'No properties match your filters.',
+  },
+  filters: {
+    code: 'Property Code',
+    neighborhood: 'Neighborhood',
+    type: 'Property Type',
+    transaction: 'Transaction',
+    minArea: 'Min Area (m²)',
+    maxArea: 'Max Area (m²)',
+    minPrice: 'Min Price',
+    maxPrice: 'Max Price',
+    floor: 'Floor Level',
+    allAreas: 'All areas',
+    allTypes: 'All types',
+    saleRent: 'Sale & Rent',
+  },
+  about: {
+    title: 'About Houseland',
+    intro:
+      'Houseland is Sulaymaniyah\'s premier boutique real estate agency — from family homes in Sarchinar to commercial units on Raparin.',
+    team: 'Our Team',
+  },
+  footer: {
+    tagline: 'Premium real estate agency serving Sulaymaniyah and the Kurdistan Region.',
+    whatsapp: 'WhatsApp',
+    rights: 'All rights reserved.',
+  },
+  property: {
+    call: 'Call Agency',
+    whatsapp: 'WhatsApp',
+    loading: 'Loading property...',
+    area: 'Approximate area',
+    location: 'Location (Approximate)',
+    video: 'Video Tour',
+    privacyNote: 'Official agency contact only — submitter info protected.',
+  },
+  enums: {
+    FOR_SALE: 'For Sale',
+    FOR_RENT: 'For Rent',
+    HOUSE: 'House',
+    APARTMENT: 'Apartment',
+    VILLA: 'Villa',
+    LAND: 'Land',
+    COMMERCIAL: 'Commercial',
+    PENDING: 'Pending',
+    APPROVED: 'Approved',
+    REJECTED: 'Rejected',
+    SOLD: 'Sold',
+    RENTED: 'Rented',
+  },
+  submit: {
+    signInTitle: 'Sign in to Submit',
+    signInDesc: 'Use Google to register and submit your property for review.',
+    continueGoogle: 'Continue with Google',
+  },
+  dashboard: {
+    title: 'Dashboard',
+    analytics: 'Analytics',
+    properties: 'Properties',
+    crm: 'CRM',
+    staff: 'Staff',
+    settings: 'Settings',
+  },
+  common: { loading: 'Loading...', sulaymaniyah: 'Sulaymaniyah · Iraq' },
+};
+
+export default en;

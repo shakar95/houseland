@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { signInWithGoogle } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { SULAYMANIYAH_NEIGHBORHOODS, type Neighborhood } from '@/lib/neighborhoods';
 import { LocationPicker } from '@/components/maps/LocationPicker';
 
@@ -27,21 +28,22 @@ const empty = {
 };
 
 export function SubmitPropertyPage() {
+  const { t } = useLanguage();
   const { profile, loading } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState(empty);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
 
-  if (loading) return <p className="py-20 text-center">Loading...</p>;
+  if (loading) return <p className="py-20 text-center">{t.common.loading}</p>;
 
   if (!profile) {
     return (
       <div className="mx-auto max-w-lg px-4 py-20 text-center">
-        <h1 className="font-display text-3xl text-gold-400">Sign in to Submit</h1>
-        <p className="mt-4 text-royal-300">Use Google to register and submit your property for review.</p>
+        <h1 className="font-display text-3xl text-gold-400">{t.submit.signInTitle}</h1>
+        <p className="mt-4 text-royal-300">{t.submit.signInDesc}</p>
         <button type="button" onClick={() => signInWithGoogle()} className="btn-gold mt-8">
-          Continue with Google
+          {t.submit.continueGoogle}
         </button>
       </div>
     );

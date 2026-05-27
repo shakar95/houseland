@@ -6,9 +6,11 @@ import { ObfuscatedMap } from '@/components/maps/ObfuscatedMap';
 import { VideoEmbed } from '@/components/VideoEmbed';
 import { PropertyFlyer } from '@/components/PropertyFlyer';
 import type { AgencySettings, Property } from '@/types';
-import { formatPrice, labelEnum } from '@/lib/format';
+import { formatPrice } from '@/lib/format';
+import { useLanguage } from '@/context/LanguageContext';
 
 export function PropertyDetailPage() {
+  const { t, enumLabel, propertyTitle, propertyDescription } = useLanguage();
   const { code } = useParams();
   const [property, setProperty] = useState<Property | null>(null);
   const [agency, setAgency] = useState<AgencySettings | null>(null);
@@ -25,9 +27,11 @@ export function PropertyDetailPage() {
   };
 
   if (!property) {
-    return <p className="py-20 text-center text-royal-400">Loading property...</p>;
+    return <p className="py-20 text-center text-royal-400">{t.property.loading}</p>;
   }
 
+  const title = propertyTitle(property.code, property.title);
+  const description = propertyDescription(property.code, property.description ?? '');
   const wa = agency?.whatsapp?.replace(/\D/g, '') ?? '';
 
   return (
@@ -40,12 +44,12 @@ export function PropertyDetailPage() {
         </div>
         <div>
           <span className="text-sm text-gold-500">{property.code}</span>
-          <h1 className="font-display text-4xl text-white">{property.title}</h1>
+          <h1 className="font-display text-4xl text-white">{title}</h1>
           <p className="mt-2 text-2xl font-semibold text-gold-400">
             {formatPrice(property.price, property.currency)}
           </p>
           <p className="text-royal-300">
-            {labelEnum(property.transactionType)} · {labelEnum(property.propertyType)} · {property.neighborhood}
+            {enumLabel(property.transactionType)} · {enumLabel(property.propertyType)} · {property.neighborhood}
           </p>
 
           <div className="mt-6 flex flex-wrap gap-4">
@@ -54,19 +58,19 @@ export function PropertyDetailPage() {
               onClick={() => track('phone')}
               className="btn-gold"
             >
-              <Phone className="h-4 w-4" /> Call Agency
+              <Phone className="h-4 w-4" /> {t.property.call}
             </a>
             <a
-              href={`https://wa.me/${wa}?text=${encodeURIComponent(`Interested in ${property.code}: ${property.title}`)}`}
+              href={`https://wa.me/${wa}?text=${encodeURIComponent(`${property.code}: ${title}`)}`}
               target="_blank"
               rel="noreferrer"
               onClick={() => track('whatsapp')}
               className="btn-outline-gold"
             >
-              <MessageCircle className="h-4 w-4" /> WhatsApp
+              <MessageCircle className="h-4 w-4" /> {t.property.whatsapp}
             </a>
           </div>
-          <p className="mt-2 text-xs text-royal-500">Official agency contact only — submitter info protected.</p>
+          <p className="mt-2 text-xs text-royal-500">{t.property.privacyNote}</p>
 
           <div className="mt-8 grid grid-cols-2 gap-4 text-sm">
             <div className="flex items-center gap-2">
@@ -84,12 +88,12 @@ export function PropertyDetailPage() {
             )}
             {property.facing && (
               <div className="flex items-center gap-2">
-                <Compass className="text-gold-500" /> {labelEnum(property.facing)}
+                <Compass className="text-gold-500" /> {enumLabel(property.facing)}
               </div>
             )}
           </div>
 
-          <p className="mt-6 leading-relaxed text-royal-200">{property.description}</p>
+          <p className="mt-6 leading-relaxed text-royal-200">{description}</p>
 
           <div className="mt-8">
             <PropertyFlyer property={property} agency={agency} />
@@ -98,7 +102,7 @@ export function PropertyDetailPage() {
       </div>
 
       <div className="mt-12">
-        <h2 className="font-display text-2xl text-gold-400">Location (Approximate)</h2>
+        <h2 className="font-display text-2xl text-gold-400">{t.property.location}</h2>
         <div className="mt-4">
           <ObfuscatedMap neighborhood={property.neighborhood} />
         </div>
@@ -106,7 +110,7 @@ export function PropertyDetailPage() {
 
       {property.videoLink && (
         <div className="mt-12">
-          <h2 className="font-display text-2xl text-gold-400">Video Tour</h2>
+          <h2 className="font-display text-2xl text-gold-400">{t.property.video}</h2>
           <div className="mt-4 max-w-3xl">
             <VideoEmbed url={property.videoLink} />
           </div>
