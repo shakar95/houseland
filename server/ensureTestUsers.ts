@@ -1,4 +1,4 @@
-import { PrismaClient, UserRole } from '@prisma/client';
+﻿import { PrismaClient, UserRole } from '@prisma/client';
 import { createSupabaseAdmin } from './supabaseAdmin.js';
 
 const TEST_USERS = [
@@ -33,12 +33,17 @@ export async function ensureTestUsers(prisma: PrismaClient) {
     if (createErr) {
       const msg = createErr.message.toLowerCase();
       if (msg.includes('already') || msg.includes('registered')) {
-        const { data: byEmail, error: lookupErr } = await admin.auth.admin.getUserByEmail(u.email);
-        if (lookupErr || !byEmail.user) {
-          throw new Error(`Could not resolve user: ${u.email} (${lookupErr?.message ?? 'not found'})`);
-        }
-        authUserId = byEmail.user.id;
-        await admin.auth.admin.updateUserById(authUserId, {
+        const { data: list, error: listErr } = await admin.auth.admin.listUsers({
+          page: 1,
+          perPage: 1000,
+        });
+        if (listErr) throw new Error(`User lookup failed: ${listErr.message}`);
+
+        const found = list.users.find((x) => x.email?.toLowerCase() === u.email.toLowerCase());
+        if (!found) throw new Error(`Could not resolve user: ${u.email}`);
+
+        authUserId = found.id;
+        await admin.auth.admin.updateUserById(found.id, {
           password: u.password,
           email_confirm: true,
         });
@@ -53,12 +58,12 @@ export async function ensureTestUsers(prisma: PrismaClient) {
 
     await prisma.profile.upsert({
       where: { email: u.email },
-      update: { role: u.role, fullName: u.fullName, googleAuthId: authUserId },
+      update: { role: u.role, fullName: u.fullName, googleAuthId: authUserId ?? null },
       create: {
         email: u.email,
         fullName: u.fullName,
         role: u.role,
-        googleAuthId: authUserId,
+        googleAuthId: authUserId ?? null,
       },
     });
   }
