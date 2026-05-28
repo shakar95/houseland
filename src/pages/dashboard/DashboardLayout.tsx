@@ -1,8 +1,8 @@
-import { NavLink, Outlet, Navigate } from 'react-router-dom';
+﻿import { NavLink, Outlet, Navigate, Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
-import { BarChart3, Building2, Users, Settings, UserCircle } from 'lucide-react';
+import { BarChart3, Building2, Users, Settings, UserCircle, X } from 'lucide-react';
 
 export function DashboardLayout() {
   const { profile, loading } = useAuth();
@@ -29,6 +29,15 @@ export function DashboardLayout() {
           <LanguageSwitcher />
         </div>
         <p className="text-xs text-royal-400">{profile.role}</p>
+
+        <Link
+          to="/"
+          className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-royal-700 px-3 py-2 text-sm text-royal-200 transition hover:border-gold-500/50 hover:text-gold-300"
+        >
+          <X className="h-4 w-4" />
+          {t.nav.home}
+        </Link>
+
         <nav className="mt-4 space-y-1">
           {links.map(({ to, label, icon: Icon, end }) => (
             <NavLink
