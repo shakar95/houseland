@@ -11,6 +11,7 @@
     "dev:server": "tsx watch server/index.ts",
     "postinstall": "prisma generate",
     "build": "tsc -p tsconfig.json --noEmit && vite build && tsc -p tsconfig.server.json",
+    "build:vercel": "prisma generate && tsc -p tsconfig.json --noEmit && vite build",
     "build:render": "npm install --include=dev && npm run build",
     "start": "node scripts/production-start.mjs",
     "preview": "vite preview",
@@ -22,7 +23,7 @@
     "db:seed:all": "npm run db:seed:auth && npm run db:seed"
   },
   "engines": {
-    "node": ">=20"
+    "node": "22.x"
   },
   "dependencies": {
     "@prisma/client": "^6.5.0",
