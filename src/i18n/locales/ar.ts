@@ -107,6 +107,7 @@ const ar: TranslationDict = {
   enums: {
     FOR_SALE: 'للبيع',
     FOR_RENT: 'للإيجار',
+    FOR_EXCHANGE: 'مقايضة',
     HOUSE: 'منزل',
     APARTMENT: 'شقة',
     VILLA: 'فيلا',

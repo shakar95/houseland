@@ -118,6 +118,7 @@ export function SubmitPropertyPage() {
           >
             <option value="FOR_SALE">For Sale</option>
             <option value="FOR_RENT">For Rent</option>
+            <option value="FOR_EXCHANGE">Exchange</option>
           </select>
         </div>
         <select

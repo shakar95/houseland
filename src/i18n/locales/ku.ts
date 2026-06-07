@@ -105,8 +105,9 @@ const ku: TranslationDict = {
     privacyNote: 'تەنها پەیوەندی ئەجەنس — زانیاری نێرەر پارێزراوە.',
   },
   enums: {
-    FOR_SALE: 'بۆ فرۆشتن',
-    FOR_RENT: 'بۆ کرێ',
+    FOR_SALE: 'فرۆشتن',
+    FOR_RENT: 'کرێ',
+    FOR_EXCHANGE: 'گۆڕینەوە',
     HOUSE: 'خانوو',
     APARTMENT: 'شوقە',
     VILLA: 'ڤێلا',

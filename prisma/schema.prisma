@@ -24,6 +24,7 @@ enum PropertyType {
 enum TransactionType {
   FOR_SALE
   FOR_RENT
+  FOR_EXCHANGE
 }
 
 enum FacingDirection {

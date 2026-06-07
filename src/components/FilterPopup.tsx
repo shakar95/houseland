@@ -6,9 +6,10 @@ type FilterPopupProps = {
   onClose: () => void;
   title: string;
   children: ReactNode;
+  size?: 'default' | 'large';
 };
 
-export function FilterPopup({ open, onClose, title, children }: FilterPopupProps) {
+export function FilterPopup({ open, onClose, title, children, size = 'default' }: FilterPopupProps) {
   const [visible, setVisible] = useState(false);
   const [active, setActive] = useState(false);
 
@@ -52,7 +53,7 @@ export function FilterPopup({ open, onClose, title, children }: FilterPopupProps
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`filter-popup-card ${active ? 'filter-popup-card--open' : ''}`}
+        className={`filter-popup-card ${size === 'large' ? 'filter-popup-card--large' : ''} ${active ? 'filter-popup-card--open' : ''}`}
         onTransitionEnd={onTransitionEnd}
       >
         <h3 className="filter-popup-title">{title}</h3>

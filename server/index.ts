@@ -77,13 +77,25 @@ app.get('/api/properties', async (req, res) => {
     status,
   } = req.query;
 
+  const parseMulti = (value: unknown) => {
+    if (!value || value === 'all') return [] as string[];
+    return String(value)
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+  };
+
+  const neighborhoods = parseMulti(neighborhood);
+  const propertyTypes = parseMulti(propertyType);
+  const transactionTypes = parseMulti(transactionType);
+
   const isAdmin = status !== undefined;
   const where: Record<string, unknown> = {
     ...(!isAdmin ? { status: { in: PUBLIC_STATUSES } } : {}),
     ...(code && { code: { contains: String(code), mode: 'insensitive' } }),
-    ...(neighborhood && neighborhood !== 'all' && { neighborhood: String(neighborhood) }),
-    ...(propertyType && propertyType !== 'all' && { propertyType: String(propertyType) }),
-    ...(transactionType && transactionType !== 'all' && { transactionType: String(transactionType) }),
+    ...(neighborhoods.length > 0 && { neighborhood: { in: neighborhoods } }),
+    ...(propertyTypes.length > 0 && { propertyType: { in: propertyTypes } }),
+    ...(transactionTypes.length > 0 && { transactionType: { in: transactionTypes } }),
     ...(isAdmin && status && status !== 'all' && { status: String(status) }),
     ...(floor && { floors: Number(floor) }),
   };

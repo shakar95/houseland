@@ -105,8 +105,9 @@ const en: TranslationDict = {
     privacyNote: 'Official agency contact only — submitter info protected.',
   },
   enums: {
-    FOR_SALE: 'For Sale',
-    FOR_RENT: 'For Rent',
+    FOR_SALE: 'Sale',
+    FOR_RENT: 'Rent',
+    FOR_EXCHANGE: 'Exchange',
     HOUSE: 'House',
     APARTMENT: 'Apartment',
     VILLA: 'Villa',

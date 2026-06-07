@@ -62,8 +62,9 @@ export function PropertyFiltersPanel({ filters, onChange }: Props) {
           onChange={(e) => set('transactionType', e.target.value)}
         >
           <option value="all">{t.filters.saleRent}</option>
-          <option value="FOR_SALE">{enumLabel('FOR_SALE')}</option>
-          <option value="FOR_RENT">{enumLabel('FOR_RENT')}</option>
+            <option value="FOR_SALE">{enumLabel('FOR_SALE')}</option>
+            <option value="FOR_RENT">{enumLabel('FOR_RENT')}</option>
+            <option value="FOR_EXCHANGE">{enumLabel('FOR_EXCHANGE')}</option>
         </select>
       </div>
       <div>
