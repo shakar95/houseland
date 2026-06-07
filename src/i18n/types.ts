@@ -11,6 +11,11 @@ export type TranslationDict = {
     addProperty: string;
     clearFilters: string;
     all: string;
+    menu: string;
+    language: string;
+    guest: string;
+    signInHint: string;
+    closeMenu: string;
   };
   auth: {
     signIn: string;
@@ -20,6 +25,7 @@ export type TranslationDict = {
     loginTitle: string;
     loginSubtitle: string;
     loginButton: string;
+    continueWithEmail: string;
     orGoogle: string;
     invalidCredentials: string;
     checkEmail: string;
@@ -54,6 +60,9 @@ export type TranslationDict = {
     allAreas: string;
     allTypes: string;
     saleRent: string;
+    priceShort: string;
+    areaShort: string;
+    apply: string;
   };
   about: { title: string; intro: string; team: string };
   footer: { tagline: string; whatsapp: string; rights: string };

@@ -3,7 +3,7 @@ import { Menu, X, Home } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { AppMenu } from '@/components/AppMenu';
 import { signInWithGoogle, signOut } from '@/lib/supabase';
 
 export function Header() {
@@ -33,7 +33,7 @@ export function Header() {
         </Link>
 
         <nav className="hidden items-center gap-4 lg:flex">
-          <LanguageSwitcher />
+          <AppMenu />
           {nav.map((n) => (
             <NavLink
               key={n.to}
@@ -62,7 +62,7 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2 lg:hidden">
-          <LanguageSwitcher />
+          <AppMenu />
           <button type="button" className="text-gold-400" onClick={() => setOpen(!open)}>
             {open ? <X /> : <Menu />}
           </button>

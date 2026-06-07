@@ -1,7 +1,7 @@
 ﻿import { NavLink, Outlet, Navigate, Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { AppMenu } from '@/components/AppMenu';
 import { BarChart3, Building2, Users, Settings, UserCircle, X } from 'lucide-react';
 
 export function DashboardLayout() {
@@ -26,7 +26,7 @@ export function DashboardLayout() {
       <aside className="card-luxury shrink-0 p-4 lg:w-56">
         <div className="flex items-center justify-between gap-2">
           <h2 className="font-display text-xl text-gold-400">{t.dashboard.title}</h2>
-          <LanguageSwitcher />
+          <AppMenu />
         </div>
         <p className="text-xs text-royal-400">{profile.role}</p>
 

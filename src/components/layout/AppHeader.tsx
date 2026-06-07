@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Home } from 'lucide-react';
-import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { AppMenu } from '@/components/AppMenu';
 import { useLanguage } from '@/context/LanguageContext';
 
 export function AppHeader() {
@@ -17,7 +17,7 @@ export function AppHeader() {
           <p className="text-[10px] text-royal-400">{t.common.sulaymaniyah}</p>
         </div>
       </Link>
-      <LanguageSwitcher />
+      <AppMenu />
     </header>
   );
 }
