@@ -71,7 +71,7 @@ const en: TranslationDict = {
     code: 'Property Code',
     neighborhood: 'Neighborhood',
     type: 'Property Type',
-    transaction: 'Transaction',
+    transaction: 'Transaction type',
     minArea: 'Min Area (m²)',
     maxArea: 'Max Area (m²)',
     minPrice: 'Min Price',
@@ -83,6 +83,9 @@ const en: TranslationDict = {
     priceShort: 'Price',
     areaShort: 'Area',
     apply: 'Apply',
+    searchNeighborhood: 'Search neighborhood...',
+    noNeighborhoodMatch: 'No neighborhood found',
+    selectNeighborhood: 'Select neighborhood',
   },
   about: {
     title: 'About Houseland',

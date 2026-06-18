@@ -89,6 +89,12 @@ html[dir='rtl'] body {
   @apply mt-3 flex flex-col gap-3;
 }
 
+.app-feed-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 3px;
+}
+
 .app-feed-loading {
   @apply flex flex-col gap-3;
 }
@@ -319,6 +325,63 @@ html[dir='rtl'] body {
   @apply max-h-40 overflow-y-auto pe-0.5;
 }
 
+/* ——— Neighborhood searchable dropdown ——— */
+.neighborhood-select {
+  @apply relative;
+}
+
+.neighborhood-select-trigger {
+  @apply flex w-full items-center justify-between gap-2 rounded-xl border border-royal-700 bg-royal-950/80 px-3 py-2.5 text-start text-sm text-royal-200 transition hover:border-royal-600;
+}
+
+.neighborhood-select-trigger-open {
+  @apply border-gold-500/50 ring-1 ring-gold-400/30;
+}
+
+.neighborhood-select-trigger-label {
+  @apply min-w-0 flex-1 truncate;
+}
+
+.neighborhood-select-chevron {
+  @apply h-4 w-4 shrink-0 text-royal-400 transition-transform duration-200;
+}
+
+.neighborhood-select-chevron-open {
+  @apply rotate-180 text-gold-300;
+}
+
+.neighborhood-select-panel {
+  @apply absolute start-0 end-0 top-full z-20 mt-1 overflow-hidden rounded-xl border border-royal-700 bg-royal-950 shadow-xl shadow-black/40;
+}
+
+.neighborhood-select-search-wrap {
+  @apply relative border-b border-royal-800/80;
+}
+
+.neighborhood-select-search-icon {
+  @apply pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-royal-500;
+}
+
+.neighborhood-select-search {
+  @apply w-full border-0 bg-royal-900/60 py-2.5 ps-9 pe-3 text-sm text-white placeholder:text-royal-500 focus:outline-none;
+}
+
+.neighborhood-select-box {
+  @apply max-h-48 overflow-y-auto;
+}
+
+.neighborhood-select-option {
+  @apply flex w-full items-center border-b border-royal-800/60 px-3 py-2.5 text-start text-sm text-royal-200 transition last:border-b-0 hover:bg-royal-800/80;
+}
+
+.neighborhood-select-option-active {
+  @apply bg-gold-500/15 font-medium text-gold-300;
+}
+
+.neighborhood-select-empty {
+  @apply px-3 py-6 text-center text-sm text-royal-500;
+}
+
 .filter-sheet-range {
   @apply grid grid-cols-2 gap-3;
 }
@@ -478,6 +541,43 @@ html[dir='rtl'] body {
 
 .property-card-skeleton {
   @apply h-[120px] animate-pulse rounded-2xl bg-royal-800/50;
+}
+
+/* ——— Property grid (Instagram profile style) ——— */
+.property-grid-tile {
+  @apply relative block aspect-square overflow-hidden bg-royal-900 transition active:opacity-90;
+}
+
+.property-grid-tile img {
+  @apply h-full w-full object-cover;
+}
+
+.property-grid-tile-overlay {
+  @apply pointer-events-none absolute inset-0 bg-gradient-to-t from-royal-950/90 via-royal-950/10 to-transparent;
+}
+
+.property-grid-tile-multi {
+  @apply absolute end-2 top-2 flex h-6 w-6 items-center justify-center rounded-md bg-royal-950/75 text-white backdrop-blur-sm;
+}
+
+.property-grid-tile-type {
+  @apply absolute start-2 top-2 rounded-md bg-gold-500/95 px-1.5 py-0.5 text-[9px] font-bold text-royal-950;
+}
+
+.property-grid-tile-meta {
+  @apply absolute inset-x-0 bottom-0 flex items-end justify-between gap-1 px-2 pb-2;
+}
+
+.property-grid-tile-price {
+  @apply text-[11px] font-bold leading-tight text-gold-300;
+}
+
+.property-grid-tile-code {
+  @apply rounded bg-royal-950/60 px-1 py-0.5 text-[9px] font-medium text-royal-200 backdrop-blur-sm;
+}
+
+.property-grid-skeleton {
+  @apply aspect-square animate-pulse bg-royal-800/50;
 }
 
 /* ——— Legacy / shared ——— */

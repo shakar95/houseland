@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { api } from '@/lib/api';
-import { PropertyCard } from '@/components/PropertyCard';
+import { PropertyGridCard } from '@/components/PropertyGridCard';
 import { PropertyFilterBar } from '@/components/PropertyFilterBar';
 import { useLanguage } from '@/context/LanguageContext';
 import type { Property, PropertyFilters } from '@/types';
@@ -37,19 +37,23 @@ export function ListingsPage() {
         <PropertyFilterBar filters={filters} onChange={setFilters} resultCount={loading ? undefined : properties.length} />
       </div>
 
-      <div className="app-feed">
+      <div className="-mx-4 mt-3">
         {loading ? (
-          <div className="app-feed-loading">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="property-card-skeleton" />
+          <div className="app-feed-grid">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="property-grid-skeleton" />
             ))}
           </div>
         ) : properties.length === 0 ? (
-          <div className="app-empty">
+          <div className="app-empty mx-4">
             <p>{t.listings.empty}</p>
           </div>
         ) : (
-          properties.map((p) => <PropertyCard key={p.id} property={p} />)
+          <div className="app-feed-grid">
+            {properties.map((p) => (
+              <PropertyGridCard key={p.id} property={p} />
+            ))}
+          </div>
         )}
       </div>
     </div>

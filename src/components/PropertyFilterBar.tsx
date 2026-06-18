@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { SlidersHorizontal, X } from 'lucide-react';
 import { FilterPopup } from '@/components/FilterPopup';
-import { SULAYMANIYAH_NEIGHBORHOODS } from '@/lib/neighborhoods';
+import { NeighborhoodFilterSelect } from '@/components/NeighborhoodFilterSelect';
 import {
   formatFilterListLabel,
   joinFilterList,
@@ -20,9 +20,11 @@ interface Props {
 type PopupKey = 'type' | 'neighborhood' | 'price' | 'area';
 
 const types = ['HOUSE', 'APARTMENT', 'VILLA', 'LAND', 'COMMERCIAL'] as const;
+const quickTransactionFilters = ['FOR_SALE', 'FOR_RENT'] as const;
 const transactionFilters = ['FOR_SALE', 'FOR_RENT', 'FOR_EXCHANGE'] as const;
 
 type DraftFilters = {
+  transactionTypes: string[];
   propertyTypes: string[];
   neighborhoods: string[];
   minPrice: string;
@@ -33,6 +35,7 @@ type DraftFilters = {
 
 function toDraft(filters: PropertyFilters): DraftFilters {
   return {
+    transactionTypes: parseFilterList(filters.transactionType),
     propertyTypes: parseFilterList(filters.propertyType),
     neighborhoods: parseFilterList(filters.neighborhood),
     minPrice: filters.minPrice ?? '',
@@ -99,11 +102,14 @@ export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
 
   const selectedTypes = parseFilterList(filters.propertyType);
   const selectedNeighborhoods = parseFilterList(filters.neighborhood);
+  const selectedTransactions = parseFilterList(filters.transactionType);
+  const transactionActive = selectedTransactions.length > 0;
   const typeActive = selectedTypes.length > 0;
   const neighborhoodActive = selectedNeighborhoods.length > 0;
   const priceActive = Boolean(filters.minPrice || filters.maxPrice);
   const areaActive = Boolean(filters.minArea || filters.maxArea);
-  const hasSecondaryFilters = typeActive || neighborhoodActive || priceActive || areaActive;
+  const hasSecondaryFilters =
+    transactionActive || typeActive || neighborhoodActive || priceActive || areaActive;
 
   useEffect(() => {
     if (popup === 'type') setPopupTypes(parseFilterList(filters.propertyType));
@@ -137,9 +143,7 @@ export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
   const setScalar = (key: keyof PropertyFilters, value: string) =>
     onChange({ ...filters, [key]: value });
 
-  const selectedTransactions = parseFilterList(filters.transactionType);
-
-  const toggleTransaction = (value: (typeof transactionFilters)[number]) => {
+  const toggleTransaction = (value: (typeof quickTransactionFilters)[number]) => {
     setListFilter('transactionType', toggleFilterList(selectedTransactions, value));
   };
 
@@ -150,8 +154,11 @@ export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
 
   const applyDraft = () => {
     const next: PropertyFilters = { ...filters };
+    const transactionValue = joinFilterList(draft.transactionTypes);
     const typeValue = joinFilterList(draft.propertyTypes);
     const neighborhoodValue = joinFilterList(draft.neighborhoods);
+    if (transactionValue) next.transactionType = transactionValue;
+    else delete next.transactionType;
     if (typeValue) next.propertyType = typeValue;
     else delete next.propertyType;
     if (neighborhoodValue) next.neighborhood = neighborhoodValue;
@@ -166,6 +173,7 @@ export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
 
   const clearDraft = () => {
     setDraft({
+      transactionTypes: [],
       propertyTypes: [],
       neighborhoods: [],
       minPrice: '',
@@ -178,6 +186,7 @@ export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
   const clearSecondaryFilters = () => {
     onChange({
       ...filters,
+      transactionType: undefined,
       propertyType: undefined,
       neighborhood: undefined,
       minPrice: '',
@@ -229,7 +238,7 @@ export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
           value={filters.code ?? ''}
           onChange={(e) => setScalar('code', e.target.value)}
         />
-        {transactionFilters.map((tx) => (
+        {quickTransactionFilters.map((tx) => (
           <button
             key={tx}
             type="button"
@@ -300,18 +309,7 @@ export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
         onClose={() => setPopup(null)}
         title={t.filters.neighborhood}
       >
-        <div className="filter-popup-list filter-popup-list-scroll">
-          {SULAYMANIYAH_NEIGHBORHOODS.map((n) => (
-            <button
-              key={n}
-              type="button"
-              className={`filter-popup-option ${popupNeighborhoods.includes(n) ? 'filter-popup-option-active' : ''}`}
-              onClick={() => setPopupNeighborhoods((prev) => toggleFilterList(prev, n))}
-            >
-              {n}
-            </button>
-          ))}
-        </div>
+        <NeighborhoodFilterSelect value={popupNeighborhoods} onChange={setPopupNeighborhoods} />
         <button type="button" onClick={applyPopupNeighborhoods} className="btn-gold mt-4 w-full">
           {t.filters.apply}
         </button>
@@ -373,6 +371,27 @@ export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
       >
         <div className="filter-sheet">
           <section className="filter-sheet-section">
+            <h4 className="filter-sheet-heading">{t.filters.transaction}</h4>
+            <div className="filter-sheet-chips">
+              {transactionFilters.map((tx) => (
+                <button
+                  key={tx}
+                  type="button"
+                  className={`filter-chip ${draft.transactionTypes.includes(tx) ? 'filter-chip-active' : ''}`}
+                  onClick={() =>
+                    setDraft((prev) => ({
+                      ...prev,
+                      transactionTypes: toggleFilterList(prev.transactionTypes, tx),
+                    }))
+                  }
+                >
+                  {enumLabel(tx)}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="filter-sheet-section">
             <h4 className="filter-sheet-heading">{t.filters.type}</h4>
             <div className="filter-sheet-chips">
               {types.map((type) => (
@@ -395,23 +414,10 @@ export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
 
           <section className="filter-sheet-section">
             <h4 className="filter-sheet-heading">{t.filters.neighborhood}</h4>
-            <div className="filter-sheet-chips filter-sheet-chips-scroll">
-              {SULAYMANIYAH_NEIGHBORHOODS.map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  className={`filter-chip ${draft.neighborhoods.includes(n) ? 'filter-chip-active' : ''}`}
-                  onClick={() =>
-                    setDraft((prev) => ({
-                      ...prev,
-                      neighborhoods: toggleFilterList(prev.neighborhoods, n),
-                    }))
-                  }
-                >
-                  {n}
-                </button>
-              ))}
-            </div>
+            <NeighborhoodFilterSelect
+              value={draft.neighborhoods}
+              onChange={(neighborhoods) => setDraft((prev) => ({ ...prev, neighborhoods }))}
+            />
           </section>
 
           <section className="filter-sheet-section">

@@ -71,7 +71,7 @@ const ku: TranslationDict = {
     code: 'کۆدی موڵک',
     neighborhood: 'گەڕەک',
     type: 'جۆری موڵک',
-    transaction: 'مامەڵە',
+    transaction: 'جۆری مامەڵە',
     minArea: 'کەمترین ڕووبەر (م²)',
     maxArea: 'زۆرترین ڕووبەر (م²)',
     minPrice: 'کەمترین نرخ',
@@ -83,6 +83,9 @@ const ku: TranslationDict = {
     priceShort: 'نرخ',
     areaShort: 'ڕووبەر',
     apply: 'جێبەجێکردن',
+    searchNeighborhood: 'گەڕان بە گەڕەک...',
+    noNeighborhoodMatch: 'هیچ گەڕەکێک نەدۆزرایەوە',
+    selectNeighborhood: 'گەڕەک هەڵبژێرە',
   },
   about: {
     title: 'دەربارەی هاوسلاند',

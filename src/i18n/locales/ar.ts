@@ -83,6 +83,9 @@ const ar: TranslationDict = {
     priceShort: 'السعر',
     areaShort: 'المساحة',
     apply: 'تطبيق',
+    searchNeighborhood: 'بحث عن حي...',
+    noNeighborhoodMatch: 'لم يتم العثور على حي',
+    selectNeighborhood: 'اختر الحي',
   },
   about: {
     title: 'عن هاوسلاند',

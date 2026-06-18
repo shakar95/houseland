@@ -63,6 +63,9 @@ export type TranslationDict = {
     priceShort: string;
     areaShort: string;
     apply: string;
+    searchNeighborhood: string;
+    noNeighborhoodMatch: string;
+    selectNeighborhood: string;
   };
   about: { title: string; intro: string; team: string };
   footer: { tagline: string; whatsapp: string; rights: string };
