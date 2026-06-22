@@ -89,7 +89,7 @@ model Staff {
 
 model AgencySettings {
   id             String @id @default("default")
-  name           String @default("Houseland")
+  name           String @default("Houseland Real Estate")
   logoUrl        String? @map("logo_url")
   phonePrimary   String @map("phone_primary")
   phoneSecondary String? @map("phone_secondary")
@@ -129,6 +129,13 @@ model Property {
   analytics Analytics?
   contracts Contract[]
 
+  @@index([status])
+  @@index([status, createdAt(sort: Desc)])
+  @@index([neighborhood])
+  @@index([propertyType])
+  @@index([transactionType])
+  @@index([price])
+  @@index([areaSqm])
   @@map("properties")
 }
 

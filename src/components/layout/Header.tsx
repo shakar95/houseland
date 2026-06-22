@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { AppMenu } from '@/components/AppMenu';
 import { signInWithGoogle, signOut } from '@/lib/supabase';
+import { APP_NAME } from '@/lib/brand';
 
 export function Header() {
   const [open, setOpen] = useState(false);
@@ -27,7 +28,7 @@ export function Header() {
             <Home className="h-5 w-5" />
           </div>
           <div>
-            <span className="font-display text-2xl font-bold tracking-wide text-gold-300">Houseland</span>
+            <span className="font-display text-xl font-bold tracking-wide text-gold-300 sm:text-2xl">{APP_NAME}</span>
             <p className="text-xs text-royal-400">{t.common.sulaymaniyah}</p>
           </div>
         </Link>

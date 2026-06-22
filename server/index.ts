@@ -7,6 +7,14 @@ import { prisma } from './prisma.js';
 import { requireAuth, requireRole, type AuthRequest } from './middleware/auth.js';
 import { generatePropertyCode } from './utils/propertyCode.js';
 import { ensureTestUsers } from './ensureTestUsers.js';
+import {
+  ADMIN_LIST_SELECT,
+  PUBLIC_LIST_SELECT,
+  PUBLIC_STATUSES,
+  buildPropertyWhere,
+  maskPropertyForPublic,
+  trimImagesForList,
+} from './utils/propertyQueries.js';
 import { PropertyStatus } from '@prisma/client';
 
 function param(value: string | string[]): string {
@@ -18,13 +26,6 @@ const PORT = Number(process.env.PORT) || 3002;
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
-
-const PUBLIC_STATUSES: PropertyStatus[] = [PropertyStatus.APPROVED];
-
-function maskPropertyForPublic<T extends Record<string, unknown>>(p: T) {
-  const { latitude, longitude, submitterId, ...rest } = p;
-  return { ...rest, latitude: undefined, longitude: undefined, submitterId: undefined };
-}
 
 // ——— Agency ———
 app.get('/api/agency', async (_req, res) => {
@@ -64,62 +65,30 @@ app.delete('/api/staff/:id', requireAuth, requireRole('ADMIN'), async (req, res)
 
 // ——— Properties (public) ———
 app.get('/api/properties', async (req, res) => {
-  const {
-    code,
-    minArea,
-    maxArea,
-    minPrice,
-    maxPrice,
-    neighborhood,
-    floor,
-    propertyType,
-    transactionType,
-    status,
-  } = req.query;
+  const isAdmin = req.query.status !== undefined;
+  const where = buildPropertyWhere(req.query as Record<string, unknown>, isAdmin);
+  const limitRaw = Number(req.query.limit);
+  const take = Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 500) : undefined;
 
-  const parseMulti = (value: unknown) => {
-    if (!value || value === 'all') return [] as string[];
-    return String(value)
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
-  };
-
-  const neighborhoods = parseMulti(neighborhood);
-  const propertyTypes = parseMulti(propertyType);
-  const transactionTypes = parseMulti(transactionType);
-
-  const isAdmin = status !== undefined;
-  const where: Record<string, unknown> = {
-    ...(!isAdmin ? { status: { in: PUBLIC_STATUSES } } : {}),
-    ...(code && { code: { contains: String(code), mode: 'insensitive' } }),
-    ...(neighborhoods.length > 0 && { neighborhood: { in: neighborhoods } }),
-    ...(propertyTypes.length > 0 && { propertyType: { in: propertyTypes } }),
-    ...(transactionTypes.length > 0 && { transactionType: { in: transactionTypes } }),
-    ...(isAdmin && status && status !== 'all' && { status: String(status) }),
-    ...(floor && { floors: Number(floor) }),
-  };
-
-  if (minArea || maxArea) {
-    where.areaSqm = {
-      ...(minArea && { gte: Number(minArea) }),
-      ...(maxArea && { lte: Number(maxArea) }),
-    };
-  }
-  if (minPrice || maxPrice) {
-    where.price = {
-      ...(minPrice && { gte: Number(minPrice) }),
-      ...(maxPrice && { lte: Number(maxPrice) }),
-    };
+  if (isAdmin) {
+    const properties = await prisma.property.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      select: ADMIN_LIST_SELECT,
+      ...(take ? { take } : {}),
+    });
+    res.json(properties);
+    return;
   }
 
   const properties = await prisma.property.findMany({
     where,
     orderBy: { createdAt: 'desc' },
-    include: { analytics: true },
+    select: PUBLIC_LIST_SELECT,
+    ...(take ? { take } : {}),
   });
 
-  res.json(isAdmin ? properties : properties.map(maskPropertyForPublic));
+  res.json(properties.map((p) => maskPropertyForPublic(trimImagesForList(p))));
 });
 
 app.get('/api/properties/:idOrCode', async (req, res) => {
@@ -273,5 +242,5 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 app.listen(PORT, () => {
-  console.log(`Houseland API running on http://localhost:${PORT}`);
+  console.log(`Houseland Real Estate API running on http://localhost:${PORT}`);
 });

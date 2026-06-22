@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
+import { useLanguage } from '@/context/LanguageContext';
 
 const SULAY_CENTER: [number, number] = [35.556, 45.432];
 
@@ -46,6 +47,7 @@ interface Props {
 }
 
 export function LocationPicker({ latitude, longitude, onChange }: Props) {
+  const { t } = useLanguage();
   const [pos, setPos] = useState<[number, number]>([latitude || SULAY_CENTER[0], longitude || SULAY_CENTER[1]]);
 
   useEffect(() => {
@@ -63,7 +65,7 @@ export function LocationPicker({ latitude, longitude, onChange }: Props) {
         <TileLayer attribution='&copy; OpenStreetMap' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <DraggableMarker position={pos} onChange={handle} />
       </MapContainer>
-      <p className="mt-2 text-xs text-royal-400">Click map or drag pin for exact location (admin only).</p>
+      <p className="mt-2 text-xs text-royal-400">{t.submit.mapHint}</p>
     </div>
   );
 }

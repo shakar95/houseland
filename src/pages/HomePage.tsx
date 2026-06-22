@@ -11,7 +11,10 @@ export function HomePage() {
   const [featured, setFeatured] = useState<Property[]>([]);
 
   useEffect(() => {
-    api.get<Property[]>('/api/properties').then((list) => setFeatured(list.slice(0, 6))).catch(() => {});
+    api
+      .get<Property[]>('/api/properties?limit=6', { auth: false })
+      .then(setFeatured)
+      .catch(() => {});
   }, []);
 
   const features = [

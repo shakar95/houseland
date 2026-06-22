@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Phone, MapPin, MessageCircle } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useLanguage } from '@/context/LanguageContext';
+import { APP_NAME } from '@/lib/brand';
 import type { AgencySettings } from '@/types';
 
 export function Footer() {
@@ -16,7 +17,7 @@ export function Footer() {
     <footer className="mt-auto border-t border-royal-800 bg-royal-900/50">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 md:grid-cols-3">
         <div>
-          <h3 className="font-display text-2xl text-gold-400">Houseland</h3>
+          <h3 className="font-display text-2xl text-gold-400">{agency?.name ?? APP_NAME}</h3>
           <p className="mt-2 text-sm text-royal-300">{t.footer.tagline}</p>
         </div>
         <div className="space-y-3 text-sm text-royal-200">
@@ -44,7 +45,7 @@ export function Footer() {
         </div>
         <div className="text-sm text-royal-400">
           <p>
-            © {new Date().getFullYear()} Houseland. {t.footer.rights}
+            © {new Date().getFullYear()} {agency?.name ?? APP_NAME}. {t.footer.rights}
           </p>
         </div>
       </div>

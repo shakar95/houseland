@@ -58,7 +58,7 @@ CREATE TABLE "staff" (
 
 CREATE TABLE "agency_settings" (
     "id" TEXT NOT NULL DEFAULT 'default',
-    "name" TEXT NOT NULL DEFAULT 'Houseland',
+    "name" TEXT NOT NULL DEFAULT 'Houseland Real Estate',
     "logo_url" TEXT,
     "phone_primary" TEXT NOT NULL,
     "phone_secondary" TEXT,
@@ -185,7 +185,7 @@ INSERT INTO "agency_settings" (
   "id", "name", "phone_primary", "phone_secondary", "whatsapp", "address", "email"
 ) VALUES (
   'default',
-  'Houseland',
+  'Houseland Real Estate',
   '+964 770 123 4567',
   '+964 750 987 6543',
   '+9647701234567',

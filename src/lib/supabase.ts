@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { clearAuthTokenCache } from './authTokenCache';
 
 const url = import.meta.env.VITE_SUPABASE_URL ?? '';
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY ?? '';
@@ -42,6 +43,7 @@ export async function signUpWithPassword(email: string, password: string, fullNa
 
 export async function signOut() {
   if (supabaseConfigured) await supabase.auth.signOut();
+  clearAuthTokenCache();
 }
 
 export async function getAccessToken(): Promise<string | null> {

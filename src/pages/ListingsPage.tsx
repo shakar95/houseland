@@ -25,7 +25,7 @@ export function ListingsPage() {
   useEffect(() => {
     setLoading(true);
     api
-      .get<Property[]>(`/api/properties${query}`)
+      .get<Property[]>(`/api/properties${query}`, { auth: false })
       .then(setProperties)
       .catch(() => setProperties([]))
       .finally(() => setLoading(false));

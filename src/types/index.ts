@@ -13,7 +13,7 @@ export interface Property {
   id: string;
   code: string;
   title: string;
-  description: string;
+  description?: string;
   propertyType: string;
   transactionType: string;
   areaSqm: number;
@@ -28,6 +28,7 @@ export interface Property {
   longitude?: number;
   neighborhood: string;
   images: string[];
+  imageCount?: number;
   videoLink?: string | null;
   status: string;
   analytics?: Analytics;

@@ -7,6 +7,11 @@ import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { SULAYMANIYAH_NEIGHBORHOODS, type Neighborhood } from '@/lib/neighborhoods';
 import { LocationPicker } from '@/components/maps/LocationPicker';
+import { PropertyImageUpload } from '@/components/PropertyImageUpload';
+import { uploadPropertyImages } from '@/lib/uploadPropertyImages';
+
+const propertyTypes = ['HOUSE', 'APARTMENT', 'VILLA', 'LAND', 'COMMERCIAL'] as const;
+const transactionTypes = ['FOR_SALE', 'FOR_RENT', 'FOR_EXCHANGE'] as const;
 
 const empty = {
   title: '',
@@ -24,17 +29,21 @@ const empty = {
   latitude: 35.556,
   longitude: 45.432,
   neighborhood: SULAYMANIYAH_NEIGHBORHOODS[0] as Neighborhood,
-  images: [''],
+  images: [] as string[],
   videoLink: '',
 };
 
 export function SubmitPropertyPage() {
-  const { t } = useLanguage();
+  const { t, enumLabel } = useLanguage();
   const { profile, loading } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState(empty);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
   const [message, setMessage] = useState('');
+  const [messageIsError, setMessageIsError] = useState(false);
+  const [imageError, setImageError] = useState('');
 
   if (loading) return <p className="py-20 text-center">{t.common.loading}</p>;
 
@@ -55,12 +64,24 @@ export function SubmitPropertyPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!imageFiles.length) {
+      setImageError(t.submit.imageRequired);
+      setMessageIsError(true);
+      setMessage(t.submit.imageRequired);
+      return;
+    }
+
     setSubmitting(true);
+    setUploadingImages(true);
     setMessage('');
+    setMessageIsError(false);
+    setImageError('');
     try {
-      const images = form.images.filter(Boolean);
+      const images = await uploadPropertyImages(imageFiles);
+      setUploadingImages(false);
       await api.post('/api/properties', {
         ...form,
+        currency: 'USD',
         images,
         facing: form.facing || null,
         floors: form.floors ?? null,
@@ -69,79 +90,100 @@ export function SubmitPropertyPage() {
         dimensions: form.dimensions || null,
         videoLink: form.videoLink || null,
       });
-      setMessage('Submitted! Your listing is pending admin approval.');
+      setMessage(t.submit.success);
       setTimeout(() => navigate('/'), 2000);
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : 'Submission failed');
+      setUploadingImages(false);
+      setMessageIsError(true);
+      const code = err instanceof Error ? err.message : '';
+      if (code === 'STORAGE_NOT_CONFIGURED') {
+        setMessage(t.submit.storageNotConfigured);
+      } else if (code === 'STORAGE_BUCKET_MISSING') {
+        setMessage(t.submit.storageBucketMissing);
+      } else if (code === 'NOT_AUTHENTICATED') {
+        setMessage(t.submit.signInTitle);
+      } else {
+        setMessage(err instanceof Error ? err.message : t.submit.failed);
+      }
     } finally {
       setSubmitting(false);
+      setUploadingImages(false);
     }
   };
 
   return (
     <div className="app-page pb-6">
       <h1 className="text-xl font-bold text-gold-400">{t.nav.submit}</h1>
-      <p className="mt-2 text-royal-300">
-        Listings stay private until approved. Contact details will show agency numbers only.
-      </p>
+      <p className="mt-2 text-royal-300">{t.submit.intro}</p>
       <form onSubmit={handleSubmit} className="mt-8 space-y-6">
         <input
           className="input-luxury"
-          placeholder="Title"
+          placeholder={t.submit.titlePlaceholder}
           required
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
         />
         <textarea
           className="input-luxury min-h-[120px]"
-          placeholder="Description"
+          placeholder={t.submit.descriptionPlaceholder}
           required
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
         />
         <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="filter-label">{t.submit.propertyTypeLabel}</label>
+            <select
+              className="input-luxury mt-1"
+              value={form.propertyType}
+              onChange={(e) => setForm({ ...form, propertyType: e.target.value })}
+            >
+              {propertyTypes.map((type) => (
+                <option key={type} value={type}>
+                  {enumLabel(type)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="filter-label">{t.submit.transactionTypeLabel}</label>
+            <select
+              className="input-luxury mt-1"
+              value={form.transactionType}
+              onChange={(e) => setForm({ ...form, transactionType: e.target.value })}
+            >
+              {transactionTypes.map((type) => (
+                <option key={type} value={type}>
+                  {enumLabel(type)}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div>
+          <label className="filter-label">{t.submit.neighborhoodLabel}</label>
           <select
-            className="input-luxury"
-            value={form.propertyType}
-            onChange={(e) => setForm({ ...form, propertyType: e.target.value })}
+            className="input-luxury mt-1"
+            value={form.neighborhood}
+            onChange={(e) => setForm({ ...form, neighborhood: e.target.value as Neighborhood })}
           >
-            {['HOUSE', 'APARTMENT', 'VILLA', 'LAND', 'COMMERCIAL'].map((t) => (
-              <option key={t} value={t}>
-                {t}
+            {SULAYMANIYAH_NEIGHBORHOODS.map((n) => (
+              <option key={n} value={n}>
+                {n}
               </option>
             ))}
           </select>
-          <select
-            className="input-luxury"
-            value={form.transactionType}
-            onChange={(e) => setForm({ ...form, transactionType: e.target.value })}
-          >
-            <option value="FOR_SALE">For Sale</option>
-            <option value="FOR_RENT">For Rent</option>
-            <option value="FOR_EXCHANGE">Exchange</option>
-          </select>
         </div>
-        <select
-          className="input-luxury"
-          value={form.neighborhood}
-          onChange={(e) => setForm({ ...form, neighborhood: e.target.value as Neighborhood })}
-        >
-          {SULAYMANIYAH_NEIGHBORHOODS.map((n) => (
-            <option key={n} value={n}>
-              {n}
-            </option>
-          ))}
-        </select>
         <LocationPicker
           latitude={form.latitude}
           longitude={form.longitude}
           onChange={(lat, lng) => setForm({ ...form, latitude: lat, longitude: lng })}
         />
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2">
           <input
             type="number"
             className="input-luxury"
-            placeholder="Area (m²)"
+            placeholder={t.submit.areaPlaceholder}
             required
             value={form.areaSqm || ''}
             onChange={(e) => setForm({ ...form, areaSqm: Number(e.target.value) })}
@@ -149,35 +191,36 @@ export function SubmitPropertyPage() {
           <input
             type="number"
             className="input-luxury"
-            placeholder="Price"
+            placeholder={t.submit.pricePlaceholder}
             required
             value={form.price || ''}
             onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
           />
-          <select
-            className="input-luxury"
-            value={form.currency}
-            onChange={(e) => setForm({ ...form, currency: e.target.value })}
-          >
-            <option value="USD">USD</option>
-            <option value="IQD">IQD</option>
-          </select>
         </div>
-        <input
-          className="input-luxury"
-          placeholder="Image URL"
-          value={form.images[0]}
-          onChange={(e) => setForm({ ...form, images: [e.target.value] })}
+        <PropertyImageUpload
+          files={imageFiles}
+          onChange={(next) => {
+            setImageFiles(next);
+            setImageError('');
+          }}
+          disabled={submitting}
+          error={imageError}
         />
         <input
           className="input-luxury"
-          placeholder="Video link (YouTube, TikTok, Facebook, Instagram)"
+          placeholder={t.submit.videoPlaceholder}
           value={form.videoLink}
           onChange={(e) => setForm({ ...form, videoLink: e.target.value })}
         />
-        {message && <p className="text-gold-300">{message}</p>}
+        {message && (
+          <p className={messageIsError ? 'text-red-300' : 'text-gold-300'}>{message}</p>
+        )}
         <button type="submit" disabled={submitting} className="btn-gold w-full">
-          {submitting ? 'Submitting...' : 'Submit for Review'}
+          {uploadingImages
+            ? t.submit.uploadingImages
+            : submitting
+              ? t.submit.submitting
+              : t.submit.submitButton}
         </button>
       </form>
     </div>

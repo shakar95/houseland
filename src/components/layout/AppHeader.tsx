@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Home } from 'lucide-react';
 import { AppMenu } from '@/components/AppMenu';
 import { useLanguage } from '@/context/LanguageContext';
+import { APP_NAME } from '@/lib/brand';
 
 export function AppHeader() {
   const { t } = useLanguage();
@@ -13,7 +14,7 @@ export function AppHeader() {
           <Home className="h-4 w-4" />
         </div>
         <div className="leading-tight">
-          <span className="text-base font-bold text-white">Houseland</span>
+          <span className="text-sm font-bold text-white sm:text-base">{APP_NAME}</span>
           <p className="text-[10px] text-royal-400">{t.common.sulaymaniyah}</p>
         </div>
       </Link>

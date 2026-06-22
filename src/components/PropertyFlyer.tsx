@@ -3,6 +3,7 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import type { Property, AgencySettings } from '@/types';
 import { formatPrice, labelEnum } from '@/lib/format';
+import { APP_NAME } from '@/lib/brand';
 
 interface Props {
   property: Property;
@@ -36,7 +37,7 @@ export function PropertyFlyer({ property, agency }: Props) {
         >
           <div className="flex items-center justify-between border-b-2 border-[#1e3270] pb-4">
             <div>
-              <h1 className="text-3xl font-bold text-[#1e3270]">{agency?.name ?? 'Houseland'}</h1>
+              <h1 className="text-3xl font-bold text-[#1e3270]">{agency?.name ?? APP_NAME}</h1>
               <p className="text-sm text-gray-600">{agency?.address}</p>
             </div>
             <p className="text-xl font-bold text-[#d4a017]">{property.code}</p>
@@ -57,7 +58,7 @@ export function PropertyFlyer({ property, agency }: Props) {
           </div>
           <p className="mt-4 text-sm leading-relaxed">{property.description}</p>
           <div className="mt-6 border-t pt-4 text-sm">
-            <p className="font-semibold">Contact Houseland</p>
+            <p className="font-semibold">Contact {agency?.name ?? APP_NAME}</p>
             <p>{agency?.phonePrimary}</p>
             <p>WhatsApp: {agency?.whatsapp}</p>
           </div>

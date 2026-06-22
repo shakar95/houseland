@@ -5,6 +5,7 @@ import { signInWithGoogle, signInWithPassword } from '@/lib/supabase';
 import { getAuthErrorKey, getAuthErrorRaw } from '@/lib/authErrors';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { APP_NAME } from '@/lib/brand';
 
 type SignInModalProps = {
   open: boolean;
@@ -118,7 +119,7 @@ export function SignInModal({ open, onClose, onSuccess }: SignInModalProps) {
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-gold-400 to-gold-600 text-royal-950 shadow-lg shadow-gold-500/30 ring-4 ring-gold-500/20">
             <Home className="h-8 w-8" strokeWidth={2.25} />
           </div>
-          <p className="mt-3 font-display text-2xl font-bold text-gold-300">Houseland</p>
+          <p className="mt-3 font-display text-xl font-bold text-gold-300 sm:text-2xl">{APP_NAME}</p>
           <p className="text-[11px] text-royal-400">{t.common.sulaymaniyah}</p>
         </div>
 

@@ -12,10 +12,10 @@ const prisma = new PrismaClient();
 async function main() {
   await prisma.agencySettings.upsert({
     where: { id: 'default' },
-    update: {},
+    update: { name: 'Houseland Real Estate' },
     create: {
       id: 'default',
-      name: 'Houseland',
+      name: 'Houseland Real Estate',
       phonePrimary: '+964 770 123 4567',
       phoneSecondary: '+964 750 987 6543',
       whatsapp: '+9647701234567',

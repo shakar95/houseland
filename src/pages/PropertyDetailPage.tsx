@@ -17,7 +17,7 @@ export function PropertyDetailPage() {
 
   useEffect(() => {
     if (!code) return;
-    api.get<Property>(`/api/properties/${code}`).then(setProperty).catch(() => {});
+    api.get<Property>(`/api/properties/${code}`, { auth: false }).then(setProperty).catch(() => {});
     api.get<AgencySettings>('/api/agency').then(setAgency).catch(() => {});
   }, [code]);
 

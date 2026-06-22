@@ -8,7 +8,7 @@ export function PropertyGridCard({ property }: { property: Property }) {
   const { enumLabel, propertyTitle } = useLanguage();
   const img = property.images[0] || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=600';
   const title = propertyTitle(property.code, property.title);
-  const hasMultipleImages = property.images.filter(Boolean).length > 1;
+  const hasMultipleImages = (property.imageCount ?? property.images.filter(Boolean).length) > 1;
 
   return (
     <Link to={`/property/${property.code}`} className="property-grid-tile" aria-label={title}>
