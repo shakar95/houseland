@@ -14,6 +14,7 @@ type Props = {
   images: string[];
   videoUrl?: string | null;
   alt: string;
+  className?: string;
 };
 
 function buildSlides(images: string[], videoUrl?: string | null): Slide[] {
@@ -32,7 +33,7 @@ function buildSlides(images: string[], videoUrl?: string | null): Slide[] {
   return slides;
 }
 
-export function PropertyImageGallery({ images, videoUrl, alt }: Props) {
+export function PropertyImageGallery({ images, videoUrl, alt, className }: Props) {
   const { rtl, t } = useLanguage();
   const trackRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
@@ -48,8 +49,9 @@ export function PropertyImageGallery({ images, videoUrl, alt }: Props) {
       const el = trackRef.current;
       if (!el) return;
       const i = ((next % slides.length) + slides.length) % slides.length;
-      const slide = el.children[i] as HTMLElement | undefined;
-      slide?.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
+      const width = el.clientWidth;
+      if (!width) return;
+      el.scrollTo({ left: width * i, behavior: 'smooth' });
       setIndex(i);
     },
     [slides.length],
@@ -58,34 +60,30 @@ export function PropertyImageGallery({ images, videoUrl, alt }: Props) {
   const syncIndexFromScroll = useCallback(() => {
     const el = trackRef.current;
     if (!el || el.children.length === 0) return;
-    const rect = el.getBoundingClientRect();
-    const center = rect.left + rect.width / 2;
-    let closest = 0;
-    let minDist = Infinity;
-    Array.from(el.children).forEach((child, i) => {
-      const r = child.getBoundingClientRect();
-      const dist = Math.abs(r.left + r.width / 2 - center);
-      if (dist < minDist) {
-        minDist = dist;
-        closest = i;
-      }
-    });
-    setIndex(closest);
+    const width = el.clientWidth;
+    if (!width) return;
+    const i = Math.min(Math.max(Math.round(el.scrollLeft / width), 0), el.children.length - 1);
+    setIndex(i);
   }, []);
 
   useEffect(() => {
     const el = trackRef.current;
     if (!el || !multi) return;
     el.addEventListener('scroll', syncIndexFromScroll, { passive: true });
-    return () => el.removeEventListener('scroll', syncIndexFromScroll);
-  }, [multi, syncIndexFromScroll]);
+    const onResize = () => syncIndexFromScroll();
+    window.addEventListener('resize', onResize);
+    return () => {
+      el.removeEventListener('scroll', syncIndexFromScroll);
+      window.removeEventListener('resize', onResize);
+    };
+  }, [multi, syncIndexFromScroll, slides.length]);
 
   const activeIsReel = slides[index]?.type === 'video';
 
   return (
-    <div className="property-gallery">
+    <div className={['property-gallery', className].filter(Boolean).join(' ')}>
       <div className={`property-gallery-viewport${activeIsReel ? ' property-gallery-viewport--reel' : ''}`}>
-        <div ref={trackRef} className="property-gallery-track" dir={rtl ? 'rtl' : 'ltr'}>
+        <div ref={trackRef} className="property-gallery-track">
           {slides.map((slide, i) =>
             slide.type === 'image' ? (
               <div key={slide.key} className="property-gallery-slide">
@@ -98,21 +96,23 @@ export function PropertyImageGallery({ images, videoUrl, alt }: Props) {
               </div>
             ) : (
               <div key={slide.key} className="property-gallery-slide property-gallery-slide--reel">
-                {index === i ? (
-                  <VideoEmbed url={slide.url} aspect="reel" />
-                ) : (
-                  <button
-                    type="button"
-                    className="property-gallery-video-poster"
-                    onClick={() => scrollTo(i)}
-                    aria-label={t.property.video}
-                  >
-                    <img src={poster} alt="" loading="lazy" draggable={false} />
-                    <span className="property-gallery-play">
-                      <Play className="h-8 w-8 fill-white text-white" />
-                    </span>
-                  </button>
-                )}
+                <div className="property-gallery-reel-frame">
+                  {index === i ? (
+                    <VideoEmbed url={slide.url} aspect="reel" />
+                  ) : (
+                    <button
+                      type="button"
+                      className="property-gallery-video-poster"
+                      onClick={() => scrollTo(i)}
+                      aria-label={t.property.video}
+                    >
+                      <img src={poster} alt="" loading="lazy" draggable={false} />
+                      <span className="property-gallery-play">
+                        <Play className="h-8 w-8 fill-white text-white" />
+                      </span>
+                    </button>
+                  )}
+                </div>
               </div>
             ),
           )}

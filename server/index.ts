@@ -13,8 +13,14 @@ import {
   PUBLIC_STATUSES,
   buildPropertyWhere,
   maskPropertyForPublic,
-  trimImagesForList,
 } from './utils/propertyQueries.js';
+import { toPublicListingCard, syncPropertyMedia } from './utils/propertyMedia.js';
+import {
+  getListingCache,
+  setListingCache,
+  listingCacheKey,
+  invalidateListingCache,
+} from './utils/listingCache.js';
 import { PropertyStatus } from '@prisma/client';
 
 function param(value: string | string[]): string {
@@ -81,6 +87,14 @@ app.get('/api/properties', async (req, res) => {
     return;
   }
 
+  const cacheKey = listingCacheKey(req.query as Record<string, unknown>);
+  const cached = getListingCache(cacheKey);
+  if (cached) {
+    res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=120');
+    res.json(cached);
+    return;
+  }
+
   const properties = await prisma.property.findMany({
     where,
     orderBy: { createdAt: 'desc' },
@@ -88,7 +102,10 @@ app.get('/api/properties', async (req, res) => {
     ...(take ? { take } : {}),
   });
 
-  res.json(properties.map((p) => maskPropertyForPublic(trimImagesForList(p))));
+  const payload = properties.map((p) => maskPropertyForPublic(toPublicListingCard(p)));
+  setListingCache(cacheKey, payload);
+  res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=120');
+  res.json(payload);
 });
 
 app.get('/api/properties/:idOrCode', async (req, res) => {
@@ -103,11 +120,13 @@ app.get('/api/properties/:idOrCode', async (req, res) => {
   if (!property) return res.status(404).json({ error: 'Not found' });
 
   if (req.query.admin !== 'true') {
-    await prisma.analytics.upsert({
-      where: { propertyId: property.id },
-      update: { viewsCount: { increment: 1 } },
-      create: { propertyId: property.id, viewsCount: 1 },
-    });
+    void prisma.analytics
+      .upsert({
+        where: { propertyId: property.id },
+        update: { viewsCount: { increment: 1 } },
+        create: { propertyId: property.id, viewsCount: 1 },
+      })
+      .catch(() => {});
     return res.json(maskPropertyForPublic(property));
   }
   res.json(property);
@@ -115,23 +134,33 @@ app.get('/api/properties/:idOrCode', async (req, res) => {
 
 app.post('/api/properties', requireAuth, async (req: AuthRequest, res) => {
   const code = await generatePropertyCode();
+  const media = syncPropertyMedia((req.body.images as string[]) ?? []);
+  const status =
+    req.userRole === 'ADMIN' ? PropertyStatus.APPROVED : PropertyStatus.PENDING;
   const property = await prisma.property.create({
     data: {
       ...req.body,
+      ...media,
       code,
-      status: PropertyStatus.PENDING,
+      status,
       submitterId: req.userId,
     },
   });
   await prisma.analytics.create({ data: { propertyId: property.id } });
+  invalidateListingCache();
   res.json(property);
 });
 
 app.patch('/api/properties/:id', requireAuth, requireRole('ADMIN', 'STAFF'), async (req, res) => {
+  const body = { ...req.body } as Record<string, unknown>;
+  if (Array.isArray(body.images)) {
+    Object.assign(body, syncPropertyMedia(body.images as string[]));
+  }
   const property = await prisma.property.update({
     where: { id: param(req.params.id) },
-    data: req.body,
+    data: body,
   });
+  invalidateListingCache();
   res.json(property);
 });
 

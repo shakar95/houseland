@@ -3,7 +3,7 @@ import { PropertyStatus as Status } from '@prisma/client';
 
 export const PUBLIC_STATUSES: PropertyStatus[] = [Status.APPROVED];
 
-/** Fields needed for listing cards / grid — skips heavy text & location. */
+/** Fields needed for listing cards / grid — thumbnail only, no full images array. */
 export const PUBLIC_LIST_SELECT = {
   id: true,
   code: true,
@@ -16,8 +16,9 @@ export const PUBLIC_LIST_SELECT = {
   bedrooms: true,
   bathrooms: true,
   neighborhood: true,
-  images: true,
   status: true,
+  thumbnailUrl: true,
+  imageCount: true,
 } satisfies Prisma.PropertySelect;
 
 /** Dashboard / CRM — no descriptions or image arrays. */

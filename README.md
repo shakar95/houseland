@@ -20,6 +20,7 @@ Premium single-agency real estate web app for **Houseland** (Sulaymaniyah, Iraq)
    - Enable **Google** provider under Authentication.
    - Add redirect URL: `http://localhost:5173/auth/callback`
    - **Storage:** SQL Editor → run `supabase/storage.sql` (creates public `property-images` bucket + upload policies)
+   - **Listings speed:** SQL Editor → run `supabase/listings-optimize.sql` (thumbnail columns + feed index)
 3. Install and migrate:
 
 ```bash

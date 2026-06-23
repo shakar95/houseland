@@ -126,6 +126,7 @@ export type TranslationDict = {
     submitButton: string;
     submitting: string;
     success: string;
+    successApproved: string;
     failed: string;
   };
   dashboard: { title: string; analytics: string; properties: string; crm: string; staff: string; settings: string };

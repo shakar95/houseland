@@ -173,6 +173,7 @@ const en: TranslationDict = {
     submitButton: 'Submit for Review',
     submitting: 'Submitting...',
     success: 'Submitted! Your listing is pending admin approval.',
+    successApproved: 'Submitted! Your listing is now live.',
     failed: 'Submission failed',
   },
   dashboard: {

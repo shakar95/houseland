@@ -173,6 +173,7 @@ const ku: TranslationDict = {
     submitButton: 'ناردن بۆ پێداچوونەوە',
     submitting: 'ناردن...',
     success: 'نێردرا! موڵکەکەت چاوەڕوانی پەسەندکردنی ئادمینە.',
+    successApproved: 'نێردرا! موڵکەکە ئێستا لە لیستدا دەردەکەوێت.',
     failed: 'ناردن سەرکەوتوو نەبوو',
   },
   dashboard: {

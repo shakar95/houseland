@@ -98,7 +98,7 @@ export function SubmitPropertyPage() {
         dimensions: form.dimensions || null,
         videoLink: form.videoLink || null,
       });
-      setMessage(t.submit.success);
+      setMessage(profile?.role === 'ADMIN' ? t.submit.successApproved : t.submit.success);
       setTimeout(() => navigate('/'), 2000);
     } catch (err) {
       setUploadingImages(false);

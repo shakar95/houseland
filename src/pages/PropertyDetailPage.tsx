@@ -34,24 +34,30 @@ export function PropertyDetailPage() {
   const wa = agency?.whatsapp?.replace(/\D/g, '') ?? '';
 
   return (
-    <div className="app-page pb-6">
-      <div className="grid gap-8 lg:grid-cols-2">
-        <PropertyImageGallery images={property.images} videoUrl={property.videoLink} alt={title} />
-        <div>
+    <div className="app-page property-detail pb-6">
+      <div className="property-detail-layout">
+        <section className="property-detail-media">
+          <PropertyImageGallery
+            className="property-gallery--detail"
+            images={property.images}
+            videoUrl={property.videoLink}
+            alt={title}
+          />
+        </section>
+
+        <section className="property-detail-info">
           <span className="text-sm text-gold-500">{property.code}</span>
-          <h1 className="font-display text-4xl text-white">{title}</h1>
-          <p className="mt-2 text-2xl font-semibold text-gold-400">
-            {formatPrice(property.price, property.currency)}
-          </p>
-          <p className="text-royal-300">
+          <h1 className="property-detail-title">{title}</h1>
+          <p className="property-detail-price">{formatPrice(property.price, property.currency)}</p>
+          <p className="property-detail-meta text-royal-300">
             {enumLabel(property.transactionType)} · {enumLabel(property.propertyType)} · {property.neighborhood}
           </p>
 
-          <div className="mt-6 flex flex-wrap gap-4">
+          <div className="property-detail-actions">
             <a
               href={`tel:${agency?.phonePrimary}`}
               onClick={() => track('phone')}
-              className="btn-gold"
+              className="btn-gold property-detail-btn"
             >
               <Phone className="h-4 w-4" /> {t.property.call}
             </a>
@@ -60,39 +66,39 @@ export function PropertyDetailPage() {
               target="_blank"
               rel="noreferrer"
               onClick={() => track('whatsapp')}
-              className="btn-outline-gold"
+              className="btn-outline-gold property-detail-btn"
             >
               <MessageCircle className="h-4 w-4" /> {t.property.whatsapp}
             </a>
           </div>
           <p className="mt-2 text-xs text-royal-500">{t.property.privacyNote}</p>
 
-          <div className="mt-8 grid grid-cols-2 gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <Maximize className="text-gold-500" />
-              {formatCountLabel(t.property.areaSqm, property.areaSqm)}
+          <div className="property-detail-stats">
+            <div className="property-detail-stat">
+              <Maximize className="shrink-0 text-gold-500" />
+              <span>{formatCountLabel(t.property.areaSqm, property.areaSqm)}</span>
             </div>
             {property.bedrooms != null && (
-              <div className="flex items-center gap-2">
-                <Bed className="text-gold-500" />
-                {pickCountLabel(property.bedrooms, t.property.bedroom, t.property.bedrooms)}
+              <div className="property-detail-stat">
+                <Bed className="shrink-0 text-gold-500" />
+                <span>{pickCountLabel(property.bedrooms, t.property.bedroom, t.property.bedrooms)}</span>
               </div>
             )}
             {property.bathrooms != null && (
-              <div className="flex items-center gap-2">
-                <Bath className="text-gold-500" />
-                {pickCountLabel(property.bathrooms, t.property.bathroom, t.property.bathrooms)}
+              <div className="property-detail-stat">
+                <Bath className="shrink-0 text-gold-500" />
+                <span>{pickCountLabel(property.bathrooms, t.property.bathroom, t.property.bathrooms)}</span>
               </div>
             )}
             {property.floors != null && (
-              <div className="flex items-center gap-2">
-                <Layers className="text-gold-500" />
-                {formatCountLabel(t.property.floors, property.floors)}
+              <div className="property-detail-stat">
+                <Layers className="shrink-0 text-gold-500" />
+                <span>{formatCountLabel(t.property.floors, property.floors)}</span>
               </div>
             )}
             {property.facing && (
-              <div className="flex items-center gap-2">
-                <Compass className="text-gold-500" />
+              <div className="property-detail-stat property-detail-stat--wide">
+                <Compass className="shrink-0 text-gold-500" />
                 <span>
                   {t.property.facing}: {enumLabel(property.facing)}
                 </span>
@@ -100,16 +106,16 @@ export function PropertyDetailPage() {
             )}
           </div>
 
-          <p className="mt-6 leading-relaxed text-royal-200">{description}</p>
-        </div>
+          <p className="property-detail-description">{description}</p>
+        </section>
       </div>
 
-      <div className="mt-12">
-        <h2 className="font-display text-2xl text-gold-400">{t.property.location}</h2>
+      <section className="property-detail-map mt-10 sm:mt-12">
+        <h2 className="font-display text-xl text-gold-400 sm:text-2xl">{t.property.location}</h2>
         <div className="mt-4">
           <ObfuscatedMap neighborhood={property.neighborhood} />
         </div>
-      </div>
+      </section>
     </div>
   );
 }

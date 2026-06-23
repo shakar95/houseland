@@ -119,6 +119,8 @@ model Property {
   longitude       Float
   neighborhood    String
   images          String[]
+  thumbnailUrl    String?         @map("thumbnail_url")
+  imageCount      Int             @default(0) @map("image_count")
   videoLink       String?         @map("video_link")
   status          PropertyStatus  @default(PENDING)
   submitterId     String?         @map("submitter_id")

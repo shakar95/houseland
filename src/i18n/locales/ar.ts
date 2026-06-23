@@ -173,6 +173,7 @@ const ar: TranslationDict = {
     submitButton: 'إرسال للمراجعة',
     submitting: 'جاري الإرسال...',
     success: 'تم الإرسال! عقارك بانتظار موافقة الإدارة.',
+    successApproved: 'تم الإرسال! العقار ظاهر الآن في القائمة.',
     failed: 'فشل الإرسال',
   },
   dashboard: {
