@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Play } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { VideoEmbed } from '@/components/VideoEmbed';
@@ -35,8 +35,8 @@ function buildSlides(images: string[], videoUrl?: string | null): Slide[] {
 
 export function PropertyImageGallery({ images, videoUrl, alt, className }: Props) {
   const { rtl, t } = useLanguage();
-  const trackRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
   const slides = useMemo(() => buildSlides(images, videoUrl), [images, videoUrl]);
   const poster = images.filter(Boolean)[0] ?? FALLBACK_IMAGE;
   const multi = slides.length > 1;
@@ -44,46 +44,42 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
   const PrevIcon = rtl ? ChevronRight : ChevronLeft;
   const NextIcon = rtl ? ChevronLeft : ChevronRight;
 
-  const scrollTo = useCallback(
+  const goTo = useCallback(
     (next: number) => {
-      const el = trackRef.current;
-      if (!el) return;
       const i = ((next % slides.length) + slides.length) % slides.length;
-      const width = el.clientWidth;
-      if (!width) return;
-      el.scrollTo({ left: width * i, behavior: 'smooth' });
       setIndex(i);
     },
     [slides.length],
   );
 
-  const syncIndexFromScroll = useCallback(() => {
-    const el = trackRef.current;
-    if (!el || el.children.length === 0) return;
-    const width = el.clientWidth;
-    if (!width) return;
-    const i = Math.min(Math.max(Math.round(el.scrollLeft / width), 0), el.children.length - 1);
-    setIndex(i);
-  }, []);
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  };
 
-  useEffect(() => {
-    const el = trackRef.current;
-    if (!el || !multi) return;
-    el.addEventListener('scroll', syncIndexFromScroll, { passive: true });
-    const onResize = () => syncIndexFromScroll();
-    window.addEventListener('resize', onResize);
-    return () => {
-      el.removeEventListener('scroll', syncIndexFromScroll);
-      window.removeEventListener('resize', onResize);
-    };
-  }, [multi, syncIndexFromScroll, slides.length]);
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStart.current || !multi) return;
+    const dx = touchStart.current.x - e.changedTouches[0].clientX;
+    const dy = touchStart.current.y - e.changedTouches[0].clientY;
+    touchStart.current = null;
+    if (Math.abs(dx) < 36 || Math.abs(dx) < Math.abs(dy)) return;
+    const forward = rtl ? dx < 0 : dx > 0;
+    goTo(index + (forward ? 1 : -1));
+  };
 
   const activeIsReel = slides[index]?.type === 'video';
+  const slideOffset = rtl ? index * 100 : -index * 100;
 
   return (
     <div className={['property-gallery', className].filter(Boolean).join(' ')}>
-      <div className={`property-gallery-viewport${activeIsReel ? ' property-gallery-viewport--reel' : ''}`}>
-        <div ref={trackRef} className="property-gallery-track">
+      <div
+        className={`property-gallery-viewport${activeIsReel ? ' property-gallery-viewport--reel' : ''}`}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
+        <div
+          className="property-gallery-track"
+          style={{ transform: `translate3d(${slideOffset}%, 0, 0)` }}
+        >
           {slides.map((slide, i) =>
             slide.type === 'image' ? (
               <div key={slide.key} className="property-gallery-slide">
@@ -103,7 +99,7 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
                     <button
                       type="button"
                       className="property-gallery-video-poster"
-                      onClick={() => scrollTo(i)}
+                      onClick={() => goTo(i)}
                       aria-label={t.property.video}
                     >
                       <img src={poster} alt="" loading="lazy" draggable={false} />
@@ -123,7 +119,7 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
             <button
               type="button"
               className="property-gallery-nav property-gallery-nav-prev"
-              onClick={() => scrollTo(index - 1)}
+              onClick={() => goTo(index - 1)}
               aria-label={t.property.photoPrev}
             >
               <PrevIcon className="h-5 w-5" />
@@ -131,7 +127,7 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
             <button
               type="button"
               className="property-gallery-nav property-gallery-nav-next"
-              onClick={() => scrollTo(index + 1)}
+              onClick={() => goTo(index + 1)}
               aria-label={t.property.photoNext}
             >
               <NextIcon className="h-5 w-5" />
@@ -154,7 +150,7 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
                 aria-selected={i === index}
                 aria-label={slide.type === 'video' ? t.property.video : `${i + 1} / ${slides.length}`}
                 className={i === index ? 'property-gallery-dot is-active' : 'property-gallery-dot'}
-                onClick={() => scrollTo(i)}
+                onClick={() => goTo(i)}
               />
             ))}
           </div>
@@ -165,7 +161,7 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
                   key={slide.key}
                   type="button"
                   className={i === index ? 'property-gallery-thumb is-active' : 'property-gallery-thumb'}
-                  onClick={() => scrollTo(i)}
+                  onClick={() => goTo(i)}
                   aria-label={`${i + 1} / ${slides.length}`}
                 >
                   <img src={slide.src} alt="" loading="lazy" draggable={false} />
@@ -179,7 +175,7 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
                       ? 'property-gallery-thumb property-gallery-thumb--video is-active'
                       : 'property-gallery-thumb property-gallery-thumb--video'
                   }
-                  onClick={() => scrollTo(i)}
+                  onClick={() => goTo(i)}
                   aria-label={t.property.video}
                 >
                   <img src={poster} alt="" loading="lazy" draggable={false} />
