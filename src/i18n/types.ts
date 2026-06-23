@@ -80,6 +80,10 @@ export type TranslationDict = {
     photos: string;
     photoPrev: string;
     photoNext: string;
+    photoFullscreen: string;
+    photoClose: string;
+    photoZoomIn: string;
+    photoZoomOut: string;
     areaSqm: string;
     bedroom: string;
     bedrooms: string;

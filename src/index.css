@@ -601,7 +601,7 @@ html[dir='rtl'] body {
   max-height: min(78vw, 420px);
   @apply border border-royal-800/80 bg-royal-900/40 shadow-lg shadow-black/20;
   border-radius: 1rem;
-  touch-action: pan-y pinch-zoom;
+  touch-action: pan-x pan-y;
 }
 
 @media (min-width: 640px) {
@@ -646,6 +646,24 @@ html[dir='rtl'] body {
   object-position: center;
   max-height: 100%;
   max-width: 100%;
+}
+
+.property-gallery-image-btn {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+  touch-action: manipulation;
+}
+
+.property-gallery-image-btn img {
+  position: absolute;
+  inset: 0;
 }
 
 .property-gallery-nav {
@@ -802,6 +820,90 @@ html[dir='rtl'] body {
 
 .property-gallery-thumb-play {
   @apply absolute inset-0 flex items-center justify-center bg-royal-950/50;
+}
+
+/* ——— Property image lightbox ——— */
+.property-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  background: rgb(2 6 18 / 0.96);
+  backdrop-filter: blur(8px);
+}
+
+.property-lightbox-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+}
+
+.property-lightbox-counter {
+  @apply text-sm font-medium text-royal-200;
+}
+
+.property-lightbox-zoom-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-inline-start: auto;
+}
+
+.property-lightbox-btn {
+  @apply flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-royal-950/70 text-white transition hover:bg-royal-900/90 active:scale-95 disabled:opacity-40;
+}
+
+.property-lightbox-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  touch-action: none;
+  cursor: zoom-in;
+  padding: 0.5rem 1rem 1.5rem;
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+}
+
+.property-lightbox-zoom-layer {
+  transform-origin: center center;
+  transition: transform 0.15s ease-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  max-height: 100%;
+  will-change: transform;
+}
+
+.property-lightbox-image {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+
+.property-lightbox-nav {
+  @apply absolute top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-royal-950/75 text-white shadow-lg backdrop-blur-md transition hover:bg-royal-900/90 active:scale-95;
+}
+
+.property-lightbox-nav-prev {
+  inset-inline-start: 0.75rem;
+}
+
+.property-lightbox-nav-next {
+  inset-inline-end: 0.75rem;
 }
 
 /* ——— Property detail page ——— */
