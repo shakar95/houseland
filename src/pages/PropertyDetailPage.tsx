@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Phone, MessageCircle, Bed, Bath, Maximize, Compass } from 'lucide-react';
+import { Phone, MessageCircle, Bed, Bath, Maximize, Compass, Layers } from 'lucide-react';
 import { api } from '@/lib/api';
+import { PropertyImageGallery } from '@/components/PropertyImageGallery';
 import { ObfuscatedMap } from '@/components/maps/ObfuscatedMap';
-import { VideoEmbed } from '@/components/VideoEmbed';
-import { PropertyFlyer } from '@/components/PropertyFlyer';
 import type { AgencySettings, Property } from '@/types';
-import { formatPrice } from '@/lib/format';
+import { formatPrice, formatCountLabel, pickCountLabel } from '@/lib/format';
 import { useLanguage } from '@/context/LanguageContext';
 
 export function PropertyDetailPage() {
@@ -37,11 +36,7 @@ export function PropertyDetailPage() {
   return (
     <div className="app-page pb-6">
       <div className="grid gap-8 lg:grid-cols-2">
-        <div className="space-y-4">
-          {property.images.map((img, i) => (
-            <img key={i} src={img} alt="" className="w-full rounded-xl object-cover" />
-          ))}
-        </div>
+        <PropertyImageGallery images={property.images} videoUrl={property.videoLink} alt={title} />
         <div>
           <span className="text-sm text-gold-500">{property.code}</span>
           <h1 className="font-display text-4xl text-white">{title}</h1>
@@ -74,30 +69,38 @@ export function PropertyDetailPage() {
 
           <div className="mt-8 grid grid-cols-2 gap-4 text-sm">
             <div className="flex items-center gap-2">
-              <Maximize className="text-gold-500" /> {property.areaSqm} m²
+              <Maximize className="text-gold-500" />
+              {formatCountLabel(t.property.areaSqm, property.areaSqm)}
             </div>
             {property.bedrooms != null && (
               <div className="flex items-center gap-2">
-                <Bed className="text-gold-500" /> {property.bedrooms} bedrooms
+                <Bed className="text-gold-500" />
+                {pickCountLabel(property.bedrooms, t.property.bedroom, t.property.bedrooms)}
               </div>
             )}
             {property.bathrooms != null && (
               <div className="flex items-center gap-2">
-                <Bath className="text-gold-500" /> {property.bathrooms} facilities
+                <Bath className="text-gold-500" />
+                {pickCountLabel(property.bathrooms, t.property.bathroom, t.property.bathrooms)}
+              </div>
+            )}
+            {property.floors != null && (
+              <div className="flex items-center gap-2">
+                <Layers className="text-gold-500" />
+                {formatCountLabel(t.property.floors, property.floors)}
               </div>
             )}
             {property.facing && (
               <div className="flex items-center gap-2">
-                <Compass className="text-gold-500" /> {enumLabel(property.facing)}
+                <Compass className="text-gold-500" />
+                <span>
+                  {t.property.facing}: {enumLabel(property.facing)}
+                </span>
               </div>
             )}
           </div>
 
           <p className="mt-6 leading-relaxed text-royal-200">{description}</p>
-
-          <div className="mt-8">
-            <PropertyFlyer property={property} agency={agency} />
-          </div>
         </div>
       </div>
 
@@ -107,15 +110,6 @@ export function PropertyDetailPage() {
           <ObfuscatedMap neighborhood={property.neighborhood} />
         </div>
       </div>
-
-      {property.videoLink && (
-        <div className="mt-12">
-          <h2 className="font-display text-2xl text-gold-400">{t.property.video}</h2>
-          <div className="mt-4 max-w-3xl">
-            <VideoEmbed url={property.videoLink} />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

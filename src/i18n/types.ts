@@ -77,6 +77,16 @@ export type TranslationDict = {
     location: string;
     video: string;
     privacyNote: string;
+    photos: string;
+    photoPrev: string;
+    photoNext: string;
+    areaSqm: string;
+    bedroom: string;
+    bedrooms: string;
+    bathroom: string;
+    bathrooms: string;
+    floors: string;
+    facing: string;
   };
   enums: Record<string, string>;
   submit: {
@@ -89,6 +99,16 @@ export type TranslationDict = {
     propertyTypeLabel: string;
     transactionTypeLabel: string;
     neighborhoodLabel: string;
+    floorsCountLabel: string;
+    floorsCountPlaceholder: string;
+    floorLevelLabel: string;
+    floorLevelPlaceholder: string;
+    bedroomsLabel: string;
+    bedroomsPlaceholder: string;
+    bathroomsLabel: string;
+    bathroomsPlaceholder: string;
+    facingLabel: string;
+    facingPlaceholder: string;
     areaPlaceholder: string;
     pricePlaceholder: string;
     imagesLabel: string;

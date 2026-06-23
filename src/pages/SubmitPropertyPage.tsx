@@ -12,9 +12,10 @@ import { uploadPropertyImages } from '@/lib/uploadPropertyImages';
 
 const propertyTypes = ['HOUSE', 'APARTMENT', 'VILLA', 'LAND', 'COMMERCIAL'] as const;
 const transactionTypes = ['FOR_SALE', 'FOR_RENT', 'FOR_EXCHANGE'] as const;
+const facingDirections = ['EAST', 'WEST', 'NORTH', 'SOUTH'] as const;
+const residentialTypes = new Set(['HOUSE', 'APARTMENT', 'VILLA']);
 
 const empty = {
-  title: '',
   description: '',
   propertyType: 'HOUSE',
   transactionType: 'FOR_SALE',
@@ -62,6 +63,12 @@ export function SubmitPropertyPage() {
     );
   }
 
+  const showFloorsField = residentialTypes.has(form.propertyType);
+  const showRoomFields = residentialTypes.has(form.propertyType);
+  const isApartment = form.propertyType === 'APARTMENT';
+  const floorsLabel = isApartment ? t.submit.floorLevelLabel : t.submit.floorsCountLabel;
+  const floorsPlaceholder = isApartment ? t.submit.floorLevelPlaceholder : t.submit.floorsCountPlaceholder;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!imageFiles.length) {
@@ -81,6 +88,7 @@ export function SubmitPropertyPage() {
       setUploadingImages(false);
       await api.post('/api/properties', {
         ...form,
+        title: `${enumLabel(form.propertyType)} — ${form.neighborhood}`,
         currency: 'USD',
         images,
         facing: form.facing || null,
@@ -116,13 +124,6 @@ export function SubmitPropertyPage() {
       <h1 className="text-xl font-bold text-gold-400">{t.nav.submit}</h1>
       <p className="mt-2 text-royal-300">{t.submit.intro}</p>
       <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-        <input
-          className="input-luxury"
-          placeholder={t.submit.titlePlaceholder}
-          required
-          value={form.title}
-          onChange={(e) => setForm({ ...form, title: e.target.value })}
-        />
         <textarea
           className="input-luxury min-h-[120px]"
           placeholder={t.submit.descriptionPlaceholder}
@@ -136,7 +137,7 @@ export function SubmitPropertyPage() {
             <select
               className="input-luxury mt-1"
               value={form.propertyType}
-              onChange={(e) => setForm({ ...form, propertyType: e.target.value })}
+              onChange={(e) => setForm({ ...form, propertyType: e.target.value, floors: undefined })}
             >
               {propertyTypes.map((type) => (
                 <option key={type} value={type}>
@@ -160,6 +161,93 @@ export function SubmitPropertyPage() {
             </select>
           </div>
         </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <input
+            type="number"
+            className="input-luxury"
+            placeholder={t.submit.areaPlaceholder}
+            required
+            value={form.areaSqm || ''}
+            onChange={(e) => setForm({ ...form, areaSqm: Number(e.target.value) })}
+          />
+          <input
+            type="number"
+            className="input-luxury"
+            placeholder={t.submit.pricePlaceholder}
+            required
+            value={form.price || ''}
+            onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
+          />
+        </div>
+        {showFloorsField && (
+          <div>
+            <label className="filter-label">{floorsLabel}</label>
+            <input
+              type="number"
+              min={1}
+              className="input-luxury mt-1"
+              placeholder={floorsPlaceholder}
+              value={form.floors ?? ''}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  floors: e.target.value ? Number(e.target.value) : undefined,
+                })
+              }
+            />
+          </div>
+        )}
+        {showRoomFields && (
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div>
+              <label className="filter-label">{t.submit.bedroomsLabel}</label>
+              <input
+                type="number"
+                min={0}
+                className="input-luxury mt-1"
+                placeholder={t.submit.bedroomsPlaceholder}
+                value={form.bedrooms ?? ''}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    bedrooms: e.target.value ? Number(e.target.value) : undefined,
+                  })
+                }
+              />
+            </div>
+            <div>
+              <label className="filter-label">{t.submit.bathroomsLabel}</label>
+              <input
+                type="number"
+                min={0}
+                className="input-luxury mt-1"
+                placeholder={t.submit.bathroomsPlaceholder}
+                value={form.bathrooms ?? ''}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    bathrooms: e.target.value ? Number(e.target.value) : undefined,
+                  })
+                }
+              />
+            </div>
+            <div>
+              <label className="filter-label">{t.submit.facingLabel}</label>
+              <select
+                className="input-luxury mt-1"
+                value={form.facing}
+                onChange={(e) => setForm({ ...form, facing: e.target.value })}
+              >
+                <option value="">{t.submit.facingPlaceholder}</option>
+                {facingDirections.map((dir) => (
+                  <option key={dir} value={dir}>
+                    {enumLabel(dir)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
         <div>
           <label className="filter-label">{t.submit.neighborhoodLabel}</label>
           <select
@@ -179,24 +267,6 @@ export function SubmitPropertyPage() {
           longitude={form.longitude}
           onChange={(lat, lng) => setForm({ ...form, latitude: lat, longitude: lng })}
         />
-        <div className="grid gap-4 sm:grid-cols-2">
-          <input
-            type="number"
-            className="input-luxury"
-            placeholder={t.submit.areaPlaceholder}
-            required
-            value={form.areaSqm || ''}
-            onChange={(e) => setForm({ ...form, areaSqm: Number(e.target.value) })}
-          />
-          <input
-            type="number"
-            className="input-luxury"
-            placeholder={t.submit.pricePlaceholder}
-            required
-            value={form.price || ''}
-            onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
-          />
-        </div>
         <PropertyImageUpload
           files={imageFiles}
           onChange={(next) => {
