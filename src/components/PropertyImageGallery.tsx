@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Play } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { VideoEmbed } from '@/components/VideoEmbed';
@@ -58,12 +58,38 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
   const PrevIcon = rtl ? ChevronRight : ChevronLeft;
   const NextIcon = rtl ? ChevronLeft : ChevronRight;
 
+  const [videoInteracting, setVideoInteracting] = useState(false);
+  const videoTouchStart = useRef<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    setVideoInteracting(false);
+  }, [index]);
+
   const goTo = useCallback(
     (next: number) => {
       const i = ((next % slides.length) + slides.length) % slides.length;
       setIndex(i);
     },
     [slides.length],
+  );
+
+  const handleSwipe = useCallback(
+    (startX: number, startY: number, endX: number, endY: number): boolean => {
+      const dx = startX - endX;
+      const dy = startY - endY;
+      if (multi && Math.abs(dx) >= 30 && Math.abs(dx) > Math.abs(dy)) {
+        if (singleTapTimerRef.current) {
+          clearTimeout(singleTapTimerRef.current);
+          singleTapTimerRef.current = null;
+        }
+        lastTapRef.current = 0;
+        const forward = rtl ? dx < 0 : dx > 0;
+        goTo(index + (forward ? 1 : -1));
+        return true;
+      }
+      return false;
+    },
+    [goTo, index, multi, rtl],
   );
 
   const openLightbox = useCallback(
@@ -109,19 +135,13 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
 
   const onTouchEnd = (e: React.TouchEvent) => {
     if (!touchStart.current) return;
-    const dx = touchStart.current.x - e.changedTouches[0].clientX;
-    const dy = touchStart.current.y - e.changedTouches[0].clientY;
-    const moved = Math.hypot(dx, dy);
+    const start = touchStart.current;
+    const endX = e.changedTouches[0].clientX;
+    const endY = e.changedTouches[0].clientY;
+    const moved = Math.hypot(start.x - endX, start.y - endY);
     touchStart.current = null;
 
-    if (multi && Math.abs(dx) >= 36 && Math.abs(dx) > Math.abs(dy)) {
-      if (singleTapTimerRef.current) {
-        clearTimeout(singleTapTimerRef.current);
-        singleTapTimerRef.current = null;
-      }
-      lastTapRef.current = 0;
-      const forward = rtl ? dx < 0 : dx > 0;
-      goTo(index + (forward ? 1 : -1));
+    if (handleSwipe(start.x, start.y, endX, endY)) {
       return;
     }
 
@@ -129,6 +149,31 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
       touchHandledRef.current = true;
       handleImageTap(index);
     }
+  };
+
+  const onVideoOverlayTouchStart = (e: React.TouchEvent) => {
+    videoTouchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  };
+
+  const onVideoOverlayTouchEnd = (e: React.TouchEvent) => {
+    if (!videoTouchStart.current) return;
+    const start = videoTouchStart.current;
+    const endX = e.changedTouches[0].clientX;
+    const endY = e.changedTouches[0].clientY;
+    const moved = Math.hypot(start.x - endX, start.y - endY);
+    videoTouchStart.current = null;
+
+    if (handleSwipe(start.x, start.y, endX, endY)) {
+      return;
+    }
+
+    if (moved < 15) {
+      setVideoInteracting(true);
+    }
+  };
+
+  const onVideoOverlayClick = () => {
+    setVideoInteracting(true);
   };
 
   const onImageClick = (slideIndex: number) => {
@@ -173,9 +218,50 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
                 </div>
               ) : (
                 <div key={slide.key} className="property-gallery-slide property-gallery-slide--reel">
-                  <div className="property-gallery-reel-frame">
+                  <div className="property-gallery-reel-frame relative">
                     {index === i ? (
-                      <VideoEmbed url={slide.url} aspect="reel" />
+                      <>
+                        <div className={`w-full h-full ${videoInteracting ? 'pointer-events-auto' : 'pointer-events-none'}`}>
+                          <VideoEmbed url={slide.url} aspect="reel" />
+                        </div>
+
+                        {!videoInteracting && (
+                          <div
+                            className="absolute inset-0 z-10 flex items-center justify-center cursor-pointer select-none"
+                            onTouchStart={onVideoOverlayTouchStart}
+                            onTouchEnd={onVideoOverlayTouchEnd}
+                            onClick={onVideoOverlayClick}
+                          />
+                        )}
+
+                        {videoInteracting && multi && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setVideoInteracting(false);
+                            }}
+                            className="absolute bottom-3 start-3 z-30 inline-flex items-center gap-1.5 rounded-full bg-royal-950/90 px-3 py-1 text-xs font-medium text-white shadow-md backdrop-blur-md border border-white/20 hover:bg-royal-900 transition-all"
+                          >
+                            <span>گەڕانەوە بۆ سوایپ</span>
+                          </button>
+                        )}
+
+                        {multi && (
+                          <>
+                            <div
+                              className="absolute inset-y-0 start-0 w-12 z-20 touch-pan-y"
+                              onTouchStart={onTouchStart}
+                              onTouchEnd={onTouchEnd}
+                            />
+                            <div
+                              className="absolute inset-y-0 end-0 w-12 z-20 touch-pan-y"
+                              onTouchStart={onTouchStart}
+                              onTouchEnd={onTouchEnd}
+                            />
+                          </>
+                        )}
+                      </>
                     ) : (
                       <button
                         type="button"

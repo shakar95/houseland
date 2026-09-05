@@ -52,7 +52,7 @@ export function VideoEmbed({ url, aspect = 'video', className }: Props) {
           href={currentUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="absolute top-3 end-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-royal-950/90 px-3 py-1.5 text-xs font-semibold text-white shadow-md backdrop-blur-md border border-white/25 hover:bg-[#1877F2] hover:border-[#1877F2] transition-all"
+          className="absolute top-3 end-3 z-30 pointer-events-auto inline-flex items-center gap-1.5 rounded-full bg-royal-950/90 px-3 py-1.5 text-xs font-semibold text-white shadow-md backdrop-blur-md border border-white/25 hover:bg-[#1877F2] hover:border-[#1877F2] transition-all"
         >
           <ExternalLink className="h-3.5 w-3.5 text-gold-400" />
           <span>سەیرکردن لە فەیسبووک</span>
