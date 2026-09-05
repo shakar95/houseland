@@ -19,6 +19,11 @@ export const PUBLIC_LIST_SELECT = {
   status: true,
   thumbnailUrl: true,
   imageCount: true,
+  frontageMeters: true,
+  streetWidth: true,
+  streetWidth2: true,
+  isCorner: true,
+  nearestLandmark: true,
 } satisfies Prisma.PropertySelect;
 
 /** Dashboard / CRM — no descriptions or image arrays. */

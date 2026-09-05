@@ -19,6 +19,7 @@ enum PropertyType {
   VILLA
   LAND
   COMMERCIAL
+  FARM
 }
 
 enum TransactionType {
@@ -109,6 +110,10 @@ model Property {
   transactionType TransactionType @map("transaction_type")
   areaSqm         Float           @map("area_sqm")
   dimensions      String?
+  frontageMeters  Float?          @map("frontage_meters")
+  streetWidth     Float?          @map("street_width")
+  streetWidth2    Float?          @map("street_width_2")
+  isCorner        Boolean         @default(false) @map("is_corner")
   price           Float
   currency        Currency        @default(USD)
   floors          Int?
@@ -118,6 +123,7 @@ model Property {
   latitude        Float
   longitude       Float
   neighborhood    String
+  nearestLandmark String?         @map("nearest_landmark")
   images          String[]
   thumbnailUrl    String?         @map("thumbnail_url")
   imageCount      Int             @default(0) @map("image_count")

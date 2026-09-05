@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Edit3 } from 'lucide-react';
 import { api } from '@/lib/api';
 import type { Property } from '@/types';
 import { labelEnum } from '@/lib/format';
@@ -73,19 +75,26 @@ export function PropertiesPage() {
                 <td className="py-3 text-gold-400">{p.code}</td>
                 <td>{p.title}</td>
                 <td>{labelEnum(p.status)}</td>
-                <td className="space-x-2">
+                <td className="space-x-2 rtl:space-x-reverse whitespace-nowrap">
+                  <Link
+                    to={`/property/${p.code}/edit`}
+                    className="inline-flex items-center gap-1 rounded bg-royal-800 px-2 py-1 text-xs font-semibold text-gold-300 hover:bg-royal-700 transition"
+                  >
+                    <Edit3 className="h-3 w-3" />
+                    <span>دەستکاری</span>
+                  </Link>
                   {p.status === 'PENDING' && (
                     <>
                       <button
                         type="button"
-                        className="text-green-400"
+                        className="text-green-400 text-xs font-semibold hover:underline"
                         onClick={() => approve(p.id, 'APPROVED')}
                       >
                         Approve
                       </button>
                       <button
                         type="button"
-                        className="text-red-400"
+                        className="text-red-400 text-xs font-semibold hover:underline"
                         onClick={() => approve(p.id, 'REJECTED')}
                       >
                         Reject

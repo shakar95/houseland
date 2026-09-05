@@ -91,6 +91,12 @@ export type TranslationDict = {
     bathrooms: string;
     floors: string;
     facing: string;
+    showMore: string;
+    showLess: string;
+    frontage: string;
+    streetWidth: string;
+    corner: string;
+    nearestLandmark: string;
   };
   enums: Record<string, string>;
   submit: {
@@ -103,6 +109,8 @@ export type TranslationDict = {
     propertyTypeLabel: string;
     transactionTypeLabel: string;
     neighborhoodLabel: string;
+    nearestLandmarkLabel: string;
+    nearestLandmarkPlaceholder: string;
     floorsCountLabel: string;
     floorsCountPlaceholder: string;
     floorLevelLabel: string;
@@ -114,6 +122,13 @@ export type TranslationDict = {
     facingLabel: string;
     facingPlaceholder: string;
     areaPlaceholder: string;
+    frontageLabel: string;
+    frontagePlaceholder: string;
+    streetWidthLabel: string;
+    streetWidthPlaceholder: string;
+    streetWidth1Label: string;
+    streetWidth2Label: string;
+    isCornerLabel: string;
     pricePlaceholder: string;
     imagesLabel: string;
     imagesHint: string;
@@ -132,6 +147,16 @@ export type TranslationDict = {
     success: string;
     successApproved: string;
     failed: string;
+    editTitle: string;
+    editProperty: string;
+    saveChanges: string;
+    saving: string;
+    editSuccess: string;
+    propertyNotFound: string;
+    deleteProperty: string;
+    deleteConfirm: string;
+    statusLabel: string;
+    existingImages: string;
   };
   dashboard: { title: string; analytics: string; properties: string; crm: string; staff: string; settings: string };
   common: { loading: string; sulaymaniyah: string };

@@ -10,41 +10,45 @@ export interface AuthRequest extends Request {
 }
 
 export async function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token) return res.status(401).json({ error: 'Unauthorized' });
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'Unauthorized' });
 
-  if (!supabaseKey) {
-    return res.status(503).json({ error: 'Auth not configured' });
-  }
+    if (!supabaseKey) {
+      return res.status(503).json({ error: 'Auth not configured' });
+    }
 
-  const supabase = createSupabaseServerClient(supabaseKey);
-  const { data, error } = await supabase.auth.getUser(token);
-  if (error || !data.user) return res.status(401).json({ error: 'Invalid token' });
+    const supabase = createSupabaseServerClient(supabaseKey);
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error || !data.user) return res.status(401).json({ error: 'Invalid token' });
 
-  let profile = await prisma.profile.findFirst({
-    where: { OR: [{ googleAuthId: data.user.id }, { email: data.user.email ?? '' }] },
-  });
-
-  if (!profile && data.user.email) {
-    profile = await prisma.profile.create({
-      data: {
-        email: data.user.email,
-        fullName: data.user.user_metadata?.full_name ?? data.user.email.split('@')[0],
-        googleAuthId: data.user.id,
-      },
+    let profile = await prisma.profile.findFirst({
+      where: { OR: [{ googleAuthId: data.user.id }, { email: data.user.email ?? '' }] },
     });
-  } else if (profile && !profile.googleAuthId) {
-    profile = await prisma.profile.update({
-      where: { id: profile.id },
-      data: { googleAuthId: data.user.id },
-    });
+
+    if (!profile && data.user.email) {
+      profile = await prisma.profile.create({
+        data: {
+          email: data.user.email,
+          fullName: data.user.user_metadata?.full_name ?? data.user.email.split('@')[0],
+          googleAuthId: data.user.id,
+        },
+      });
+    } else if (profile && !profile.googleAuthId) {
+      profile = await prisma.profile.update({
+        where: { id: profile.id },
+        data: { googleAuthId: data.user.id },
+      });
+    }
+
+    if (!profile) return res.status(401).json({ error: 'Profile not found' });
+
+    req.userId = profile.id;
+    req.userRole = profile.role;
+    next();
+  } catch (err) {
+    next(err);
   }
-
-  if (!profile) return res.status(401).json({ error: 'Profile not found' });
-
-  req.userId = profile.id;
-  req.userRole = profile.role;
-  next();
 }
 
 export function requireRole(...roles: string[]) {

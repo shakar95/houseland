@@ -18,6 +18,11 @@ export interface Property {
   transactionType: string;
   areaSqm: number;
   dimensions?: string | null;
+  frontageMeters?: number | null;
+  streetWidth?: number | null;
+  streetWidth2?: number | null;
+  isCorner?: boolean;
+  nearestLandmark?: string | null;
   price: number;
   currency: string;
   floors?: number | null;

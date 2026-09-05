@@ -7,7 +7,7 @@ interface Props {
   onChange: (f: Filters) => void;
 }
 
-const types = ['HOUSE', 'APARTMENT', 'VILLA', 'LAND', 'COMMERCIAL'] as const;
+const types = ['HOUSE', 'APARTMENT', 'VILLA', 'LAND', 'COMMERCIAL', 'FARM'] as const;
 
 export function PropertyFiltersPanel({ filters, onChange }: Props) {
   const { t, enumLabel } = useLanguage();

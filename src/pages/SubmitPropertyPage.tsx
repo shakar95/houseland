@@ -10,7 +10,7 @@ import { LocationPicker } from '@/components/maps/LocationPicker';
 import { PropertyImageUpload } from '@/components/PropertyImageUpload';
 import { uploadPropertyImages } from '@/lib/uploadPropertyImages';
 
-const propertyTypes = ['HOUSE', 'APARTMENT', 'VILLA', 'LAND', 'COMMERCIAL'] as const;
+const propertyTypes = ['HOUSE', 'APARTMENT', 'VILLA', 'LAND', 'COMMERCIAL', 'FARM'] as const;
 const transactionTypes = ['FOR_SALE', 'FOR_RENT', 'FOR_EXCHANGE'] as const;
 const facingDirections = ['EAST', 'WEST', 'NORTH', 'SOUTH'] as const;
 const residentialTypes = new Set(['HOUSE', 'APARTMENT', 'VILLA']);
@@ -20,16 +20,20 @@ const empty = {
   propertyType: 'HOUSE',
   transactionType: 'FOR_SALE',
   areaSqm: 0,
+  frontageMeters: undefined as number | undefined,
+  streetWidth: undefined as number | undefined,
+  streetWidth2: undefined as number | undefined,
+  isCorner: false,
   dimensions: '',
   price: 0,
   currency: 'USD',
   floors: undefined as number | undefined,
   bedrooms: undefined as number | undefined,
-  bathrooms: undefined as number | undefined,
   facing: '',
   latitude: 35.556,
   longitude: 45.432,
   neighborhood: SULAYMANIYAH_NEIGHBORHOODS[0] as Neighborhood,
+  nearestLandmark: '',
   images: [] as string[],
   videoLink: '',
 };
@@ -91,10 +95,15 @@ export function SubmitPropertyPage() {
         title: `${enumLabel(form.propertyType)} — ${form.neighborhood}`,
         currency: 'USD',
         images,
+        frontageMeters: form.frontageMeters ?? null,
+        streetWidth: form.streetWidth ?? null,
+        streetWidth2: form.isCorner ? (form.streetWidth2 ?? null) : null,
+        isCorner: form.isCorner,
+        nearestLandmark: form.nearestLandmark?.trim() || null,
         facing: form.facing || null,
         floors: form.floors ?? null,
         bedrooms: form.bedrooms ?? null,
-        bathrooms: form.bathrooms ?? null,
+        bathrooms: null,
         dimensions: form.dimensions || null,
         videoLink: form.videoLink || null,
       });
@@ -179,6 +188,90 @@ export function SubmitPropertyPage() {
             onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
           />
         </div>
+
+        {/* پێش (Frontage) و کۆڵان (Street Width) و ڕوکن (Corner) */}
+        <div className="rounded-xl border border-royal-800/80 bg-royal-950/40 p-4 space-y-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label className="filter-label">{t.submit.frontageLabel}</label>
+              <input
+                type="number"
+                min={0}
+                step="any"
+                className="input-luxury mt-1"
+                placeholder={t.submit.frontagePlaceholder}
+                value={form.frontageMeters ?? ''}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    frontageMeters: e.target.value ? Number(e.target.value) : undefined,
+                  })
+                }
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between">
+                <label className="filter-label">
+                  {form.isCorner ? t.submit.streetWidth1Label : t.submit.streetWidthLabel}
+                </label>
+                <label className="inline-flex items-center gap-2 text-xs font-medium text-gold-400 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={form.isCorner}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        isCorner: e.target.checked,
+                        streetWidth2: e.target.checked ? form.streetWidth2 : undefined,
+                      })
+                    }
+                    className="h-4 w-4 rounded border-royal-700 bg-royal-900 text-gold-500 focus:ring-gold-500 focus:ring-offset-royal-950 cursor-pointer"
+                  />
+                  <span>{t.submit.isCornerLabel}</span>
+                </label>
+              </div>
+              <input
+                type="number"
+                min={0}
+                step="any"
+                className="input-luxury mt-1"
+                placeholder={form.isCorner ? t.submit.streetWidth1Label : t.submit.streetWidthPlaceholder}
+                value={form.streetWidth ?? ''}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    streetWidth: e.target.value ? Number(e.target.value) : undefined,
+                  })
+                }
+              />
+            </div>
+          </div>
+
+          {form.isCorner && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              <div></div>
+              <div>
+                <label className="filter-label">{t.submit.streetWidth2Label}</label>
+                <input
+                  type="number"
+                  min={0}
+                  step="any"
+                  className="input-luxury mt-1"
+                  placeholder={t.submit.streetWidth2Label}
+                  value={form.streetWidth2 ?? ''}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      streetWidth2: e.target.value ? Number(e.target.value) : undefined,
+                    })
+                  }
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
         {showFloorsField && (
           <div>
             <label className="filter-label">{floorsLabel}</label>
@@ -198,7 +291,7 @@ export function SubmitPropertyPage() {
           </div>
         )}
         {showRoomFields && (
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="filter-label">{t.submit.bedroomsLabel}</label>
               <input
@@ -211,22 +304,6 @@ export function SubmitPropertyPage() {
                   setForm({
                     ...form,
                     bedrooms: e.target.value ? Number(e.target.value) : undefined,
-                  })
-                }
-              />
-            </div>
-            <div>
-              <label className="filter-label">{t.submit.bathroomsLabel}</label>
-              <input
-                type="number"
-                min={0}
-                className="input-luxury mt-1"
-                placeholder={t.submit.bathroomsPlaceholder}
-                value={form.bathrooms ?? ''}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    bathrooms: e.target.value ? Number(e.target.value) : undefined,
                   })
                 }
               />
@@ -262,6 +339,16 @@ export function SubmitPropertyPage() {
             ))}
           </select>
         </div>
+        <div>
+          <label className="filter-label">{t.submit.nearestLandmarkLabel}</label>
+          <input
+            type="text"
+            className="input-luxury mt-1"
+            placeholder={t.submit.nearestLandmarkPlaceholder}
+            value={form.nearestLandmark}
+            onChange={(e) => setForm({ ...form, nearestLandmark: e.target.value })}
+          />
+        </div>
         <LocationPicker
           latitude={form.latitude}
           longitude={form.longitude}
@@ -281,6 +368,18 @@ export function SubmitPropertyPage() {
           placeholder={t.submit.videoPlaceholder}
           value={form.videoLink}
           onChange={(e) => setForm({ ...form, videoLink: e.target.value })}
+          onBlur={async (e) => {
+            const val = e.target.value.trim();
+            if (val && (val.includes('facebook.com/share/') || val.includes('fb.watch/'))) {
+              try {
+                const res = await fetch(`/api/resolve-video-url?url=${encodeURIComponent(val)}`);
+                const data = await res.json();
+                if (data?.resolvedUrl) {
+                  setForm((prev) => ({ ...prev, videoLink: data.resolvedUrl }));
+                }
+              } catch {}
+            }
+          }}
         />
         {message && (
           <p className={messageIsError ? 'text-red-300' : 'text-gold-300'}>{message}</p>

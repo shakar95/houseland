@@ -4,6 +4,7 @@ import { LanguageProvider } from '@/context/LanguageContext';
 import { Layout } from '@/components/layout/Layout';
 import { ListingsPage } from '@/pages/ListingsPage';
 import { PropertyDetailPage } from '@/pages/PropertyDetailPage';
+import { EditPropertyPage } from '@/pages/EditPropertyPage';
 import { SubmitPropertyPage } from '@/pages/SubmitPropertyPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { AboutPage } from '@/pages/AboutPage';
@@ -25,6 +26,7 @@ export default function App() {
               <Route path="/" element={<ListingsPage />} />
               <Route path="/listings" element={<Navigate to="/" replace />} />
               <Route path="/property/:code" element={<PropertyDetailPage />} />
+              <Route path="/property/:code/edit" element={<EditPropertyPage />} />
               <Route path="/submit" element={<SubmitPropertyPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/about" element={<AboutPage />} />

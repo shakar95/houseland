@@ -764,12 +764,14 @@ html[dir='rtl'] body {
 
 .property-gallery-reel-frame {
   height: 100%;
-  width: auto;
+  width: 100%;
   max-width: 100%;
   max-height: 100%;
-  aspect-ratio: 9 / 16;
   margin-inline: auto;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .property-gallery-video-wrap {
@@ -983,6 +985,17 @@ html[dir='rtl'] body {
 
 .property-detail-description {
   @apply mt-5 text-sm leading-relaxed text-royal-200 sm:mt-6 sm:text-base;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.property-detail-description--clamped {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 7;
+  line-clamp: 7;
+  overflow: hidden;
 }
 
 /* ——— Legacy / shared ——— */

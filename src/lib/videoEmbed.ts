@@ -29,9 +29,40 @@ function extractTikTokId(url: string): string | null {
   return m ? m[1] : null;
 }
 
+function cleanFacebookUrl(raw: string): string {
+  try {
+    let u = raw.trim();
+    // Normalize mobile and subdomain hosts
+    u = u.replace(/^https?:\/\/(?:m|mobile|web|touch)\.facebook\.com/i, 'https://www.facebook.com');
+    const parsed = new URL(u);
+    // Remove typical tracking parameters that break Facebook plugin
+    const trackingParams = ['mibextid', 'ref', 'rdid', 'sfnsn', 'fs', 's', 'extid', '__tn__', 'locale', '_rdr', 'startTime'];
+    trackingParams.forEach((p) => parsed.searchParams.delete(p));
+
+    const reelMatch = parsed.pathname.match(/\/reel\/(\d+)/);
+    if (reelMatch) {
+      return `https://www.facebook.com/reel/${reelMatch[1]}/`;
+    }
+
+    const watchMatch = parsed.searchParams.get('v');
+    if (watchMatch && /^\d+$/.test(watchMatch)) {
+      return `https://www.facebook.com/watch/?v=${watchMatch}`;
+    }
+
+    let res = parsed.toString();
+    if (!res.endsWith('/') && !res.includes('?')) {
+      res += '/';
+    }
+    return res;
+  } catch {
+    return raw.trim();
+  }
+}
+
 function extractFacebookEmbed(url: string): string | null {
   if (url.includes('facebook.com') || url.includes('fb.watch')) {
-    return encodeURIComponent(url);
+    const cleaned = cleanFacebookUrl(url);
+    return encodeURIComponent(cleaned);
   }
   return null;
 }
@@ -75,7 +106,7 @@ export function parseVideoLink(url: string, aspect: VideoAspect = 'video'): Vide
     return {
       provider: 'facebook',
       originalUrl: trimmed,
-      embedHtml: `<iframe class="${cls}" src="https://www.facebook.com/plugins/video.php?href=${fbUrl}&show_text=false&width=360&height=640" title="Facebook" frameborder="0" allowfullscreen scrolling="no"></iframe>`,
+      embedHtml: `<iframe class="${cls}" src="https://www.facebook.com/plugins/video.php?href=${fbUrl}&show_text=false" title="Facebook" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowfullscreen="true" scrolling="no"></iframe>`,
     };
   }
 

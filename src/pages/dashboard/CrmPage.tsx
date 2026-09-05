@@ -102,7 +102,7 @@ export function CrmPage() {
                 Budget: {formatPrice(entry.budget, entry.budgetCurrency ?? 'USD')}
               </p>
             )}
-            {entry.notes && <p className="mt-2 text-sm text-royal-400">{entry.notes}</p>}
+            {entry.notes && <p className="mt-2 text-sm text-royal-400 whitespace-pre-wrap break-words">{entry.notes}</p>}
             <div className="mt-3">
               <p className="text-xs text-royal-500">Inventory match</p>
               <ul className="mt-1 text-sm">
