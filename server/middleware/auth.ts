@@ -1,8 +1,10 @@
 import type { Request, Response, NextFunction } from 'express';
-import { prisma } from '../prisma.js';
+import { eq, or } from 'drizzle-orm';
+import { db, profiles } from '../db/index.js';
 import { createSupabaseServerClient } from '../supabaseAdmin.js';
 
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+const supabaseKey =
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
 
 export interface AuthRequest extends Request {
   userId?: string;
@@ -22,23 +24,35 @@ export async function requireAuth(req: AuthRequest, res: Response, next: NextFun
     const { data, error } = await supabase.auth.getUser(token);
     if (error || !data.user) return res.status(401).json({ error: 'Invalid token' });
 
-    let profile = await prisma.profile.findFirst({
-      where: { OR: [{ googleAuthId: data.user.id }, { email: data.user.email ?? '' }] },
-    });
+    const userEmail = data.user.email ?? '';
+    const lookupConditions = [eq(profiles.googleAuthId, data.user.id)];
+    if (userEmail) {
+      lookupConditions.push(eq(profiles.email, userEmail));
+    }
+
+    let [profile] = await db
+      .select()
+      .from(profiles)
+      .where(or(...lookupConditions))
+      .limit(1);
 
     if (!profile && data.user.email) {
-      profile = await prisma.profile.create({
-        data: {
+      const [created] = await db
+        .insert(profiles)
+        .values({
           email: data.user.email,
           fullName: data.user.user_metadata?.full_name ?? data.user.email.split('@')[0],
           googleAuthId: data.user.id,
-        },
-      });
+        })
+        .returning();
+      profile = created;
     } else if (profile && !profile.googleAuthId) {
-      profile = await prisma.profile.update({
-        where: { id: profile.id },
-        data: { googleAuthId: data.user.id },
-      });
+      const [updated] = await db
+        .update(profiles)
+        .set({ googleAuthId: data.user.id })
+        .where(eq(profiles.id, profile.id))
+        .returning();
+      profile = updated;
     }
 
     if (!profile) return res.status(401).json({ error: 'Profile not found' });

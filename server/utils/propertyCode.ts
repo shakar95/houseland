@@ -1,7 +1,9 @@
-import { prisma } from '../prisma.js';
+import { count } from 'drizzle-orm';
+import { db, properties } from '../db/index.js';
 
 export async function generatePropertyCode(): Promise<string> {
-  const count = await prisma.property.count();
-  const num = String(count + 1).padStart(3, '0');
+  const [res] = await db.select({ total: count() }).from(properties);
+  const total = Number(res?.total ?? 0);
+  const num = String(total + 1).padStart(3, '0');
   return `SULI-${num}`;
 }

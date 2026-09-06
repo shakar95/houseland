@@ -4,14 +4,17 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { prisma } from './prisma.js';
+import { db } from './db/index.js';
+import { agencySettings, staff, profiles, properties, analytics, contracts, crmEntries } from './db/schema.js';
+import { eq, desc, and, or, sql, inArray, ilike, count } from 'drizzle-orm';
 import { requireAuth, requireRole, type AuthRequest } from './middleware/auth.js';
 import { generatePropertyCode } from './utils/propertyCode.js';
 import { ensureTestUsers } from './ensureTestUsers.js';
 import {
-  ADMIN_LIST_SELECT,
-  PUBLIC_LIST_SELECT,
+  ADMIN_LIST_COLUMNS,
+  PUBLIC_LIST_COLUMNS,
   PUBLIC_STATUSES,
-  buildPropertyWhere,
+  buildDrizzlePropertyWhere,
   maskPropertyForPublic,
 } from './utils/propertyQueries.js';
 import { toPublicListingCard, syncPropertyMedia } from './utils/propertyMedia.js';
@@ -43,55 +46,63 @@ app.use(express.json({ limit: '10mb' }));
 
 // ——— Agency ———
 app.get('/api/agency', wrap(async (_req, res) => {
-  const settings = await prisma.agencySettings.findUnique({ where: { id: 'default' } });
-  res.json(settings);
+  const [settings] = await db.select().from(agencySettings).where(eq(agencySettings.id, 'default'));
+  res.json(settings || null);
 }));
 
 app.put('/api/agency', requireAuth, requireRole('ADMIN'), wrap(async (req: AuthRequest, res) => {
-  const settings = await prisma.agencySettings.upsert({
-    where: { id: 'default' },
-    update: req.body,
-    create: { id: 'default', ...req.body },
-  });
+  const { id, ...updateData } = req.body;
+  const [settings] = await db.insert(agencySettings)
+    .values({ id: 'default', ...req.body })
+    .onConflictDoUpdate({
+      target: agencySettings.id,
+      set: updateData,
+    })
+    .returning();
   res.json(settings);
 }));
 
 // ——— Staff ———
 app.get('/api/staff', wrap(async (_req, res) => {
-  const staff = await prisma.staff.findMany({ where: { active: true } });
-  res.json(staff);
+  const staffList = await db.select().from(staff).where(eq(staff.active, true));
+  res.json(staffList);
 }));
 
 app.post('/api/staff', requireAuth, requireRole('ADMIN'), wrap(async (req, res) => {
-  const staff = await prisma.staff.create({ data: req.body });
-  res.json(staff);
+  const [newStaff] = await db.insert(staff).values(req.body).returning();
+  res.json(newStaff);
 }));
 
 app.put('/api/staff/:id', requireAuth, requireRole('ADMIN'), wrap(async (req, res) => {
-  const staff = await prisma.staff.update({ where: { id: param(req.params.id) }, data: req.body });
-  res.json(staff);
+  const [updatedStaff] = await db.update(staff)
+    .set(req.body)
+    .where(eq(staff.id, param(req.params.id)))
+    .returning();
+  res.json(updatedStaff);
 }));
 
 app.delete('/api/staff/:id', requireAuth, requireRole('ADMIN'), wrap(async (req, res) => {
-  await prisma.staff.update({ where: { id: param(req.params.id) }, data: { active: false } });
+  await db.update(staff)
+    .set({ active: false })
+    .where(eq(staff.id, param(req.params.id)));
   res.json({ ok: true });
 }));
 
 // ——— Properties (public) ———
 app.get('/api/properties', wrap(async (req, res) => {
   const isAdmin = req.query.status !== undefined;
-  const where = buildPropertyWhere(req.query as Record<string, unknown>, isAdmin);
+  const whereCond = buildDrizzlePropertyWhere(req.query as Record<string, unknown>, isAdmin);
   const limitRaw = Number(req.query.limit);
   const take = Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 500) : undefined;
 
   if (isAdmin) {
-    const properties = await prisma.property.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      select: ADMIN_LIST_SELECT,
-      ...(take ? { take } : {}),
-    });
-    res.json(properties);
+    let query = db.select(ADMIN_LIST_COLUMNS).from(properties);
+    if (whereCond) query = query.where(whereCond) as any;
+    query = query.orderBy(desc(properties.createdAt)) as any;
+    if (take) query = query.limit(take) as any;
+    
+    const results = await query;
+    res.json(results);
     return;
   }
 
@@ -103,14 +114,14 @@ app.get('/api/properties', wrap(async (req, res) => {
     return;
   }
 
-  const properties = await prisma.property.findMany({
-    where,
-    orderBy: { createdAt: 'desc' },
-    select: PUBLIC_LIST_SELECT,
-    ...(take ? { take } : {}),
-  });
+  let query = db.select(PUBLIC_LIST_COLUMNS).from(properties);
+  if (whereCond) query = query.where(whereCond) as any;
+  query = query.orderBy(desc(properties.createdAt)) as any;
+  if (take) query = query.limit(take) as any;
 
-  const payload = properties.map((p) => maskPropertyForPublic(toPublicListingCard(p)));
+  const results = await query;
+
+  const payload = results.map((p) => maskPropertyForPublic(toPublicListingCard(p)));
   setListingCache(cacheKey, payload);
   res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=120');
   res.json(payload);
@@ -118,26 +129,33 @@ app.get('/api/properties', wrap(async (req, res) => {
 
 app.get('/api/properties/:idOrCode', wrap(async (req, res) => {
   const key = param(req.params.idOrCode);
-  const property = await prisma.property.findFirst({
-    where: {
-      OR: [{ id: key }, { code: key }],
-      ...(req.query.admin !== 'true' ? { status: { in: PUBLIC_STATUSES } } : {}),
-    },
-    include: { analytics: true },
-  });
+  const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(key);
+  const matchCond = isUuid 
+    ? or(eq(properties.id, key), eq(properties.code, key))
+    : eq(properties.code, key);
+
+  const [property] = await db.select().from(properties).where(
+    and(
+      matchCond,
+      req.query.admin !== 'true' ? inArray(properties.status, PUBLIC_STATUSES) : undefined
+    )
+  );
   if (!property) return res.status(404).json({ error: 'Not found' });
 
+  const [propertyAnalytics] = await db.select().from(analytics).where(eq(analytics.propertyId, property.id));
+  const fullProperty = { ...property, analytics: propertyAnalytics || null };
+
   if (req.query.admin !== 'true') {
-    void prisma.analytics
-      .upsert({
-        where: { propertyId: property.id },
-        update: { viewsCount: { increment: 1 } },
-        create: { propertyId: property.id, viewsCount: 1 },
+    void db.insert(analytics)
+      .values({ propertyId: property.id, viewsCount: 1 })
+      .onConflictDoUpdate({
+        target: analytics.propertyId,
+        set: { viewsCount: sql`${analytics.viewsCount} + 1` }
       })
       .catch(() => {});
-    return res.json(maskPropertyForPublic(property));
+    return res.json(maskPropertyForPublic(fullProperty));
   }
-  res.json(property);
+  res.json(fullProperty);
 }));
 
 function sanitizePropertyInput(body: Record<string, unknown>) {
@@ -264,30 +282,30 @@ app.post('/api/properties', requireAuth, wrap(async (req: AuthRequest, res) => {
   const sanitized = sanitizePropertyInput(req.body);
   const resolvedVideoLink = await resolveVideoUrl(sanitized.videoLink);
   const status =
-    req.userRole === 'ADMIN' ? PropertyStatus.APPROVED : PropertyStatus.PENDING;
-  const property = await prisma.property.create({
-    data: {
-      ...sanitized,
-      videoLink: resolvedVideoLink,
-      ...media,
-      code,
-      status,
-      submitterId: req.userId,
-    },
-  });
-  await prisma.analytics.create({ data: { propertyId: property.id } });
+    req.userRole === 'ADMIN' ? 'APPROVED' : 'PENDING';
+  
+  const [property] = await db.insert(properties).values({
+    ...sanitized,
+    videoLink: resolvedVideoLink,
+    ...media,
+    code,
+    status,
+    submitterId: req.userId,
+  }).returning();
+  
+  await db.insert(analytics).values({ propertyId: property.id });
   invalidateListingCache();
   res.json(property);
 }));
 
 app.patch('/api/properties/:id', requireAuth, requireRole('ADMIN', 'STAFF'), wrap(async (req, res) => {
   const target = param(req.params.id);
-  const existing = await prisma.property.findFirst({
-    where: {
-      OR: [{ id: target }, { code: target }],
-    },
-    select: { id: true },
-  });
+  const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(target);
+  const matchCond = isUuid 
+    ? or(eq(properties.id, target), eq(properties.code, target))
+    : eq(properties.code, target);
+
+  const [existing] = await db.select({ id: properties.id }).from(properties).where(matchCond);
   if (!existing) {
     res.status(404).json({ error: 'Property not found' });
     return;
@@ -349,91 +367,104 @@ app.patch('/api/properties/:id', requireAuth, requireRole('ADMIN', 'STAFF'), wra
     }
   }
 
-  const property = await prisma.property.update({
-    where: { id: existing.id },
-    data: updateData,
-  });
+  const [property] = await db.update(properties)
+    .set(updateData)
+    .where(eq(properties.id, existing.id))
+    .returning();
   invalidateListingCache();
   res.json(property);
 }));
 
 app.delete('/api/properties/:id', requireAuth, requireRole('ADMIN'), wrap(async (req, res) => {
   const target = param(req.params.id);
-  const existing = await prisma.property.findFirst({
-    where: { OR: [{ id: target }, { code: target }] },
-    select: { id: true },
-  });
+  const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(target);
+  const matchCond = isUuid 
+    ? or(eq(properties.id, target), eq(properties.code, target))
+    : eq(properties.code, target);
+
+  const [existing] = await db.select({ id: properties.id }).from(properties).where(matchCond);
   if (!existing) {
     res.status(404).json({ error: 'Property not found' });
     return;
   }
-  await prisma.analytics.deleteMany({ where: { propertyId: existing.id } });
-  await prisma.contract.deleteMany({ where: { propertyId: existing.id } });
-  await prisma.property.delete({ where: { id: existing.id } });
+  await db.delete(analytics).where(eq(analytics.propertyId, existing.id));
+  await db.delete(contracts).where(eq(contracts.propertyId, existing.id));
+  await db.delete(properties).where(eq(properties.id, existing.id));
   invalidateListingCache();
   res.json({ success: true });
 }));
 
 app.post('/api/properties/:id/analytics', wrap(async (req, res) => {
   const { event } = req.body as { event: 'phone' | 'whatsapp' };
-  const field = event === 'phone' ? 'phoneClicks' : 'whatsappClicks';
-  await prisma.analytics.update({
-    where: { propertyId: param(req.params.id) },
-    data: { [field]: { increment: 1 } },
-  });
+  const field = event === 'phone' ? analytics.phoneClicks : analytics.whatsappClicks;
+  await db.update(analytics)
+    .set({ [event === 'phone' ? 'phoneClicks' : 'whatsappClicks']: sql`${field} + 1` })
+    .where(eq(analytics.propertyId, param(req.params.id)));
   res.json({ ok: true });
 }));
 
 // ——— CRM ———
 app.get('/api/crm', requireAuth, requireRole('ADMIN', 'STAFF'), wrap(async (_req, res) => {
-  const entries = await prisma.crmEntry.findMany({ orderBy: { updatedAt: 'desc' } });
+  const entries = await db.select().from(crmEntries).orderBy(desc(crmEntries.updatedAt));
   res.json(entries);
 }));
 
 app.post('/api/crm', requireAuth, requireRole('ADMIN', 'STAFF'), wrap(async (req, res) => {
-  const entry = await prisma.crmEntry.create({ data: req.body });
+  const [entry] = await db.insert(crmEntries).values(req.body).returning();
   res.json(entry);
 }));
 
 app.patch('/api/crm/:id', requireAuth, requireRole('ADMIN', 'STAFF'), wrap(async (req, res) => {
-  const entry = await prisma.crmEntry.update({ where: { id: param(req.params.id) }, data: req.body });
+  const [entry] = await db.update(crmEntries)
+    .set(req.body)
+    .where(eq(crmEntries.id, param(req.params.id)))
+    .returning();
   res.json(entry);
 }));
 
 // ——— Contracts ———
 app.get('/api/contracts', requireAuth, requireRole('ADMIN', 'STAFF'), wrap(async (_req, res) => {
-  const contracts = await prisma.contract.findMany({
-    include: { property: true },
-    orderBy: { date: 'desc' },
+  const results = await db.query.contracts.findMany({
+    with: { property: true },
+    orderBy: (contracts, { desc }) => [desc(contracts.date)],
   });
-  res.json(contracts);
+  res.json(results);
 }));
 
 app.post('/api/contracts', requireAuth, requireRole('ADMIN', 'STAFF'), wrap(async (req, res) => {
-  const contract = await prisma.contract.create({ data: req.body });
-  const analyticsField =
-    req.body.contractType === 'SALE' ? 'saleContractsCount' : 'rentContractsCount';
-  await prisma.analytics.update({
-    where: { propertyId: req.body.propertyId },
-    data: { [analyticsField]: { increment: 1 } },
-  });
-  const newStatus = req.body.contractType === 'SALE' ? PropertyStatus.SOLD : PropertyStatus.RENTED;
-  await prisma.property.update({
-    where: { id: req.body.propertyId },
-    data: { status: newStatus },
-  });
+  const [contract] = await db.insert(contracts).values({
+    ...req.body,
+    date: req.body.date ? new Date(req.body.date) : new Date(),
+  }).returning();
+  
+  const analyticsField = req.body.contractType === 'SALE' ? analytics.saleContractsCount : analytics.rentContractsCount;
+  
+  await db.update(analytics)
+    .set({ [req.body.contractType === 'SALE' ? 'saleContractsCount' : 'rentContractsCount']: sql`${analyticsField} + 1` })
+    .where(eq(analytics.propertyId, req.body.propertyId));
+
+  const newStatus = req.body.contractType === 'SALE' ? 'SOLD' : 'RENTED';
+  await db.update(properties)
+    .set({ status: newStatus })
+    .where(eq(properties.id, req.body.propertyId));
+
   res.json(contract);
 }));
 
 // ——— Analytics dashboard ———
 app.get('/api/analytics/dashboard', requireAuth, requireRole('ADMIN', 'STAFF'), wrap(async (_req, res) => {
-  const all = await prisma.analytics.findMany({
-    include: { property: { select: { code: true, title: true, status: true } } },
+  const all = await db.query.analytics.findMany({
+    with: {
+      property: {
+        columns: { code: true, title: true, status: true }
+      }
+    }
   });
-  const sold = await prisma.property.count({ where: { status: PropertyStatus.SOLD } });
-  const rented = await prisma.property.count({ where: { status: PropertyStatus.RENTED } });
-  const pending = await prisma.property.count({ where: { status: PropertyStatus.PENDING } });
-  const active = await prisma.property.count({ where: { status: PropertyStatus.APPROVED } });
+
+  const [{ count: sold }] = await db.select({ count: count() }).from(properties).where(eq(properties.status, 'SOLD'));
+  const [{ count: rented }] = await db.select({ count: count() }).from(properties).where(eq(properties.status, 'RENTED'));
+  const [{ count: pending }] = await db.select({ count: count() }).from(properties).where(eq(properties.status, 'PENDING'));
+  const [{ count: active }] = await db.select({ count: count() }).from(properties).where(eq(properties.status, 'APPROVED'));
 
   const totals = all.reduce(
     (acc, a) => ({
@@ -453,8 +484,8 @@ app.get('/api/analytics/dashboard', requireAuth, requireRole('ADMIN', 'STAFF'), 
 
 // ——— Profile ———
 app.get('/api/me', requireAuth, wrap(async (req: AuthRequest, res) => {
-  const profile = await prisma.profile.findUnique({ where: { id: req.userId } });
-  res.json(profile);
+  const [profile] = await db.select().from(profiles).where(eq(profiles.id, req.userId as string));
+  res.json(profile || null);
 }));
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
@@ -501,25 +532,21 @@ app.listen(PORT, () => {
   // Background migration for legacy share links
   (async () => {
     try {
-      const properties = await prisma.property.findMany({
-        where: {
-          OR: [
-            { videoLink: { contains: 'facebook.com/share/' } },
-            { videoLink: { contains: 'facebook.com/reel/' } },
-            { videoLink: { contains: 'facebook.com/watch' } },
-            { videoLink: { contains: 'fb.watch/' } },
-          ],
-        },
-        select: { id: true, videoLink: true },
-      });
-      for (const prop of properties) {
+      const props = await db.select({ id: properties.id, videoLink: properties.videoLink }).from(properties).where(
+        or(
+          ilike(properties.videoLink, '%facebook.com/share/%'),
+          ilike(properties.videoLink, '%facebook.com/reel/%'),
+          ilike(properties.videoLink, '%facebook.com/watch%'),
+          ilike(properties.videoLink, '%fb.watch/%')
+        )
+      );
+      for (const prop of props) {
         if (prop.videoLink) {
           const resolved = await resolveVideoUrl(prop.videoLink);
           if (resolved && resolved !== prop.videoLink) {
-            await prisma.property.update({
-              where: { id: prop.id },
-              data: { videoLink: resolved },
-            });
+            await db.update(properties)
+              .set({ videoLink: resolved })
+              .where(eq(properties.id, prop.id));
             console.log(`[VideoResolver] Auto-migrated property ${prop.id} to canonical reel/video URL: ${resolved}`);
           }
         }
