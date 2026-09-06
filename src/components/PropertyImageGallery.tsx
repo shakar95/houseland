@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Play } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { VideoEmbed } from '@/components/VideoEmbed';
 import { PropertyImageLightbox } from '@/components/PropertyImageLightbox';
@@ -46,8 +46,9 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [lightboxStartScale, setLightboxStartScale] = useState(1);
-  const touchStart = useRef<{ x: number; y: number } | null>(null);
-  const touchCurrent = useRef<{ x: number; y: number } | null>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const isSwipingRef = useRef<boolean | null>(null);
   const lastTapRef = useRef(0);
   const singleTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchHandledRef = useRef(false);
@@ -59,32 +60,27 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
   const PrevIcon = rtl ? ChevronRight : ChevronLeft;
   const NextIcon = rtl ? ChevronLeft : ChevronRight;
 
-  const [videoInteracting, setVideoInteracting] = useState(false);
-  const videoTouchStart = useRef<{ x: number; y: number } | null>(null);
-  const videoTouchCurrent = useRef<{ x: number; y: number } | null>(null);
+  const videoSlideIndex = useMemo(
+    () => slides.findIndex((s) => s.type === 'video'),
+    [slides],
+  );
+  const prevIndexRef = useRef(index);
+  const [videoKey, setVideoKey] = useState(0);
 
   useEffect(() => {
-    setVideoInteracting(false);
-  }, [index]);
+    if (prevIndexRef.current === videoSlideIndex && index !== videoSlideIndex) {
+      setVideoKey((k) => k + 1);
+    }
+    prevIndexRef.current = index;
+  }, [index, videoSlideIndex]);
 
   useEffect(() => {
-    const handleMessage = (e: MessageEvent) => {
-      try {
-        const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
-        if (data?.event === 'onStateChange') {
-          // 2 = paused, 0 = ended
-          if (data.info === 2 || data.info === 0) {
-            setVideoInteracting(false);
-          } else if (data.info === 1) {
-            setVideoInteracting(true);
-          }
-        }
-      } catch {}
-    };
-
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, []);
+    if (trackRef.current) {
+      trackRef.current.style.transition = 'transform 0.32s cubic-bezier(0.25, 0.9, 0.3, 1)';
+      const offset = rtl ? index * 100 : -index * 100;
+      trackRef.current.style.transform = `translate3d(${offset}%, 0, 0)`;
+    }
+  }, [index, rtl]);
 
   const goTo = useCallback(
     (next: number) => {
@@ -92,25 +88,6 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
       setIndex(i);
     },
     [slides.length],
-  );
-
-  const handleSwipe = useCallback(
-    (startX: number, startY: number, endX: number, endY: number): boolean => {
-      const dx = startX - endX;
-      const dy = startY - endY;
-      if (multi && Math.abs(dx) >= 20 && Math.abs(dx) > Math.abs(dy)) {
-        if (singleTapTimerRef.current) {
-          clearTimeout(singleTapTimerRef.current);
-          singleTapTimerRef.current = null;
-        }
-        lastTapRef.current = 0;
-        const forward = rtl ? dx < 0 : dx > 0;
-        goTo(index + (forward ? 1 : -1));
-        return true;
-      }
-      return false;
-    },
-    [goTo, index, multi, rtl],
   );
 
   const openLightbox = useCallback(
@@ -153,90 +130,83 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
   const onTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length !== 1) return;
     const t = e.touches[0];
-    touchStart.current = { x: t.clientX, y: t.clientY };
-    touchCurrent.current = { x: t.clientX, y: t.clientY };
+    touchStartRef.current = { x: t.clientX, y: t.clientY, time: Date.now() };
+    isSwipingRef.current = null;
   };
 
   const onTouchMove = (e: React.TouchEvent) => {
-    if (!touchStart.current || e.touches.length !== 1) return;
+    if (!touchStartRef.current || !trackRef.current || e.touches.length !== 1) return;
     const t = e.touches[0];
-    touchCurrent.current = { x: t.clientX, y: t.clientY };
+    const dx = t.clientX - touchStartRef.current.x;
+    const dy = t.clientY - touchStartRef.current.y;
+
+    if (isSwipingRef.current === null) {
+      if (Math.abs(dx) > 7 || Math.abs(dy) > 7) {
+        isSwipingRef.current = Math.abs(dx) > Math.abs(dy);
+      }
+    }
+
+    if (isSwipingRef.current === true && multi) {
+      trackRef.current.style.transition = 'none';
+      const baseOffset = rtl ? index * 100 : -index * 100;
+      const isAtStart = index === 0 && (rtl ? dx < 0 : dx > 0);
+      const isAtEnd = index === slides.length - 1 && (rtl ? dx > 0 : dx < 0);
+      const effectiveDx = isAtStart || isAtEnd ? dx * 0.25 : dx;
+      trackRef.current.style.transform = `translate3d(calc(${baseOffset}% + ${effectiveDx}px), 0, 0)`;
+    }
   };
 
   const onTouchEnd = (e: React.TouchEvent) => {
-    if (!touchStart.current) return;
-    const start = touchStart.current;
-    const end = touchCurrent.current ?? {
-      x: e.changedTouches[0]?.clientX ?? start.x,
-      y: e.changedTouches[0]?.clientY ?? start.y,
-    };
-    const moved = Math.hypot(start.x - end.x, start.y - end.y);
-    touchStart.current = null;
-    touchCurrent.current = null;
+    if (!touchStartRef.current || !trackRef.current) return;
+    const startX = touchStartRef.current.x;
+    const startY = touchStartRef.current.y;
+    const endX = e.changedTouches[0]?.clientX ?? startX;
+    const endY = e.changedTouches[0]?.clientY ?? startY;
+    const dx = endX - startX;
+    const dy = endY - startY;
+    const elapsed = Date.now() - touchStartRef.current.time;
+    const wasSwiping = isSwipingRef.current === true;
 
-    if (handleSwipe(start.x, start.y, end.x, end.y)) {
+    touchStartRef.current = null;
+    isSwipingRef.current = null;
+
+    if (wasSwiping && multi) {
+      trackRef.current.style.transition = 'transform 0.32s cubic-bezier(0.25, 0.9, 0.3, 1)';
+      const isFlick = elapsed < 320 && Math.abs(dx) > 28;
+      const isDistance = Math.abs(dx) > 48;
+
+      if (isFlick || isDistance) {
+        if (singleTapTimerRef.current) {
+          clearTimeout(singleTapTimerRef.current);
+          singleTapTimerRef.current = null;
+        }
+        lastTapRef.current = 0;
+        const forward = rtl ? dx < 0 : dx > 0;
+        const nextIndex = forward ? index + 1 : index - 1;
+        if (nextIndex >= 0 && nextIndex < slides.length) {
+          goTo(nextIndex);
+          return;
+        }
+      }
+      const baseOffset = rtl ? index * 100 : -index * 100;
+      trackRef.current.style.transform = `translate3d(${baseOffset}%, 0, 0)`;
       return;
     }
 
-    if (moved < 14 && slides[index]?.type === 'image') {
+    const moved = Math.hypot(dx, dy);
+    if (moved < 12 && slides[index]?.type === 'image') {
       touchHandledRef.current = true;
       handleImageTap(index);
     }
   };
 
   const onTouchCancel = () => {
-    if (!touchStart.current) return;
-    const start = touchStart.current;
-    const end = touchCurrent.current ?? start;
-    touchStart.current = null;
-    touchCurrent.current = null;
-    handleSwipe(start.x, start.y, end.x, end.y);
-  };
-
-  const onVideoOverlayTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length !== 1) return;
-    const t = e.touches[0];
-    videoTouchStart.current = { x: t.clientX, y: t.clientY };
-    videoTouchCurrent.current = { x: t.clientX, y: t.clientY };
-  };
-
-  const onVideoOverlayTouchMove = (e: React.TouchEvent) => {
-    if (!videoTouchStart.current || e.touches.length !== 1) return;
-    const t = e.touches[0];
-    videoTouchCurrent.current = { x: t.clientX, y: t.clientY };
-  };
-
-  const onVideoOverlayTouchEnd = (e: React.TouchEvent) => {
-    if (!videoTouchStart.current) return;
-    const start = videoTouchStart.current;
-    const end = videoTouchCurrent.current ?? {
-      x: e.changedTouches[0]?.clientX ?? start.x,
-      y: e.changedTouches[0]?.clientY ?? start.y,
-    };
-    const moved = Math.hypot(start.x - end.x, start.y - end.y);
-    videoTouchStart.current = null;
-    videoTouchCurrent.current = null;
-
-    if (handleSwipe(start.x, start.y, end.x, end.y)) {
-      return;
-    }
-
-    if (moved < 15) {
-      setVideoInteracting(true);
-    }
-  };
-
-  const onVideoOverlayTouchCancel = () => {
-    if (!videoTouchStart.current) return;
-    const start = videoTouchStart.current;
-    const end = videoTouchCurrent.current ?? start;
-    videoTouchStart.current = null;
-    videoTouchCurrent.current = null;
-    handleSwipe(start.x, start.y, end.x, end.y);
-  };
-
-  const onVideoOverlayClick = () => {
-    setVideoInteracting(true);
+    if (!touchStartRef.current || !trackRef.current) return;
+    touchStartRef.current = null;
+    isSwipingRef.current = null;
+    trackRef.current.style.transition = 'transform 0.32s cubic-bezier(0.25, 0.9, 0.3, 1)';
+    const baseOffset = rtl ? index * 100 : -index * 100;
+    trackRef.current.style.transform = `translate3d(${baseOffset}%, 0, 0)`;
   };
 
   const onImageClick = (slideIndex: number) => {
@@ -261,6 +231,7 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
           onTouchCancel={onTouchCancel}
         >
           <div
+            ref={trackRef}
             className="property-gallery-track"
             style={{ transform: `translate3d(${slideOffset}%, 0, 0)` }}
           >
@@ -284,94 +255,51 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
               ) : (
                 <div key={slide.key} className="property-gallery-slide property-gallery-slide--reel">
                   <div className="property-gallery-reel-frame relative">
-                    {index === i ? (
+                    <div className="w-full h-full pointer-events-auto">
+                      <VideoEmbed
+                        key={`video-${slide.key}-${videoKey}`}
+                        url={slide.url}
+                        aspect="reel"
+                        autoPlay={false}
+                      />
+                    </div>
+
+                    {/* Fluid swipe gesture zones across the outer perimeter of the video */}
+                    {multi && (
                       <>
-                        <div className={`w-full h-full ${videoInteracting ? 'pointer-events-auto' : 'pointer-events-none'}`}>
-                          <VideoEmbed url={slide.url} aspect="reel" autoPlay={videoInteracting} />
-                        </div>
-
-                        {!videoInteracting ? (
-                          <div
-                            className="absolute inset-0 z-20 flex items-center justify-center cursor-pointer select-none bg-black/25 transition-all"
-                            style={{ touchAction: 'pan-y' }}
-                            onTouchStart={onVideoOverlayTouchStart}
-                            onTouchMove={onVideoOverlayTouchMove}
-                            onTouchEnd={onVideoOverlayTouchEnd}
-                            onTouchCancel={onVideoOverlayTouchCancel}
-                            onClick={onVideoOverlayClick}
-                          >
-                            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-black/60 backdrop-blur-md border border-white/30 text-white shadow-2xl transition hover:scale-105 active:scale-95">
-                              <Play className="h-7 w-7 fill-white text-white ms-1" />
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                            {/* Floating Pause Button when video is active */}
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setVideoInteracting(false);
-                              }}
-                              className="absolute top-3 start-3 z-30 inline-flex items-center gap-1.5 rounded-full bg-royal-950/85 px-3 py-1.5 text-xs font-semibold text-white border border-white/25 shadow-xl backdrop-blur-md hover:bg-royal-900 active:scale-95 transition pointer-events-auto"
-                              aria-label="Pause"
-                            >
-                              <Pause className="h-3.5 w-3.5 text-gold-400 fill-gold-400" />
-                              <span>ڕاگرتن</span>
-                            </button>
-
-                            {/* Touch swipe zones across top, bottom, and sides */}
-                            {multi && (
-                              <>
-                                <div
-                                  className="absolute top-0 inset-x-0 h-20 z-20"
-                                  style={{ touchAction: 'pan-y' }}
-                                  onTouchStart={onTouchStart}
-                                  onTouchMove={onTouchMove}
-                                  onTouchEnd={onTouchEnd}
-                                  onTouchCancel={onTouchCancel}
-                                />
-                                <div
-                                  className="absolute bottom-0 inset-x-0 h-20 z-20"
-                                  style={{ touchAction: 'pan-y' }}
-                                  onTouchStart={onTouchStart}
-                                  onTouchMove={onTouchMove}
-                                  onTouchEnd={onTouchEnd}
-                                  onTouchCancel={onTouchCancel}
-                                />
-                                <div
-                                  className="absolute inset-y-20 start-0 w-20 z-20"
-                                  style={{ touchAction: 'pan-y' }}
-                                  onTouchStart={onTouchStart}
-                                  onTouchMove={onTouchMove}
-                                  onTouchEnd={onTouchEnd}
-                                  onTouchCancel={onTouchCancel}
-                                />
-                                <div
-                                  className="absolute inset-y-20 end-0 w-20 z-20"
-                                  style={{ touchAction: 'pan-y' }}
-                                  onTouchStart={onTouchStart}
-                                  onTouchMove={onTouchMove}
-                                  onTouchEnd={onTouchEnd}
-                                  onTouchCancel={onTouchCancel}
-                                />
-                              </>
-                            )}
-                          </>
-                        )}
+                        <div
+                          className="absolute top-0 inset-x-0 h-28 z-20"
+                          style={{ touchAction: 'pan-y' }}
+                          onTouchStart={onTouchStart}
+                          onTouchMove={onTouchMove}
+                          onTouchEnd={onTouchEnd}
+                          onTouchCancel={onTouchCancel}
+                        />
+                        <div
+                          className="absolute bottom-0 inset-x-0 h-28 z-20"
+                          style={{ touchAction: 'pan-y' }}
+                          onTouchStart={onTouchStart}
+                          onTouchMove={onTouchMove}
+                          onTouchEnd={onTouchEnd}
+                          onTouchCancel={onTouchCancel}
+                        />
+                        <div
+                          className="absolute inset-y-28 start-0 w-24 z-20"
+                          style={{ touchAction: 'pan-y' }}
+                          onTouchStart={onTouchStart}
+                          onTouchMove={onTouchMove}
+                          onTouchEnd={onTouchEnd}
+                          onTouchCancel={onTouchCancel}
+                        />
+                        <div
+                          className="absolute inset-y-28 end-0 w-24 z-20"
+                          style={{ touchAction: 'pan-y' }}
+                          onTouchStart={onTouchStart}
+                          onTouchMove={onTouchMove}
+                          onTouchEnd={onTouchEnd}
+                          onTouchCancel={onTouchCancel}
+                        />
                       </>
-                    ) : (
-                      <button
-                        type="button"
-                        className="property-gallery-video-poster"
-                        onClick={() => goTo(i)}
-                        aria-label={t.property.video}
-                      >
-                        <img src={poster} alt="" loading="lazy" draggable={false} />
-                        <span className="property-gallery-play">
-                          <Play className="h-8 w-8 fill-white text-white" />
-                        </span>
-                      </button>
                     )}
                   </div>
                 </div>

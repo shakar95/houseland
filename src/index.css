@@ -601,7 +601,7 @@ html[dir='rtl'] body {
   max-height: min(78vw, 420px);
   @apply border border-royal-800/80 bg-royal-900/40 shadow-lg shadow-black/20;
   border-radius: 1rem;
-  touch-action: pan-x pan-y;
+  touch-action: pan-y;
 }
 
 @media (min-width: 640px) {
