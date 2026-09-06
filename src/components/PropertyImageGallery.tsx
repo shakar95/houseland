@@ -6,8 +6,6 @@ import { PropertyImageLightbox } from '@/components/PropertyImageLightbox';
 
 const FALLBACK_IMAGE =
   'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200';
-const DOUBLE_TAP_MS = 400;
-const SINGLE_TAP_DELAY_MS = 450;
 
 type ImageSlide = { type: 'image'; src: string; key: string };
 type VideoSlide = { type: 'video'; url: string; key: string };
@@ -45,14 +43,11 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
   const [index, setIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
-  const [lightboxStartScale, setLightboxStartScale] = useState(1);
   const trackRef = useRef<HTMLDivElement>(null);
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const [isVideoFullscreen, setIsVideoFullscreen] = useState(false);
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const isSwipingRef = useRef<boolean | null>(null);
-  const lastTapRef = useRef(0);
-  const singleTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchHandledRef = useRef(false);
   const slides = useMemo(() => buildSlides(images, videoUrl), [images, videoUrl]);
   const imageUrls = useMemo(() => images.filter(Boolean), [images]);
@@ -121,14 +116,9 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
   );
 
   const openLightbox = useCallback(
-    (slideIndex: number, zoom = false) => {
+    (slideIndex: number) => {
       const slide = slides[slideIndex];
       if (slide?.type !== 'image' || imageUrls.length === 0) return;
-      if (singleTapTimerRef.current) {
-        clearTimeout(singleTapTimerRef.current);
-        singleTapTimerRef.current = null;
-      }
-      setLightboxStartScale(zoom ? 2.5 : 1);
       setLightboxIndex(imageIndexForSlide(slides, slideIndex));
       setLightboxOpen(true);
     },
@@ -137,22 +127,7 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
 
   const handleImageTap = useCallback(
     (slideIndex: number) => {
-      const now = Date.now();
-      if (now - lastTapRef.current < DOUBLE_TAP_MS) {
-        lastTapRef.current = 0;
-        if (singleTapTimerRef.current) {
-          clearTimeout(singleTapTimerRef.current);
-          singleTapTimerRef.current = null;
-        }
-        openLightbox(slideIndex, true);
-        return;
-      }
-      lastTapRef.current = now;
-      if (singleTapTimerRef.current) clearTimeout(singleTapTimerRef.current);
-      singleTapTimerRef.current = setTimeout(() => {
-        singleTapTimerRef.current = null;
-        openLightbox(slideIndex, false);
-      }, SINGLE_TAP_DELAY_MS);
+      openLightbox(slideIndex);
     },
     [openLightbox],
   );
@@ -206,11 +181,6 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
       const isDistance = Math.abs(dx) > 48;
 
       if (isFlick || isDistance) {
-        if (singleTapTimerRef.current) {
-          clearTimeout(singleTapTimerRef.current);
-          singleTapTimerRef.current = null;
-        }
-        lastTapRef.current = 0;
         const forward = rtl ? dx > 0 : dx < 0;
         const nextIndex = forward ? index + 1 : index - 1;
         if (nextIndex >= 0 && nextIndex < slides.length) {
@@ -440,11 +410,11 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
 
       {lightboxOpen && imageUrls.length > 0 && (
         <PropertyImageLightbox
-          key={`${lightboxIndex}-${lightboxStartScale}`}
+          key="property-lightbox"
           images={imageUrls}
           index={lightboxIndex}
           alt={alt}
-          initialScale={lightboxStartScale}
+          initialScale={1}
           onClose={() => setLightboxOpen(false)}
           onIndexChange={(next) => {
             setLightboxIndex(next);
