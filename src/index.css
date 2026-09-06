@@ -833,6 +833,7 @@ html[dir='rtl'] body {
   flex-direction: column;
   background: rgb(2 6 18 / 0.96);
   backdrop-filter: blur(8px);
+  will-change: transform, opacity;
 }
 
 .property-lightbox-toolbar {

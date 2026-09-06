@@ -32,14 +32,16 @@ export function PropertyImageLightbox({
   const { rtl, t } = useLanguage();
   const [scale, setScale] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
+  const lightboxRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const pinchRef = useRef<{ distance: number; scale: number } | null>(null);
   const panStartRef = useRef<{ x: number; y: number; panX: number; panY: number } | null>(null);
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const isPanningRef = useRef(false);
-  const isSwipingRef = useRef<boolean | null>(null);
+  const gestureModeRef = useRef<'horizontal' | 'vertical' | null>(null);
   const isDoubleTappingRef = useRef(false);
   const lastTapRef = useRef<{ time: number; x: number; y: number } | null>(null);
+  const lastZoomToggleTimeRef = useRef(0);
 
   const PrevIcon = rtl ? ChevronRight : ChevronLeft;
   const NextIcon = rtl ? ChevronLeft : ChevronRight;
@@ -55,6 +57,7 @@ export function PropertyImageLightbox({
     panStartRef.current = null;
     isPanningRef.current = false;
     isDoubleTappingRef.current = false;
+    gestureModeRef.current = null;
   }, []);
 
   const prevIndexRef = useRef(index);
@@ -103,8 +106,6 @@ export function PropertyImageLightbox({
     });
   };
 
-  const lastZoomToggleTimeRef = useRef(0);
-
   const toggleZoom = useCallback(() => {
     if (!isCurrentImage) return;
     const now = Date.now();
@@ -149,7 +150,7 @@ export function PropertyImageLightbox({
     if (e.touches.length === 2 && isCurrentImage) {
       pinchRef.current = { distance: touchDistance(e.touches), scale };
       touchStartRef.current = null;
-      isSwipingRef.current = null;
+      gestureModeRef.current = null;
       isPanningRef.current = false;
       isDoubleTappingRef.current = false;
       return;
@@ -159,7 +160,7 @@ export function PropertyImageLightbox({
       const t = e.touches[0];
       const now = Date.now();
 
-      // Instantly trigger zoom on touch-start of the second tap for zero perceived latency!
+      // Double-tap triggered right on touch-start of 2nd tap
       if (
         isCurrentImage &&
         lastTapRef.current &&
@@ -170,7 +171,7 @@ export function PropertyImageLightbox({
         lastTapRef.current = null;
         isDoubleTappingRef.current = true;
         touchStartRef.current = null;
-        isSwipingRef.current = null;
+        gestureModeRef.current = null;
         isPanningRef.current = false;
         toggleZoom();
         return;
@@ -178,7 +179,7 @@ export function PropertyImageLightbox({
 
       isDoubleTappingRef.current = false;
       touchStartRef.current = { x: t.clientX, y: t.clientY, time: now };
-      isSwipingRef.current = null;
+      gestureModeRef.current = null;
       isPanningRef.current = false;
       panStartRef.current = {
         x: t.clientX,
@@ -218,15 +219,27 @@ export function PropertyImageLightbox({
         return;
       }
 
-      // If unzoomed (scale <= 1): swipe carousel slides smoothly
-      if (scale <= 1 && trackRef.current && multi) {
-        if (isSwipingRef.current === null) {
+      // If unzoomed (scale <= 1): handle both horizontal swipe & vertical swipe-to-dismiss
+      if (scale <= 1) {
+        if (gestureModeRef.current === null) {
           if (Math.abs(dx) > 7 || Math.abs(dy) > 7) {
-            isSwipingRef.current = Math.abs(dx) > Math.abs(dy);
+            gestureModeRef.current = Math.abs(dy) > Math.abs(dx) ? 'vertical' : 'horizontal';
           }
         }
 
-        if (isSwipingRef.current === true) {
+        // 🌟 Vertical Swipe-to-Dismiss gesture: fluid real-time drag with rubber-band scale & fade
+        if (gestureModeRef.current === 'vertical' && lightboxRef.current) {
+          lightboxRef.current.style.transition = 'none';
+          const progress = Math.min(Math.abs(dy) / 450, 1);
+          const dragScale = 1 - progress * 0.14;
+          const opacity = 1 - progress * 0.55;
+          lightboxRef.current.style.transform = `translate3d(0, ${dy}px, 0) scale(${dragScale})`;
+          lightboxRef.current.style.opacity = `${opacity}`;
+          return;
+        }
+
+        // Horizontal Swipe between slides
+        if (gestureModeRef.current === 'horizontal' && trackRef.current && multi) {
           trackRef.current.style.transition = 'none';
           const baseOffset = rtl ? index * 100 : -index * 100;
           const isAtStart = index === 0 && (rtl ? dx < 0 : dx > 0);
@@ -246,14 +259,17 @@ export function PropertyImageLightbox({
 
     if (isDoubleTappingRef.current) {
       isDoubleTappingRef.current = false;
+      try {
+        e.preventDefault();
+      } catch {}
       return;
     }
 
     const start = touchStartRef.current;
     touchStartRef.current = null;
-    const wasSwiping = isSwipingRef.current === true;
+    const currentMode = gestureModeRef.current;
     const wasPanning = isPanningRef.current;
-    isSwipingRef.current = null;
+    gestureModeRef.current = null;
     isPanningRef.current = false;
 
     if (!start) return;
@@ -265,19 +281,43 @@ export function PropertyImageLightbox({
     const dist = Math.hypot(dx, dy);
     const elapsed = Date.now() - start.time;
 
-    // Record tap if displacement is small (< 32px) so subsequent touch-start can double-tap instantly
+    // 1. Vertical Swipe-to-Dismiss release check
+    if (scale <= 1 && currentMode === 'vertical' && lightboxRef.current) {
+      const isFlick = elapsed < 320 && Math.abs(dy) > 50;
+      const isDistance = Math.abs(dy) > 85;
+
+      if (isFlick || isDistance) {
+        // ✨ Smoothly animate off-screen and dismiss
+        lightboxRef.current.style.transition = 'transform 0.24s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.24s ease-out';
+        const exitY = dy > 0 ? '100vh' : '-100vh';
+        lightboxRef.current.style.transform = `translate3d(0, ${exitY}, 0) scale(0.85)`;
+        lightboxRef.current.style.opacity = '0';
+        setTimeout(() => {
+          onClose();
+        }, 220);
+        return;
+      } else {
+        // Rebound smoothly back into place
+        lightboxRef.current.style.transition = 'transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.25s ease-out';
+        lightboxRef.current.style.transform = 'translate3d(0, 0, 0) scale(1)';
+        lightboxRef.current.style.opacity = '1';
+        return;
+      }
+    }
+
+    // 2. Record tap if displacement is small (< 32px) for instant double-tap on next touch-start
     if (dist < TAP_MAX_DISPLACEMENT && isCurrentImage) {
       lastTapRef.current = { time: start.time, x: endX, y: endY };
       return;
     }
 
-    // If zoomed in and was panning: don't slide
+    // 3. If zoomed in and was panning: don't slide
     if (scale > 1 || wasPanning) {
       return;
     }
 
-    // If unzoomed (scale <= 1) and was swiping: slide carousel
-    if (wasSwiping && multi && trackRef.current) {
+    // 4. Horizontal Swipe between slides release check
+    if (scale <= 1 && currentMode === 'horizontal' && multi && trackRef.current) {
       trackRef.current.style.transition = 'transform 0.32s cubic-bezier(0.25, 0.9, 0.3, 1)';
       const isFlick = elapsed < 320 && Math.abs(dx) > 28;
       const isDistance = Math.abs(dx) > 42;
@@ -297,11 +337,18 @@ export function PropertyImageLightbox({
 
   const onTouchCancel = () => {
     touchStartRef.current = null;
-    isSwipingRef.current = null;
+    gestureModeRef.current = null;
     pinchRef.current = null;
     panStartRef.current = null;
     isPanningRef.current = false;
     isDoubleTappingRef.current = false;
+
+    if (lightboxRef.current) {
+      lightboxRef.current.style.transition = 'transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.25s ease-out';
+      lightboxRef.current.style.transform = 'translate3d(0, 0, 0) scale(1)';
+      lightboxRef.current.style.opacity = '1';
+    }
+
     if (trackRef.current && scale <= 1) {
       trackRef.current.style.transition = 'transform 0.32s cubic-bezier(0.25, 0.9, 0.3, 1)';
       const baseOffset = rtl ? index * 100 : -index * 100;
@@ -323,6 +370,7 @@ export function PropertyImageLightbox({
 
   return (
     <div
+      ref={lightboxRef}
       className="property-lightbox"
       role="dialog"
       aria-modal="true"
