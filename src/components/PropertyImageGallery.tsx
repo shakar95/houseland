@@ -34,15 +34,10 @@ function buildSlides(images: string[], videoUrl?: string | null): Slide[] {
   return slides;
 }
 
-function imageIndexForSlide(slides: Slide[], slideIndex: number): number {
-  return slides.slice(0, slideIndex + 1).filter((s) => s.type === 'image').length - 1;
-}
-
 export function PropertyImageGallery({ images, videoUrl, alt, className }: Props) {
   const { rtl, t } = useLanguage();
   const [index, setIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [lightboxIndex, setLightboxIndex] = useState(0);
   const trackRef = useRef<HTMLDivElement>(null);
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const [isVideoFullscreen, setIsVideoFullscreen] = useState(false);
@@ -117,12 +112,10 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
 
   const openLightbox = useCallback(
     (slideIndex: number) => {
-      const slide = slides[slideIndex];
-      if (slide?.type !== 'image' || imageUrls.length === 0) return;
-      setLightboxIndex(imageIndexForSlide(slides, slideIndex));
+      goTo(slideIndex);
       setLightboxOpen(true);
     },
-    [imageUrls.length, slides],
+    [goTo],
   );
 
   const handleImageTap = useCallback(
@@ -408,20 +401,15 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
         )}
       </div>
 
-      {lightboxOpen && imageUrls.length > 0 && (
+      {lightboxOpen && slides.length > 0 && (
         <PropertyImageLightbox
           key="property-lightbox"
-          images={imageUrls}
-          index={lightboxIndex}
+          slides={slides}
+          index={index}
           alt={alt}
-          initialScale={1}
           onClose={() => setLightboxOpen(false)}
           onIndexChange={(next) => {
-            setLightboxIndex(next);
-            const slideIdx = slides.findIndex(
-              (s, i) => s.type === 'image' && imageIndexForSlide(slides, i) === next,
-            );
-            if (slideIdx >= 0) setIndex(slideIdx);
+            goTo(next);
           }}
         />
       )}
