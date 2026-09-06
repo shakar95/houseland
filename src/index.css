@@ -72,8 +72,8 @@ html[dir='rtl'] body {
 }
 
 .app-header {
-  @apply sticky top-0 z-40 flex items-center justify-between border-b border-royal-800/80 bg-royal-950/95 px-4 py-3 backdrop-blur-md;
-  padding-top: max(0.75rem, env(safe-area-inset-top));
+  @apply sticky top-0 z-40 flex items-center justify-between bg-royal-950/95 px-4 pt-2 pb-1 backdrop-blur-xl transition-all;
+  padding-top: max(0.55rem, env(safe-area-inset-top));
 }
 
 .app-main {
@@ -178,11 +178,11 @@ html[dir='rtl'] body {
 
 /* ——— Filter bar ——— */
 .filter-bar {
-  @apply space-y-2.5;
+  @apply space-y-2;
 }
 
 .filter-bar-row {
-  @apply flex gap-2 overflow-x-auto scrollbar-none;
+  @apply flex items-center gap-1.5 overflow-x-auto scrollbar-none;
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
@@ -192,23 +192,23 @@ html[dir='rtl'] body {
 }
 
 .filter-search {
-  @apply min-w-0 flex-1 rounded-xl border border-royal-700 bg-royal-900/80 px-4 py-2.5 text-sm text-white placeholder:text-royal-500 focus:border-gold-400 focus:outline-none focus:ring-1 focus:ring-gold-400/40;
+  @apply h-9 w-full rounded-xl border border-royal-700/60 bg-royal-900/80 text-xs text-white placeholder:text-royal-400/70 transition focus:border-gold-400/80 focus:bg-royal-900 focus:outline-none focus:ring-1 focus:ring-gold-400/30;
 }
 
 .filter-transaction-btn {
-  @apply shrink-0 rounded-xl border border-royal-700 bg-royal-900/80 px-2.5 py-2.5 text-[11px] font-medium whitespace-nowrap text-royal-200 transition active:scale-95;
+  @apply shrink-0 h-9 rounded-xl border border-royal-700/60 bg-royal-900/80 px-3 text-xs font-medium whitespace-nowrap text-royal-200 transition active:scale-95 hover:border-royal-600 hover:text-white;
 }
 
 .filter-transaction-btn-active {
-  @apply border-gold-500/60 bg-gold-500/20 text-gold-300;
+  @apply border-gold-400 bg-gradient-to-br from-gold-400 to-gold-500 text-royal-950 font-bold shadow-md shadow-gold-500/25 hover:text-royal-950;
 }
 
 .filter-toggle {
-  @apply flex shrink-0 items-center gap-1.5 rounded-xl border border-royal-700 bg-royal-900/80 px-3 py-2.5 text-sm text-royal-200 transition;
+  @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-royal-700/60 bg-royal-900/80 text-royal-200 transition active:scale-95 hover:border-royal-600 hover:text-gold-300;
 }
 
 .filter-toggle-active {
-  @apply border-gold-500/50 bg-gold-500/15 text-gold-300;
+  @apply border-gold-500/60 bg-gold-500/20 text-gold-300 shadow-sm shadow-gold-500/20;
 }
 
 .filter-chips {
@@ -234,7 +234,7 @@ html[dir='rtl'] body {
 }
 
 .filter-pills {
-  @apply flex gap-2 overflow-x-auto pb-0.5 scrollbar-none;
+  @apply flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none;
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
@@ -244,11 +244,11 @@ html[dir='rtl'] body {
 }
 
 .filter-pill {
-  @apply flex shrink-0 items-center gap-1.5 rounded-full border border-royal-700 bg-royal-900/70 px-3 py-2 text-xs font-medium text-royal-200 transition active:scale-[0.98];
+  @apply flex shrink-0 items-center gap-1 rounded-full border border-royal-700/60 bg-royal-900/60 px-2.5 py-1 text-[11px] font-medium text-royal-300 transition active:scale-95 hover:border-royal-600 hover:text-white;
 }
 
 .filter-pill-active {
-  @apply border-gold-500/60 bg-gold-500/15 text-gold-300;
+  @apply border-gold-500/60 bg-gold-500/15 text-gold-300 font-semibold;
 }
 
 .filter-pill-label {
@@ -256,7 +256,7 @@ html[dir='rtl'] body {
 }
 
 .filter-pill-clear {
-  @apply flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-royal-800/80 text-royal-300 transition hover:bg-royal-700 hover:text-white;
+  @apply flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-royal-800/80 text-royal-300 transition hover:bg-royal-700 hover:text-white;
 }
 
 .filter-popup-root {
@@ -667,7 +667,7 @@ html[dir='rtl'] body {
 }
 
 .property-gallery-nav {
-  @apply absolute top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-royal-950/75 text-white shadow-lg backdrop-blur-md transition hover:bg-royal-900/90 active:scale-95 sm:h-10 sm:w-10;
+  @apply absolute top-1/2 z-40 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-royal-950/85 text-white shadow-xl backdrop-blur-md transition hover:bg-royal-900 active:scale-95 sm:h-10 sm:w-10;
 }
 
 .property-gallery-nav-prev {
@@ -691,7 +691,7 @@ html[dir='rtl'] body {
 }
 
 .property-gallery-counter {
-  @apply absolute bottom-2.5 end-2.5 z-10 rounded-full bg-royal-950/80 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur-md sm:bottom-3 sm:end-3 sm:px-2.5 sm:py-1 sm:text-xs;
+  @apply absolute bottom-2.5 end-2.5 z-40 rounded-full border border-white/15 bg-royal-950/85 px-2.5 py-0.5 text-[11px] font-medium text-white shadow-lg backdrop-blur-md sm:bottom-3 sm:end-3 sm:px-2.5 sm:py-1 sm:text-xs;
 }
 
 .property-gallery-dots {

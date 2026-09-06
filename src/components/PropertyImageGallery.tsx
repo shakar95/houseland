@@ -222,43 +222,92 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
                     {index === i ? (
                       <>
                         <div className={`w-full h-full ${videoInteracting ? 'pointer-events-auto' : 'pointer-events-none'}`}>
-                          <VideoEmbed url={slide.url} aspect="reel" />
+                          <VideoEmbed url={slide.url} aspect="reel" autoPlay={videoInteracting} />
                         </div>
 
-                        {!videoInteracting && (
+                        {!videoInteracting ? (
                           <div
-                            className="absolute inset-0 z-10 flex items-center justify-center cursor-pointer select-none"
+                            className="absolute inset-0 z-20 flex flex-col items-center justify-center cursor-pointer select-none bg-black/25 transition-all"
                             onTouchStart={onVideoOverlayTouchStart}
                             onTouchEnd={onVideoOverlayTouchEnd}
                             onClick={onVideoOverlayClick}
-                          />
-                        )}
-
-                        {videoInteracting && multi && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setVideoInteracting(false);
-                            }}
-                            className="absolute bottom-3 start-3 z-30 inline-flex items-center gap-1.5 rounded-full bg-royal-950/90 px-3 py-1 text-xs font-medium text-white shadow-md backdrop-blur-md border border-white/20 hover:bg-royal-900 transition-all"
                           >
-                            <span>گەڕانەوە بۆ سوایپ</span>
-                          </button>
-                        )}
-
-                        {multi && (
+                            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gold-500 text-royal-950 shadow-2xl backdrop-blur-md transition-all active:scale-95 border-2 border-white/40">
+                              <Play className="h-6 w-6 fill-royal-950 ms-0.5" />
+                            </div>
+                            <span className="mt-2.5 rounded-full bg-royal-950/85 px-3.5 py-1 text-xs font-semibold text-white backdrop-blur-md border border-white/20">
+                              {t.property.video} • بۆ لێدان دابگرە
+                            </span>
+                          </div>
+                        ) : (
                           <>
-                            <div
-                              className="absolute inset-y-0 start-0 w-12 z-20 touch-pan-y"
-                              onTouchStart={onTouchStart}
-                              onTouchEnd={onTouchEnd}
-                            />
-                            <div
-                              className="absolute inset-y-0 end-0 w-12 z-20 touch-pan-y"
-                              onTouchStart={onTouchStart}
-                              onTouchEnd={onTouchEnd}
-                            />
+                            {/* Floating Top Nav Pill when video is active */}
+                            {multi && (
+                              <div className="absolute top-3 inset-x-3 z-30 flex items-center justify-between pointer-events-auto">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    goTo(index - 1);
+                                  }}
+                                  className="inline-flex items-center gap-1.5 rounded-full bg-royal-950/90 border border-white/25 px-3 py-1.5 text-xs font-semibold text-white shadow-xl backdrop-blur-md active:scale-95 hover:bg-royal-900 transition"
+                                  aria-label={t.property.photoPrev}
+                                >
+                                  <PrevIcon className="h-4 w-4 text-gold-400" />
+                                  <span>{rtl ? 'دواتر' : 'پێشوو'}</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setVideoInteracting(false);
+                                  }}
+                                  className="inline-flex items-center gap-1.5 rounded-full bg-gold-500 text-royal-950 px-3.5 py-1.5 text-xs font-bold shadow-xl border border-gold-400 active:scale-95 transition hover:bg-gold-400"
+                                >
+                                  <span>دۆخی سڵاید / سوایپ</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    goTo(index + 1);
+                                  }}
+                                  className="inline-flex items-center gap-1.5 rounded-full bg-royal-950/90 border border-white/25 px-3 py-1.5 text-xs font-semibold text-white shadow-xl backdrop-blur-md active:scale-95 hover:bg-royal-900 transition"
+                                  aria-label={t.property.photoNext}
+                                >
+                                  <span>{rtl ? 'پێشوو' : 'دواتر'}</span>
+                                  <NextIcon className="h-4 w-4 text-gold-400" />
+                                </button>
+                              </div>
+                            )}
+
+                            {/* Generous touch swipe zones across top, bottom, and sides */}
+                            {multi && (
+                              <>
+                                <div
+                                  className="absolute top-0 inset-x-0 h-16 z-20 touch-pan-x"
+                                  onTouchStart={onTouchStart}
+                                  onTouchEnd={onTouchEnd}
+                                />
+                                <div
+                                  className="absolute bottom-0 inset-x-0 h-16 z-20 touch-pan-x"
+                                  onTouchStart={onTouchStart}
+                                  onTouchEnd={onTouchEnd}
+                                />
+                                <div
+                                  className="absolute inset-y-16 start-0 w-14 z-20 touch-pan-x"
+                                  onTouchStart={onTouchStart}
+                                  onTouchEnd={onTouchEnd}
+                                />
+                                <div
+                                  className="absolute inset-y-16 end-0 w-14 z-20 touch-pan-x"
+                                  onTouchStart={onTouchStart}
+                                  onTouchEnd={onTouchEnd}
+                                />
+                              </>
+                            )}
                           </>
                         )}
                       </>

@@ -72,7 +72,7 @@ function extractInstagramId(url: string): string | null {
   return m ? m[1] : null;
 }
 
-export function parseVideoLink(url: string, aspect: VideoAspect = 'video'): VideoEmbed {
+export function parseVideoLink(url: string, aspect: VideoAspect = 'video', autoPlay = false): VideoEmbed {
   const trimmed = url.trim();
   const cls = iframeClass(aspect);
   if (!trimmed) {
@@ -81,10 +81,11 @@ export function parseVideoLink(url: string, aspect: VideoAspect = 'video'): Vide
 
   const ytId = extractYouTubeId(trimmed);
   if (ytId) {
+    const autoParam = autoPlay ? '&autoplay=1' : '';
     const src =
       aspect === 'reel'
-        ? `https://www.youtube.com/embed/${ytId}?playsinline=1`
-        : `https://www.youtube.com/embed/${ytId}`;
+        ? `https://www.youtube.com/embed/${ytId}?playsinline=1${autoParam}`
+        : `https://www.youtube.com/embed/${ytId}?${autoPlay ? 'autoplay=1' : ''}`;
     return {
       provider: 'youtube',
       originalUrl: trimmed,

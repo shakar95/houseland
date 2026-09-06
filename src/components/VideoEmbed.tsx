@@ -6,9 +6,10 @@ type Props = {
   url: string;
   aspect?: VideoAspect;
   className?: string;
+  autoPlay?: boolean;
 };
 
-export function VideoEmbed({ url, aspect = 'video', className }: Props) {
+export function VideoEmbed({ url, aspect = 'video', className, autoPlay = false }: Props) {
   const [currentUrl, setCurrentUrl] = useState(url);
 
   useEffect(() => {
@@ -27,7 +28,7 @@ export function VideoEmbed({ url, aspect = 'video', className }: Props) {
     }
   }, [url]);
 
-  const embed = parseVideoLink(currentUrl, aspect);
+  const embed = parseVideoLink(currentUrl, aspect, autoPlay);
   if (!embed.embedHtml) {
     return (
       <a

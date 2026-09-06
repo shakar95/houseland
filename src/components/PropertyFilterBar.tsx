@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { SlidersHorizontal, X } from 'lucide-react';
+import { ChevronDown, Search, SlidersHorizontal, X } from 'lucide-react';
 import { FilterPopup } from '@/components/FilterPopup';
 import { NeighborhoodFilterSelect } from '@/components/NeighborhoodFilterSelect';
 import {
@@ -63,7 +63,7 @@ function FilterPill({
       className={`filter-pill ${active ? 'filter-pill-active' : ''}`}
     >
       <span className="filter-pill-label">{label}</span>
-      {active && (
+      {active ? (
         <span
           role="button"
           tabIndex={0}
@@ -83,6 +83,8 @@ function FilterPill({
         >
           <X className="h-3 w-3" />
         </span>
+      ) : (
+        <ChevronDown className="h-2.5 w-2.5 text-royal-400/80 ms-0.5 shrink-0" />
       )}
     </button>
   );
@@ -231,13 +233,26 @@ export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
   return (
     <div className="filter-bar">
       <div className="filter-bar-row">
-        <input
-          type="search"
-          className="filter-search"
-          placeholder={t.app.searchPlaceholder}
-          value={filters.code ?? ''}
-          onChange={(e) => setScalar('code', e.target.value)}
-        />
+        <div className="relative min-w-0 flex-1">
+          <Search className="pointer-events-none absolute start-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-royal-400" />
+          <input
+            type="search"
+            className="filter-search ps-8 pe-7"
+            placeholder={t.app.searchPlaceholder}
+            value={filters.code ?? ''}
+            onChange={(e) => setScalar('code', e.target.value)}
+          />
+          {filters.code && (
+            <button
+              type="button"
+              onClick={() => setScalar('code', '')}
+              className="absolute end-2 top-1/2 -translate-y-1/2 flex h-4 w-4 items-center justify-center rounded-full bg-royal-800 text-royal-300 hover:bg-royal-700 hover:text-white"
+              aria-label="Clear"
+            >
+              <X className="h-2.5 w-2.5" />
+            </button>
+          )}
+        </div>
         {quickTransactionFilters.map((tx) => (
           <button
             key={tx}
@@ -255,7 +270,7 @@ export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
           aria-expanded={modalOpen}
           aria-label={t.app.moreFilters}
         >
-          <SlidersHorizontal className="h-4 w-4" />
+          <SlidersHorizontal className="h-3.5 w-3.5" />
         </button>
       </div>
 
@@ -484,14 +499,19 @@ export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
       </FilterPopup>
 
       {resultCount !== undefined && (
-        <p className="filter-count">
-          {resultCount} {t.app.results}
+        <div className="filter-count flex items-center justify-between">
+          <span className="flex items-center gap-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-gold-400 shadow-sm shadow-gold-400/50" />
+            <span>
+              <strong className="font-semibold text-white">{resultCount}</strong> {t.app.results}
+            </span>
+          </span>
           {hasSecondaryFilters && (
-            <button type="button" onClick={clearSecondaryFilters} className="ms-2 text-gold-400 underline">
+            <button type="button" onClick={clearSecondaryFilters} className="text-[11px] font-medium text-gold-400 hover:text-gold-300 transition">
               {t.app.clearFilters}
             </button>
           )}
-        </p>
+        </div>
       )}
     </div>
   );
