@@ -241,48 +241,6 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
                           </div>
                         ) : (
                           <>
-                            {/* Floating Top Nav Pill when video is active */}
-                            {multi && (
-                              <div className="absolute top-3 inset-x-3 z-30 flex items-center justify-between pointer-events-auto">
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    goTo(index - 1);
-                                  }}
-                                  className="inline-flex items-center gap-1.5 rounded-full bg-royal-950/90 border border-white/25 px-3 py-1.5 text-xs font-semibold text-white shadow-xl backdrop-blur-md active:scale-95 hover:bg-royal-900 transition"
-                                  aria-label={t.property.photoPrev}
-                                >
-                                  <PrevIcon className="h-4 w-4 text-gold-400" />
-                                  <span>{rtl ? 'دواتر' : 'پێشوو'}</span>
-                                </button>
-
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setVideoInteracting(false);
-                                  }}
-                                  className="inline-flex items-center gap-1.5 rounded-full bg-gold-500 text-royal-950 px-3.5 py-1.5 text-xs font-bold shadow-xl border border-gold-400 active:scale-95 transition hover:bg-gold-400"
-                                >
-                                  <span>دۆخی سڵاید / سوایپ</span>
-                                </button>
-
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    goTo(index + 1);
-                                  }}
-                                  className="inline-flex items-center gap-1.5 rounded-full bg-royal-950/90 border border-white/25 px-3 py-1.5 text-xs font-semibold text-white shadow-xl backdrop-blur-md active:scale-95 hover:bg-royal-900 transition"
-                                  aria-label={t.property.photoNext}
-                                >
-                                  <span>{rtl ? 'پێشوو' : 'دواتر'}</span>
-                                  <NextIcon className="h-4 w-4 text-gold-400" />
-                                </button>
-                              </div>
-                            )}
-
                             {/* Generous touch swipe zones across top, bottom, and sides */}
                             {multi && (
                               <>
