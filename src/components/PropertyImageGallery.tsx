@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Play } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Maximize2, Minimize2, Play } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { VideoEmbed } from '@/components/VideoEmbed';
 import { PropertyImageLightbox } from '@/components/PropertyImageLightbox';
@@ -47,6 +47,8 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [lightboxStartScale, setLightboxStartScale] = useState(1);
   const trackRef = useRef<HTMLDivElement>(null);
+  const videoContainerRef = useRef<HTMLDivElement>(null);
+  const [isVideoFullscreen, setIsVideoFullscreen] = useState(false);
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const isSwipingRef = useRef<boolean | null>(null);
   const lastTapRef = useRef(0);
@@ -73,6 +75,34 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
     }
     prevIndexRef.current = index;
   }, [index, videoSlideIndex]);
+
+  const toggleVideoFullscreen = useCallback(async () => {
+    if (!isVideoFullscreen) {
+      setIsVideoFullscreen(true);
+      try {
+        if (videoContainerRef.current?.requestFullscreen) {
+          await videoContainerRef.current.requestFullscreen();
+        }
+      } catch {}
+    } else {
+      setIsVideoFullscreen(false);
+      try {
+        if (document.fullscreenElement && document.exitFullscreen) {
+          await document.exitFullscreen();
+        }
+      } catch {}
+    }
+  }, [isVideoFullscreen]);
+
+  useEffect(() => {
+    const onFsChange = () => {
+      if (!document.fullscreenElement) {
+        setIsVideoFullscreen(false);
+      }
+    };
+    document.addEventListener('fullscreenchange', onFsChange);
+    return () => document.removeEventListener('fullscreenchange', onFsChange);
+  }, []);
 
   useEffect(() => {
     if (trackRef.current) {
@@ -254,7 +284,14 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
                 </div>
               ) : (
                 <div key={slide.key} className="property-gallery-slide property-gallery-slide--reel">
-                  <div className="property-gallery-reel-frame relative">
+                  <div
+                    ref={videoContainerRef}
+                    className={
+                      isVideoFullscreen
+                        ? 'fixed inset-0 z-[250] bg-black flex items-center justify-center p-0'
+                        : 'property-gallery-reel-frame relative'
+                    }
+                  >
                     <div className="w-full h-full pointer-events-auto">
                       <VideoEmbed
                         key={`video-${slide.key}-${videoKey}`}
@@ -264,8 +301,26 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
                       />
                     </div>
 
-                    {/* Fluid swipe gesture zones across the outer perimeter of the video */}
-                    {multi && (
+                    {/* Fullscreen icon button on video */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleVideoFullscreen();
+                      }}
+                      className="absolute top-3 start-3 z-30 pointer-events-auto inline-flex items-center justify-center h-8 w-8 rounded-full bg-royal-950/90 text-white border border-white/25 shadow-lg backdrop-blur-md hover:bg-royal-900 active:scale-95 transition-all"
+                      aria-label={isVideoFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+                      title={isVideoFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+                    >
+                      {isVideoFullscreen ? (
+                        <Minimize2 className="h-4 w-4 text-gold-400" />
+                      ) : (
+                        <Maximize2 className="h-4 w-4 text-gold-400" />
+                      )}
+                    </button>
+
+                    {/* Fluid swipe gesture zones across outer perimeter of video (disabled in fullscreen) */}
+                    {!isVideoFullscreen && multi && (
                       <>
                         <div
                           className="absolute top-0 inset-x-0 h-28 z-20"
