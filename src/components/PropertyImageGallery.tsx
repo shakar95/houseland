@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Play } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { VideoEmbed } from '@/components/VideoEmbed';
 import { PropertyImageLightbox } from '@/components/PropertyImageLightbox';
@@ -66,6 +66,25 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
   useEffect(() => {
     setVideoInteracting(false);
   }, [index]);
+
+  useEffect(() => {
+    const handleMessage = (e: MessageEvent) => {
+      try {
+        const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+        if (data?.event === 'onStateChange') {
+          // 2 = paused, 0 = ended
+          if (data.info === 2 || data.info === 0) {
+            setVideoInteracting(false);
+          } else if (data.info === 1) {
+            setVideoInteracting(true);
+          }
+        }
+      } catch {}
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
   const goTo = useCallback(
     (next: number) => {
@@ -273,16 +292,34 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
 
                         {!videoInteracting ? (
                           <div
-                            className="absolute inset-0 z-20 cursor-pointer select-none bg-transparent"
+                            className="absolute inset-0 z-20 flex items-center justify-center cursor-pointer select-none bg-black/25 transition-all"
                             style={{ touchAction: 'pan-y' }}
                             onTouchStart={onVideoOverlayTouchStart}
                             onTouchMove={onVideoOverlayTouchMove}
                             onTouchEnd={onVideoOverlayTouchEnd}
                             onTouchCancel={onVideoOverlayTouchCancel}
                             onClick={onVideoOverlayClick}
-                          />
+                          >
+                            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-black/60 backdrop-blur-md border border-white/30 text-white shadow-2xl transition hover:scale-105 active:scale-95">
+                              <Play className="h-7 w-7 fill-white text-white ms-1" />
+                            </div>
+                          </div>
                         ) : (
                           <>
+                            {/* Floating Pause Button when video is active */}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setVideoInteracting(false);
+                              }}
+                              className="absolute top-3 start-3 z-30 inline-flex items-center gap-1.5 rounded-full bg-royal-950/85 px-3 py-1.5 text-xs font-semibold text-white border border-white/25 shadow-xl backdrop-blur-md hover:bg-royal-900 active:scale-95 transition pointer-events-auto"
+                              aria-label="Pause"
+                            >
+                              <Pause className="h-3.5 w-3.5 text-gold-400 fill-gold-400" />
+                              <span>ڕاگرتن</span>
+                            </button>
+
                             {/* Touch swipe zones across top, bottom, and sides */}
                             {multi && (
                               <>

@@ -84,8 +84,8 @@ export function parseVideoLink(url: string, aspect: VideoAspect = 'video', autoP
     const autoParam = autoPlay ? '&autoplay=1' : '';
     const src =
       aspect === 'reel'
-        ? `https://www.youtube.com/embed/${ytId}?playsinline=1${autoParam}`
-        : `https://www.youtube.com/embed/${ytId}?${autoPlay ? 'autoplay=1' : ''}`;
+        ? `https://www.youtube.com/embed/${ytId}?playsinline=1&enablejsapi=1${autoParam}`
+        : `https://www.youtube.com/embed/${ytId}?enablejsapi=1${autoParam}`;
     return {
       provider: 'youtube',
       originalUrl: trimmed,
@@ -104,10 +104,11 @@ export function parseVideoLink(url: string, aspect: VideoAspect = 'video', autoP
 
   const fbUrl = extractFacebookEmbed(trimmed);
   if (fbUrl) {
+    const autoParam = autoPlay ? '&autoplay=true' : '';
     return {
       provider: 'facebook',
       originalUrl: trimmed,
-      embedHtml: `<iframe class="${cls}" src="https://www.facebook.com/plugins/video.php?href=${fbUrl}&show_text=false" title="Facebook" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowfullscreen="true" scrolling="no"></iframe>`,
+      embedHtml: `<iframe class="${cls}" src="https://www.facebook.com/plugins/video.php?href=${fbUrl}&show_text=false${autoParam}" title="Facebook" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowfullscreen="true" scrolling="no"></iframe>`,
     };
   }
 
