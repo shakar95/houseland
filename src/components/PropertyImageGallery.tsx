@@ -47,6 +47,7 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [lightboxStartScale, setLightboxStartScale] = useState(1);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const touchCurrent = useRef<{ x: number; y: number } | null>(null);
   const lastTapRef = useRef(0);
   const singleTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchHandledRef = useRef(false);
@@ -60,6 +61,7 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
 
   const [videoInteracting, setVideoInteracting] = useState(false);
   const videoTouchStart = useRef<{ x: number; y: number } | null>(null);
+  const videoTouchCurrent = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     setVideoInteracting(false);
@@ -77,7 +79,7 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
     (startX: number, startY: number, endX: number, endY: number): boolean => {
       const dx = startX - endX;
       const dy = startY - endY;
-      if (multi && Math.abs(dx) >= 30 && Math.abs(dx) > Math.abs(dy)) {
+      if (multi && Math.abs(dx) >= 20 && Math.abs(dx) > Math.abs(dy)) {
         if (singleTapTimerRef.current) {
           clearTimeout(singleTapTimerRef.current);
           singleTapTimerRef.current = null;
@@ -130,18 +132,30 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
   );
 
   const onTouchStart = (e: React.TouchEvent) => {
-    touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    if (e.touches.length !== 1) return;
+    const t = e.touches[0];
+    touchStart.current = { x: t.clientX, y: t.clientY };
+    touchCurrent.current = { x: t.clientX, y: t.clientY };
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (!touchStart.current || e.touches.length !== 1) return;
+    const t = e.touches[0];
+    touchCurrent.current = { x: t.clientX, y: t.clientY };
   };
 
   const onTouchEnd = (e: React.TouchEvent) => {
     if (!touchStart.current) return;
     const start = touchStart.current;
-    const endX = e.changedTouches[0].clientX;
-    const endY = e.changedTouches[0].clientY;
-    const moved = Math.hypot(start.x - endX, start.y - endY);
+    const end = touchCurrent.current ?? {
+      x: e.changedTouches[0]?.clientX ?? start.x,
+      y: e.changedTouches[0]?.clientY ?? start.y,
+    };
+    const moved = Math.hypot(start.x - end.x, start.y - end.y);
     touchStart.current = null;
+    touchCurrent.current = null;
 
-    if (handleSwipe(start.x, start.y, endX, endY)) {
+    if (handleSwipe(start.x, start.y, end.x, end.y)) {
       return;
     }
 
@@ -151,25 +165,55 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
     }
   };
 
+  const onTouchCancel = () => {
+    if (!touchStart.current) return;
+    const start = touchStart.current;
+    const end = touchCurrent.current ?? start;
+    touchStart.current = null;
+    touchCurrent.current = null;
+    handleSwipe(start.x, start.y, end.x, end.y);
+  };
+
   const onVideoOverlayTouchStart = (e: React.TouchEvent) => {
-    videoTouchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    if (e.touches.length !== 1) return;
+    const t = e.touches[0];
+    videoTouchStart.current = { x: t.clientX, y: t.clientY };
+    videoTouchCurrent.current = { x: t.clientX, y: t.clientY };
+  };
+
+  const onVideoOverlayTouchMove = (e: React.TouchEvent) => {
+    if (!videoTouchStart.current || e.touches.length !== 1) return;
+    const t = e.touches[0];
+    videoTouchCurrent.current = { x: t.clientX, y: t.clientY };
   };
 
   const onVideoOverlayTouchEnd = (e: React.TouchEvent) => {
     if (!videoTouchStart.current) return;
     const start = videoTouchStart.current;
-    const endX = e.changedTouches[0].clientX;
-    const endY = e.changedTouches[0].clientY;
-    const moved = Math.hypot(start.x - endX, start.y - endY);
+    const end = videoTouchCurrent.current ?? {
+      x: e.changedTouches[0]?.clientX ?? start.x,
+      y: e.changedTouches[0]?.clientY ?? start.y,
+    };
+    const moved = Math.hypot(start.x - end.x, start.y - end.y);
     videoTouchStart.current = null;
+    videoTouchCurrent.current = null;
 
-    if (handleSwipe(start.x, start.y, endX, endY)) {
+    if (handleSwipe(start.x, start.y, end.x, end.y)) {
       return;
     }
 
     if (moved < 15) {
       setVideoInteracting(true);
     }
+  };
+
+  const onVideoOverlayTouchCancel = () => {
+    if (!videoTouchStart.current) return;
+    const start = videoTouchStart.current;
+    const end = videoTouchCurrent.current ?? start;
+    videoTouchStart.current = null;
+    videoTouchCurrent.current = null;
+    handleSwipe(start.x, start.y, end.x, end.y);
   };
 
   const onVideoOverlayClick = () => {
@@ -193,7 +237,9 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
         <div
           className={`property-gallery-viewport${activeIsReel ? ' property-gallery-viewport--reel' : ''}`}
           onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
+          onTouchCancel={onTouchCancel}
         >
           <div
             className="property-gallery-track"
@@ -227,42 +273,50 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
 
                         {!videoInteracting ? (
                           <div
-                            className="absolute inset-0 z-20 flex flex-col items-center justify-center cursor-pointer select-none bg-black/25 transition-all"
+                            className="absolute inset-0 z-20 cursor-pointer select-none bg-transparent"
+                            style={{ touchAction: 'pan-y' }}
                             onTouchStart={onVideoOverlayTouchStart}
+                            onTouchMove={onVideoOverlayTouchMove}
                             onTouchEnd={onVideoOverlayTouchEnd}
+                            onTouchCancel={onVideoOverlayTouchCancel}
                             onClick={onVideoOverlayClick}
-                          >
-                            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gold-500 text-royal-950 shadow-2xl backdrop-blur-md transition-all active:scale-95 border-2 border-white/40">
-                              <Play className="h-6 w-6 fill-royal-950 ms-0.5" />
-                            </div>
-                            <span className="mt-2.5 rounded-full bg-royal-950/85 px-3.5 py-1 text-xs font-semibold text-white backdrop-blur-md border border-white/20">
-                              {t.property.video} • بۆ لێدان دابگرە
-                            </span>
-                          </div>
+                          />
                         ) : (
                           <>
-                            {/* Generous touch swipe zones across top, bottom, and sides */}
+                            {/* Touch swipe zones across top, bottom, and sides */}
                             {multi && (
                               <>
                                 <div
-                                  className="absolute top-0 inset-x-0 h-16 z-20 touch-pan-x"
+                                  className="absolute top-0 inset-x-0 h-20 z-20"
+                                  style={{ touchAction: 'pan-y' }}
                                   onTouchStart={onTouchStart}
+                                  onTouchMove={onTouchMove}
                                   onTouchEnd={onTouchEnd}
+                                  onTouchCancel={onTouchCancel}
                                 />
                                 <div
-                                  className="absolute bottom-0 inset-x-0 h-16 z-20 touch-pan-x"
+                                  className="absolute bottom-0 inset-x-0 h-20 z-20"
+                                  style={{ touchAction: 'pan-y' }}
                                   onTouchStart={onTouchStart}
+                                  onTouchMove={onTouchMove}
                                   onTouchEnd={onTouchEnd}
+                                  onTouchCancel={onTouchCancel}
                                 />
                                 <div
-                                  className="absolute inset-y-16 start-0 w-14 z-20 touch-pan-x"
+                                  className="absolute inset-y-20 start-0 w-20 z-20"
+                                  style={{ touchAction: 'pan-y' }}
                                   onTouchStart={onTouchStart}
+                                  onTouchMove={onTouchMove}
                                   onTouchEnd={onTouchEnd}
+                                  onTouchCancel={onTouchCancel}
                                 />
                                 <div
-                                  className="absolute inset-y-16 end-0 w-14 z-20 touch-pan-x"
+                                  className="absolute inset-y-20 end-0 w-20 z-20"
+                                  style={{ touchAction: 'pan-y' }}
                                   onTouchStart={onTouchStart}
+                                  onTouchMove={onTouchMove}
                                   onTouchEnd={onTouchEnd}
+                                  onTouchCancel={onTouchCancel}
                                 />
                               </>
                             )}
