@@ -26,7 +26,7 @@ sanitizeEnvUrl('DIRECT_URL');
 process.env.NODE_ENV = 'production';
 
 console.log('[houseland] Syncing database (prisma db push)...');
-const db = spawnSync('npx', ['prisma', 'db', 'push', '--skip-generate'], {
+const db = spawnSync('npx', ['prisma', 'db', 'push', '--skip-generate', '--accept-data-loss'], {
   stdio: 'inherit',
   env: process.env,
 });
