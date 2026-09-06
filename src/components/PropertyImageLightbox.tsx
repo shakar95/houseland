@@ -5,7 +5,9 @@ import { VideoEmbed } from '@/components/VideoEmbed';
 
 const MIN_SCALE = 1;
 const MAX_SCALE = 4;
-const DOUBLE_TAP_MAX_DELAY = 450;
+const DOUBLE_TAP_MAX_DELAY = 380;
+const DOUBLE_TAP_MIN_DELAY = 40;
+const DOUBLE_TAP_MAX_DISTANCE = 60;
 const TAP_MAX_DISPLACEMENT = 32;
 
 export type ImageSlide = { type: 'image'; src: string; key: string };
@@ -36,6 +38,7 @@ export function PropertyImageLightbox({
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const isPanningRef = useRef(false);
   const isSwipingRef = useRef<boolean | null>(null);
+  const isDoubleTappingRef = useRef(false);
   const lastTapRef = useRef<{ time: number; x: number; y: number } | null>(null);
 
   const PrevIcon = rtl ? ChevronRight : ChevronLeft;
@@ -51,6 +54,7 @@ export function PropertyImageLightbox({
     pinchRef.current = null;
     panStartRef.current = null;
     isPanningRef.current = false;
+    isDoubleTappingRef.current = false;
   }, []);
 
   const prevIndexRef = useRef(index);
@@ -107,7 +111,7 @@ export function PropertyImageLightbox({
         return 1;
       }
       setPan({ x: 0, y: 0 });
-      return 2.5;
+      return 2.4;
     });
   }, [isCurrentImage]);
 
@@ -131,11 +135,33 @@ export function PropertyImageLightbox({
       touchStartRef.current = null;
       isSwipingRef.current = null;
       isPanningRef.current = false;
+      isDoubleTappingRef.current = false;
       return;
     }
+
     if (e.touches.length === 1) {
       const t = e.touches[0];
-      touchStartRef.current = { x: t.clientX, y: t.clientY, time: Date.now() };
+      const now = Date.now();
+
+      // Instantly trigger zoom on touch-start of the second tap for zero perceived latency!
+      if (
+        isCurrentImage &&
+        lastTapRef.current &&
+        now - lastTapRef.current.time < DOUBLE_TAP_MAX_DELAY &&
+        now - lastTapRef.current.time > DOUBLE_TAP_MIN_DELAY &&
+        Math.hypot(t.clientX - lastTapRef.current.x, t.clientY - lastTapRef.current.y) < DOUBLE_TAP_MAX_DISTANCE
+      ) {
+        lastTapRef.current = null;
+        isDoubleTappingRef.current = true;
+        touchStartRef.current = null;
+        isSwipingRef.current = null;
+        isPanningRef.current = false;
+        toggleZoom();
+        return;
+      }
+
+      isDoubleTappingRef.current = false;
+      touchStartRef.current = { x: t.clientX, y: t.clientY, time: now };
       isSwipingRef.current = null;
       isPanningRef.current = false;
       panStartRef.current = {
@@ -148,6 +174,8 @@ export function PropertyImageLightbox({
   };
 
   const onTouchMove = (e: React.TouchEvent) => {
+    if (isDoubleTappingRef.current) return;
+
     if (e.touches.length === 2 && pinchRef.current && isCurrentImage) {
       const distance = touchDistance(e.touches);
       const next = clampScale(pinchRef.current.scale * (distance / pinchRef.current.distance));
@@ -200,6 +228,11 @@ export function PropertyImageLightbox({
 
     if (e.touches.length > 0) return;
 
+    if (isDoubleTappingRef.current) {
+      isDoubleTappingRef.current = false;
+      return;
+    }
+
     const start = touchStartRef.current;
     touchStartRef.current = null;
     const wasSwiping = isSwipingRef.current === true;
@@ -216,29 +249,18 @@ export function PropertyImageLightbox({
     const dist = Math.hypot(dx, dy);
     const elapsed = Date.now() - start.time;
 
-    // 1. Double tap detection (displacement < 32px)
+    // Record tap if displacement is small (< 32px) so subsequent touch-start can double-tap instantly
     if (dist < TAP_MAX_DISPLACEMENT && isCurrentImage) {
-      const now = Date.now();
-      if (
-        lastTapRef.current &&
-        now - lastTapRef.current.time < DOUBLE_TAP_MAX_DELAY &&
-        now - lastTapRef.current.time > 40 &&
-        Math.hypot(endX - lastTapRef.current.x, endY - lastTapRef.current.y) < 55
-      ) {
-        lastTapRef.current = null;
-        toggleZoom();
-        return;
-      }
-      lastTapRef.current = { time: now, x: endX, y: endY };
+      lastTapRef.current = { time: start.time, x: endX, y: endY };
       return;
     }
 
-    // 2. If zoomed in and was panning: don't slide slides
+    // If zoomed in and was panning: don't slide
     if (scale > 1 || wasPanning) {
       return;
     }
 
-    // 3. If unzoomed (scale <= 1) and was swiping: slide carousel
+    // If unzoomed (scale <= 1) and was swiping: slide carousel
     if (wasSwiping && multi && trackRef.current) {
       trackRef.current.style.transition = 'transform 0.32s cubic-bezier(0.25, 0.9, 0.3, 1)';
       const isFlick = elapsed < 320 && Math.abs(dx) > 28;
@@ -263,6 +285,7 @@ export function PropertyImageLightbox({
     pinchRef.current = null;
     panStartRef.current = null;
     isPanningRef.current = false;
+    isDoubleTappingRef.current = false;
     if (trackRef.current && scale <= 1) {
       trackRef.current.style.transition = 'transform 0.32s cubic-bezier(0.25, 0.9, 0.3, 1)';
       const baseOffset = rtl ? index * 100 : -index * 100;
@@ -385,7 +408,7 @@ export function PropertyImageLightbox({
                     transition:
                       i === index && (isPanningRef.current || pinchRef.current)
                         ? 'none'
-                        : 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+                        : 'transform 0.22s cubic-bezier(0.25, 1, 0.5, 1)',
                   }}
                 >
                   <img
