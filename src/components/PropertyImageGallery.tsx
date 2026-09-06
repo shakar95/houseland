@@ -181,7 +181,7 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
           singleTapTimerRef.current = null;
         }
         lastTapRef.current = 0;
-        const forward = rtl ? dx < 0 : dx > 0;
+        const forward = rtl ? dx > 0 : dx < 0;
         const nextIndex = forward ? index + 1 : index - 1;
         if (nextIndex >= 0 && nextIndex < slides.length) {
           goTo(nextIndex);

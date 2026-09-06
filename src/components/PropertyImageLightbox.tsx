@@ -150,8 +150,8 @@ export function PropertyImageLightbox({
 
     const endX = e.changedTouches[0].clientX;
     const endY = e.changedTouches[0].clientY;
-    const dx = start.x - endX;
-    const dy = start.y - endY;
+    const dx = endX - start.x;
+    const dy = endY - start.y;
     const moved = Math.hypot(dx, dy);
 
     if (didPanRef.current) {
@@ -160,7 +160,7 @@ export function PropertyImageLightbox({
     }
 
     if (multi && scale <= 1 && Math.abs(dx) >= 40 && Math.abs(dx) > Math.abs(dy)) {
-      const forward = rtl ? dx < 0 : dx > 0;
+      const forward = rtl ? dx > 0 : dx < 0;
       goTo(index + (forward ? 1 : -1));
       return;
     }
