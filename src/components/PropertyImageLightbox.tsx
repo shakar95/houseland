@@ -103,8 +103,16 @@ export function PropertyImageLightbox({
     });
   };
 
+  const lastZoomToggleTimeRef = useRef(0);
+
   const toggleZoom = useCallback(() => {
     if (!isCurrentImage) return;
+    const now = Date.now();
+    if (now - lastZoomToggleTimeRef.current < 450) {
+      return;
+    }
+    lastZoomToggleTimeRef.current = now;
+
     setScale((current) => {
       if (current > 1.05) {
         setPan({ x: 0, y: 0 });
@@ -114,6 +122,14 @@ export function PropertyImageLightbox({
       return 2.4;
     });
   }, [isCurrentImage]);
+
+  const onDoubleClick = useCallback(() => {
+    const now = Date.now();
+    if (now - lastZoomToggleTimeRef.current < 500) {
+      return;
+    }
+    toggleZoom();
+  }, [toggleZoom]);
 
   const goTo = useCallback(
     (next: number) => {
@@ -388,7 +404,7 @@ export function PropertyImageLightbox({
         onTouchEnd={onTouchEnd}
         onTouchCancel={onTouchCancel}
         onWheel={onWheel}
-        onDoubleClick={toggleZoom}
+        onDoubleClick={onDoubleClick}
       >
         <div
           ref={trackRef}
