@@ -1,5 +1,5 @@
 import { MapContainer, TileLayer, Circle } from 'react-leaflet';
-import { getZoneCenter } from '@/lib/neighborhoods';
+import { useNeighborhoods } from '@/hooks/useNeighborhoods';
 
 interface Props {
   neighborhood: string;
@@ -7,12 +7,17 @@ interface Props {
 
 /** Public map: blurred radius over neighborhood zone — exact coords hidden */
 export function ObfuscatedMap({ neighborhood }: Props) {
-  const [lat, lng] = getZoneCenter(neighborhood);
+  const { neighborhoods } = useNeighborhoods();
+  
+  const nData = neighborhoods.find((n) => n.name === neighborhood);
+  const lat = nData?.latitude ?? 35.556;
+  const lng = nData?.longitude ?? 45.432;
   const radiusMeters = 800;
 
+  // We need key on MapContainer so it remounts when lat/lng change significantly
   return (
     <div className="h-72 w-full overflow-hidden rounded-xl border border-royal-600">
-      <MapContainer center={[lat, lng]} zoom={13} className="h-full w-full" scrollWheelZoom={false}>
+      <MapContainer key={`${lat}-${lng}`} center={[lat, lng]} zoom={13} className="h-full w-full" scrollWheelZoom={false}>
         <TileLayer attribution='&copy; OpenStreetMap' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <Circle
           center={[lat, lng]}

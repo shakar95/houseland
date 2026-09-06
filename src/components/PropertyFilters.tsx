@@ -1,6 +1,6 @@
-import { SULAYMANIYAH_NEIGHBORHOODS } from '@/lib/neighborhoods';
 import { useLanguage } from '@/context/LanguageContext';
 import type { PropertyFilters as Filters } from '@/types';
+import { NeighborhoodSingleSelect } from './NeighborhoodSingleSelect';
 
 interface Props {
   filters: Filters;
@@ -26,18 +26,12 @@ export function PropertyFiltersPanel({ filters, onChange }: Props) {
       </div>
       <div>
         <label className="mb-1 block text-xs text-royal-400">{t.filters.neighborhood}</label>
-        <select
-          className="input-luxury"
-          value={filters.neighborhood ?? 'all'}
-          onChange={(e) => set('neighborhood', e.target.value)}
-        >
-          <option value="all">{t.filters.allAreas}</option>
-          {SULAYMANIYAH_NEIGHBORHOODS.map((n) => (
-            <option key={n} value={n}>
-              {n}
-            </option>
-          ))}
-        </select>
+        <NeighborhoodSingleSelect
+          value={filters.neighborhood ?? ''}
+          onChange={(val) => set('neighborhood', val)}
+          placeholder={t.filters.allAreas}
+          className="filter-select"
+        />
       </div>
       <div>
         <label className="mb-1 block text-xs text-royal-400">{t.filters.type}</label>

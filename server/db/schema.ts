@@ -185,6 +185,15 @@ export const contracts = pgTable('contracts', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
+// ——— Neighborhoods Table ———
+export const neighborhoods = pgTable('neighborhoods', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: text('name').notNull().unique(),
+  latitude: doublePrecision('latitude').notNull(),
+  longitude: doublePrecision('longitude').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
 // ——— Drizzle Relations (for relational queries) ———
 export const profilesRelations = relations(profiles, ({ many, one }) => ({
   submittedProperties: many(properties),
@@ -248,3 +257,6 @@ export type NewCrmEntry = InferInsertModel<typeof crmEntries>;
 
 export type Contract = InferSelectModel<typeof contracts>;
 export type NewContract = InferInsertModel<typeof contracts>;
+
+export type Neighborhood = InferSelectModel<typeof neighborhoods>;
+export type NewNeighborhood = InferInsertModel<typeof neighborhoods>;

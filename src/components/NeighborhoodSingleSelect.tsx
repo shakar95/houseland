@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, Search } from 'lucide-react';
 import { useNeighborhoods } from '@/hooks/useNeighborhoods';
-import { formatFilterListLabel, toggleFilterList } from '@/lib/filterUtils';
 import { useLanguage } from '@/context/LanguageContext';
 
 type Props = {
-  value: string[];
-  onChange: (next: string[]) => void;
+  value: string;
+  onChange: (next: string) => void;
+  placeholder?: string;
+  className?: string;
 };
 
-export function NeighborhoodFilterSelect({ value, onChange }: Props) {
+export function NeighborhoodSingleSelect({ value, onChange, placeholder, className = '' }: Props) {
   const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -24,7 +25,7 @@ export function NeighborhoodFilterSelect({ value, onChange }: Props) {
     return sorted.filter((n) => n.name.toLowerCase().includes(q));
   }, [search, neighborhoods]);
 
-  const triggerLabel = formatFilterListLabel(value, t.filters.selectNeighborhood);
+  const triggerLabel = value && value !== 'all' ? value : placeholder || t.filters.selectNeighborhood;
 
   useEffect(() => {
     if (!open) return;
@@ -50,25 +51,27 @@ export function NeighborhoodFilterSelect({ value, onChange }: Props) {
     };
   }, [open]);
 
-  const toggle = (name: string) => {
-    onChange(toggleFilterList(value, name));
+  const select = (name: string) => {
+    onChange(name);
+    setOpen(false);
+    setSearch('');
   };
 
   return (
-    <div ref={rootRef} className="neighborhood-select">
+    <div ref={rootRef} className={`neighborhood-select ${className}`}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="listbox"
-        className={`neighborhood-select-trigger ${open ? 'neighborhood-select-trigger-open' : ''}`}
+        className={`neighborhood-select-trigger ${open ? 'neighborhood-select-trigger-open' : ''} ${className.includes('input-luxury') ? 'h-11 w-full text-start px-3 bg-royal-800/50 border border-royal-700/50 rounded-xl' : ''}`}
       >
-        <span className="neighborhood-select-trigger-label">{triggerLabel}</span>
+        <span className="neighborhood-select-trigger-label truncate">{triggerLabel}</span>
         <ChevronDown className={`neighborhood-select-chevron ${open ? 'neighborhood-select-chevron-open' : ''}`} />
       </button>
 
       {open && (
-        <div className="neighborhood-select-panel">
+        <div className="neighborhood-select-panel z-50">
           <div className="neighborhood-select-search-wrap">
             <Search className="neighborhood-select-search-icon" />
             <input
@@ -81,16 +84,18 @@ export function NeighborhoodFilterSelect({ value, onChange }: Props) {
             />
           </div>
 
-          <div className="neighborhood-select-box" role="listbox" aria-multiselectable="true">
-            <button
-              type="button"
-              role="option"
-              aria-selected={value.length === 0}
-              className={`neighborhood-select-option ${value.length === 0 ? 'neighborhood-select-option-active' : ''}`}
-              onClick={() => onChange([])}
-            >
-              {t.filters.allAreas}
-            </button>
+          <div className="neighborhood-select-box" role="listbox">
+            {placeholder && (
+              <button
+                type="button"
+                role="option"
+                aria-selected={!value || value === 'all'}
+                className={`neighborhood-select-option ${(!value || value === 'all') ? 'neighborhood-select-option-active' : ''}`}
+                onClick={() => select(placeholder === t.filters.allAreas ? 'all' : '')}
+              >
+                {placeholder}
+              </button>
+            )}
             {filtered.length === 0 ? (
               <p className="neighborhood-select-empty">{t.filters.noNeighborhoodMatch}</p>
             ) : (
@@ -99,9 +104,9 @@ export function NeighborhoodFilterSelect({ value, onChange }: Props) {
                   key={n.id}
                   type="button"
                   role="option"
-                  aria-selected={value.includes(n.name)}
-                  className={`neighborhood-select-option ${value.includes(n.name) ? 'neighborhood-select-option-active' : ''}`}
-                  onClick={() => toggle(n.name)}
+                  aria-selected={value === n.name}
+                  className={`neighborhood-select-option ${value === n.name ? 'neighborhood-select-option-active' : ''}`}
+                  onClick={() => select(n.name)}
                 >
                   {n.name}
                 </button>

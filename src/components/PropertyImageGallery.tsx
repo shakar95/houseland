@@ -49,6 +49,9 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
   const poster = imageUrls[0] ?? FALLBACK_IMAGE;
   const multi = slides.length > 1;
 
+  // Track which slides have been loaded to prevent fetching all images at once
+  const [loadedSlides, setLoadedSlides] = useState<Set<number>>(() => new Set([0, 1]));
+
   const PrevIcon = rtl ? ChevronRight : ChevronLeft;
   const NextIcon = rtl ? ChevronLeft : ChevronRight;
 
@@ -65,6 +68,17 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
     }
     prevIndexRef.current = index;
   }, [index, videoSlideIndex]);
+
+  useEffect(() => {
+    setLoadedSlides((prev) => {
+      if (prev.has(index) && prev.has(index + 1) && prev.has(index - 1)) return prev;
+      const next = new Set(prev);
+      next.add(index);
+      if (index > 0) next.add(index - 1);
+      if (index < slides.length - 1) next.add(index + 1);
+      return next;
+    });
+  }, [index, slides.length]);
 
   const toggleVideoFullscreen = useCallback(async () => {
     if (!isVideoFullscreen) {
@@ -237,12 +251,14 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
                     onClick={() => onImageClick(i)}
                     aria-label={t.property.photoFullscreen}
                   >
-                    <img
-                      src={slide.src}
-                      alt={i === index ? alt : ''}
-                      loading={i === 0 ? 'eager' : 'lazy'}
-                      draggable={false}
-                    />
+                    {loadedSlides.has(i) ? (
+                      <img
+                        src={slide.src}
+                        alt={i === index ? alt : ''}
+                        loading={i === 0 ? 'eager' : 'lazy'}
+                        draggable={false}
+                      />
+                    ) : null}
                   </button>
                 </div>
               ) : (
@@ -256,12 +272,14 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
                     }
                   >
                     <div className="w-full h-full pointer-events-auto">
-                      <VideoEmbed
-                        key={`video-${slide.key}-${videoKey}`}
-                        url={slide.url}
-                        aspect="reel"
-                        autoPlay={false}
-                      />
+                      {loadedSlides.has(i) ? (
+                        <VideoEmbed
+                          key={`video-${slide.key}-${videoKey}`}
+                          url={slide.url}
+                          aspect="reel"
+                          autoPlay={false}
+                        />
+                      ) : null}
                     </div>
 
                     {/* Fullscreen icon button on video */}

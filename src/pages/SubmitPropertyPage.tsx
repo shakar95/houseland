@@ -5,10 +5,11 @@ import { Link } from 'react-router-dom';
 import { signInWithGoogle } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { SULAYMANIYAH_NEIGHBORHOODS, type Neighborhood } from '@/lib/neighborhoods';
 import { LocationPicker } from '@/components/maps/LocationPicker';
 import { PropertyImageUpload } from '@/components/PropertyImageUpload';
 import { uploadPropertyImages } from '@/lib/uploadPropertyImages';
+import { useNeighborhoods } from '@/hooks/useNeighborhoods';
+import { NeighborhoodSingleSelect } from '@/components/NeighborhoodSingleSelect';
 
 const propertyTypes = ['HOUSE', 'APARTMENT', 'VILLA', 'LAND', 'COMMERCIAL', 'FARM'] as const;
 const transactionTypes = ['FOR_SALE', 'FOR_RENT', 'FOR_EXCHANGE'] as const;
@@ -32,7 +33,7 @@ const empty = {
   facing: '',
   latitude: 35.556,
   longitude: 45.432,
-  neighborhood: SULAYMANIYAH_NEIGHBORHOODS[0] as Neighborhood,
+  neighborhood: '',
   nearestLandmark: '',
   images: [] as string[],
   videoLink: '',
@@ -41,6 +42,7 @@ const empty = {
 export function SubmitPropertyPage() {
   const { t, enumLabel } = useLanguage();
   const { profile, loading } = useAuth();
+  const { neighborhoods } = useNeighborhoods();
   const navigate = useNavigate();
   const [form, setForm] = useState(empty);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -327,17 +329,18 @@ export function SubmitPropertyPage() {
         )}
         <div>
           <label className="filter-label">{t.submit.neighborhoodLabel}</label>
-          <select
-            className="input-luxury mt-1"
+          <NeighborhoodSingleSelect
             value={form.neighborhood}
-            onChange={(e) => setForm({ ...form, neighborhood: e.target.value as Neighborhood })}
-          >
-            {SULAYMANIYAH_NEIGHBORHOODS.map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
+            onChange={(val) => {
+              const nData = neighborhoods.find((n) => n.name === val);
+              if (nData) {
+                setForm({ ...form, neighborhood: val, latitude: nData.latitude, longitude: nData.longitude });
+              } else {
+                setForm({ ...form, neighborhood: val });
+              }
+            }}
+            className="input-luxury mt-1"
+          />
         </div>
         <div>
           <label className="filter-label">{t.submit.nearestLandmarkLabel}</label>

@@ -4,11 +4,13 @@ import { ArrowLeft, ArrowRight, Trash2, X, Save, AlertTriangle, ExternalLink } f
 import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { SULAYMANIYAH_NEIGHBORHOODS, type Neighborhood } from '@/lib/neighborhoods';
+import { useNeighborhoods } from '@/hooks/useNeighborhoods';
 import { LocationPicker } from '@/components/maps/LocationPicker';
 import { PropertyImageUpload } from '@/components/PropertyImageUpload';
 import { uploadPropertyImages } from '@/lib/uploadPropertyImages';
 import type { Property } from '@/types';
+
+import { NeighborhoodSingleSelect } from '@/components/NeighborhoodSingleSelect';
 
 const propertyTypes = ['HOUSE', 'APARTMENT', 'VILLA', 'LAND', 'COMMERCIAL', 'FARM'] as const;
 const transactionTypes = ['FOR_SALE', 'FOR_RENT', 'FOR_EXCHANGE'] as const;
@@ -21,6 +23,7 @@ export function EditPropertyPage() {
   const navigate = useNavigate();
   const { t, enumLabel, rtl } = useLanguage();
   const { profile, loading: authLoading } = useAuth();
+  const { neighborhoods } = useNeighborhoods();
 
   const [loadingProperty, setLoadingProperty] = useState(true);
   const [propertyId, setPropertyId] = useState('');
@@ -47,7 +50,7 @@ export function EditPropertyPage() {
     floors: undefined as number | undefined,
     bedrooms: undefined as number | undefined,
     facing: '',
-    neighborhood: SULAYMANIYAH_NEIGHBORHOODS[0] as Neighborhood,
+    neighborhood: '',
     latitude: 35.556,
     longitude: 45.432,
     videoLink: '',
@@ -80,7 +83,7 @@ export function EditPropertyPage() {
           floors: prop.floors ?? undefined,
           bedrooms: prop.bedrooms ?? undefined,
           facing: prop.facing || '',
-          neighborhood: (prop.neighborhood as Neighborhood) || SULAYMANIYAH_NEIGHBORHOODS[0],
+          neighborhood: prop.neighborhood || (neighborhoods.length > 0 ? neighborhoods[0].name : ''),
           latitude: prop.latitude || 35.556,
           longitude: prop.longitude || 45.432,
           videoLink: prop.videoLink || '',
@@ -487,17 +490,18 @@ export function EditPropertyPage() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="filter-label">{t.submit.neighborhoodLabel}</label>
-            <select
-              className="input-luxury mt-1"
+            <NeighborhoodSingleSelect
               value={form.neighborhood}
-              onChange={(e) => setForm({ ...form, neighborhood: e.target.value as Neighborhood })}
-            >
-              {SULAYMANIYAH_NEIGHBORHOODS.map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            </select>
+              onChange={(val) => {
+                const nData = neighborhoods.find((n) => n.name === val);
+                if (nData) {
+                  setForm({ ...form, neighborhood: val, latitude: nData.latitude, longitude: nData.longitude });
+                } else {
+                  setForm({ ...form, neighborhood: val });
+                }
+              }}
+              className="input-luxury mt-1"
+            />
           </div>
           <div>
             <label className="filter-label">{t.submit.nearestLandmarkLabel}</label>

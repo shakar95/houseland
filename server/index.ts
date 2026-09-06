@@ -5,7 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { prisma } from './prisma.js';
 import { db } from './db/index.js';
-import { agencySettings, staff, profiles, properties, analytics, contracts, crmEntries } from './db/schema.js';
+import { agencySettings, staff, profiles, properties, analytics, contracts, crmEntries, neighborhoods } from './db/schema.js';
 import { eq, desc, and, or, sql, inArray, ilike, count } from 'drizzle-orm';
 import { requireAuth, requireRole, type AuthRequest } from './middleware/auth.js';
 import { generatePropertyCode } from './utils/propertyCode.js';
@@ -86,6 +86,14 @@ app.delete('/api/staff/:id', requireAuth, requireRole('ADMIN'), wrap(async (req,
     .set({ active: false })
     .where(eq(staff.id, param(req.params.id)));
   res.json({ ok: true });
+}));
+
+// ——— Neighborhoods ———
+app.get('/api/neighborhoods', wrap(async (_req, res) => {
+  // Cache neighborhoods for 1 hour to reduce DB load
+  res.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=7200');
+  const list = await db.select().from(neighborhoods).orderBy(neighborhoods.name);
+  res.json(list);
 }));
 
 // ——— Properties (public) ———
