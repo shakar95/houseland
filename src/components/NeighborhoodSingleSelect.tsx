@@ -16,7 +16,7 @@ export function NeighborhoodSingleSelect({ value, onChange, placeholder, classNa
   const [search, setSearch] = useState('');
   const rootRef = useRef<HTMLDivElement>(null);
   
-  const { neighborhoods } = useNeighborhoods();
+  const { neighborhoods, error } = useNeighborhoods();
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
