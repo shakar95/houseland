@@ -116,30 +116,38 @@ export function NeighborhoodFilterSelect({ value, onChange, inline }: Props) {
           </div>
 
           <div className="neighborhood-select-box" role="listbox" aria-multiselectable="true">
-            <button
-              type="button"
-              role="option"
-              aria-selected={value.length === 0}
-              className={`neighborhood-select-option ${value.length === 0 ? 'neighborhood-select-option-active' : ''}`}
-              onClick={() => onChange([])}
-            >
-              {t.filters.allAreas}
-            </button>
-            {filtered.length === 0 ? (
-              <p className="neighborhood-select-empty">{t.filters.noNeighborhoodMatch}</p>
+            {error ? (
+              <p className="p-3 text-sm text-red-500 bg-red-50 dark:bg-red-900/20 text-center rounded-md m-2">
+                {error}
+              </p>
             ) : (
-              filtered.map((n) => (
+              <>
                 <button
-                  key={n.id}
                   type="button"
                   role="option"
-                  aria-selected={value.includes(n.name)}
-                  className={`neighborhood-select-option ${value.includes(n.name) ? 'neighborhood-select-option-active' : ''}`}
-                  onClick={() => toggle(n.name)}
+                  aria-selected={value.length === 0}
+                  className={`neighborhood-select-option ${value.length === 0 ? 'neighborhood-select-option-active' : ''}`}
+                  onClick={() => onChange([])}
                 >
-                  {getNeighborhoodLabel(n, lang)}
+                  {t.filters.allAreas}
                 </button>
-              ))
+                {filtered.length === 0 ? (
+                  <p className="neighborhood-select-empty">{t.filters.noNeighborhoodMatch}</p>
+                ) : (
+                  filtered.map((n) => (
+                    <button
+                      key={n.id}
+                      type="button"
+                      role="option"
+                      aria-selected={value.includes(n.name)}
+                      className={`neighborhood-select-option ${value.includes(n.name) ? 'neighborhood-select-option-active' : ''}`}
+                      onClick={() => toggle(n.name)}
+                    >
+                      {getNeighborhoodLabel(n, lang)}
+                    </button>
+                  ))
+                )}
+              </>
             )}
           </div>
         </div>

@@ -43,6 +43,7 @@ export function getNeighborhoodLabelByName(
 export function useNeighborhoods() {
   const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>(cachedNeighborhoods || []);
   const [loading, setLoading] = useState(!cachedNeighborhoods);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (cachedNeighborhoods) {
@@ -64,11 +65,13 @@ export function useNeighborhoods() {
     fetchPromise.then(data => {
       setNeighborhoods(data);
       setLoading(false);
+      setError(null);
     }).catch(err => {
       console.error('Failed to fetch neighborhoods:', err);
+      setError(err instanceof Error ? err.message : String(err));
       setLoading(false);
     });
   }, []);
 
-  return { neighborhoods, loading };
+  return { neighborhoods, loading, error };
 }

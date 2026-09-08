@@ -90,32 +90,40 @@ export function NeighborhoodSingleSelect({ value, onChange, placeholder, classNa
           </div>
 
           <div className="neighborhood-select-box" role="listbox">
-            {placeholder && (
-              <button
-                type="button"
-                role="option"
-                aria-selected={!value || value === 'all'}
-                className={`neighborhood-select-option ${(!value || value === 'all') ? 'neighborhood-select-option-active' : ''}`}
-                onClick={() => select(placeholder === t.filters.allAreas ? 'all' : '')}
-              >
-                {placeholder}
-              </button>
-            )}
-            {filtered.length === 0 ? (
-              <p className="neighborhood-select-empty">{t.filters.noNeighborhoodMatch}</p>
+            {error ? (
+              <p className="p-3 text-sm text-red-500 bg-red-50 dark:bg-red-900/20 text-center rounded-md m-2">
+                {error}
+              </p>
             ) : (
-              filtered.map((n) => (
-                <button
-                  key={n.id}
-                  type="button"
-                  role="option"
-                  aria-selected={value === n.name}
-                  className={`neighborhood-select-option ${value === n.name ? 'neighborhood-select-option-active' : ''}`}
-                  onClick={() => select(n.name)}
-                >
-                  {getNeighborhoodLabel(n, lang)}
-                </button>
-              ))
+              <>
+                {placeholder && (
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={!value || value === 'all'}
+                    className={`neighborhood-select-option ${(!value || value === 'all') ? 'neighborhood-select-option-active' : ''}`}
+                    onClick={() => select(placeholder === t.filters.allAreas ? 'all' : '')}
+                  >
+                    {placeholder}
+                  </button>
+                )}
+                {filtered.length === 0 ? (
+                  <p className="neighborhood-select-empty">{t.filters.noNeighborhoodMatch}</p>
+                ) : (
+                  filtered.map((n) => (
+                    <button
+                      key={n.id}
+                      type="button"
+                      role="option"
+                      aria-selected={value === n.name}
+                      className={`neighborhood-select-option ${value === n.name ? 'neighborhood-select-option-active' : ''}`}
+                      onClick={() => select(n.name)}
+                    >
+                      {getNeighborhoodLabel(n, lang)}
+                    </button>
+                  ))
+                )}
+              </>
             )}
           </div>
         </div>
