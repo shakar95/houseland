@@ -214,7 +214,7 @@ const ar: TranslationDict = {
     staff: 'الموظفون',
     settings: 'الإعدادات',
   },
-  common: { loading: 'جاري التحميل...', sulaymaniyah: 'السليمانية · العراق' },
+  common: { loading: 'جاري التحميل...', sulaymaniyah: 'السليمانية · العراق', showing: 'عرض', of: 'من أصل', previous: 'السابق', next: 'التالي' },
 };
 
 export default ar;

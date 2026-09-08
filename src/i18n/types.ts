@@ -159,5 +159,5 @@ export type TranslationDict = {
     existingImages: string;
   };
   dashboard: { title: string; analytics: string; properties: string; crm: string; staff: string; settings: string };
-  common: { loading: string; sulaymaniyah: string };
+  common: { loading: string; sulaymaniyah: string; showing: string; of: string; previous: string; next: string };
 };

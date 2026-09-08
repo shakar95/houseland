@@ -214,7 +214,7 @@ const en: TranslationDict = {
     staff: 'Staff',
     settings: 'Settings',
   },
-  common: { loading: 'Loading...', sulaymaniyah: 'Sulaymaniyah · Iraq' },
+  common: { loading: 'Loading...', sulaymaniyah: 'Sulaymaniyah · Iraq', showing: 'Showing', of: 'of', previous: 'Previous', next: 'Next' },
 };
 
 export default en;

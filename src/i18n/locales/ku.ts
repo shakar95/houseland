@@ -214,7 +214,7 @@ const ku: TranslationDict = {
     staff: 'ستاف',
     settings: 'ڕێکخستن',
   },
-  common: { loading: 'چاوەڕوان بە...', sulaymaniyah: 'سلێمانی · عێراق' },
+  common: { loading: 'چاوەڕوان بە...', sulaymaniyah: 'سلێمانی · عێراق', showing: 'پیشاندان', of: 'لە کۆی', previous: 'پێشوو', next: 'دواتر' },
 };
 
 export default ku;
