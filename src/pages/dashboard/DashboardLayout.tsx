@@ -1,8 +1,8 @@
-﻿import { NavLink, Outlet, Navigate, Link } from 'react-router-dom';
+import { NavLink, Outlet, Navigate, Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { AppMenu } from '@/components/AppMenu';
-import { BarChart3, Building2, Users, Settings, UserCircle, X } from 'lucide-react';
+import { BarChart3, Building2, Users, Settings, UserCircle, X, MapPin } from 'lucide-react';
 
 export function DashboardLayout() {
   const { profile, loading } = useAuth();
@@ -11,6 +11,7 @@ export function DashboardLayout() {
   const links = [
     { to: '/dashboard', end: true, label: t.dashboard.analytics, icon: BarChart3 },
     { to: '/dashboard/properties', label: t.dashboard.properties, icon: Building2 },
+    { to: '/dashboard/neighborhoods', label: 'گەڕەکەکان', icon: MapPin },
     { to: '/dashboard/crm', label: t.dashboard.crm, icon: Users },
     { to: '/dashboard/staff', label: t.dashboard.staff, icon: UserCircle },
     { to: '/dashboard/settings', label: t.dashboard.settings, icon: Settings },

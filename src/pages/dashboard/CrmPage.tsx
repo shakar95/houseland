@@ -21,7 +21,7 @@ export function CrmPage() {
 
   useEffect(() => {
     load();
-    api.get<Property[]>('/api/properties?status=APPROVED').then(setInventory).catch(() => {});
+    api.get<{ data: Property[] }>('/api/properties?status=APPROVED').then((res) => setInventory(res.data)).catch(() => {});
   }, []);
 
   const submit = async (e: React.FormEvent) => {

@@ -22,9 +22,12 @@ import { ObfuscatedMap } from '@/components/maps/ObfuscatedMap';
 import type { AgencySettings, Property } from '@/types';
 import { formatPrice, formatCountLabel, pickCountLabel } from '@/lib/format';
 import { useLanguage } from '@/context/LanguageContext';
+import { useNeighborhoods, getNeighborhoodLabelByName } from '@/hooks/useNeighborhoods';
+
 
 export function PropertyDetailPage() {
-  const { t, enumLabel, propertyTitle, propertyDescription } = useLanguage();
+  const { t, lang, enumLabel, propertyTitle, propertyDescription } = useLanguage();
+  const { neighborhoods } = useNeighborhoods();
   const { profile } = useAuth();
   const { code } = useParams();
   const [property, setProperty] = useState<Property | null>(null);
@@ -39,7 +42,7 @@ export function PropertyDetailPage() {
 
   useEffect(() => {
     if (!code) return;
-    api.get<Property>(`/api/properties/${code}`, { auth: false }).then(setProperty).catch(() => {});
+    api.get<Property>(`/api/properties/${code}`, { auth: false, cacheMs: 300000 }).then(setProperty).catch(() => {});
     api.get<AgencySettings>('/api/agency').then(setAgency).catch(() => {});
   }, [code]);
 
@@ -91,7 +94,7 @@ export function PropertyDetailPage() {
           <h1 className="property-detail-title">{title}</h1>
           <p className="property-detail-price">{formatPrice(property.price, property.currency)}</p>
           <p className="property-detail-meta text-royal-300">
-            {enumLabel(property.transactionType)} · {enumLabel(property.propertyType)} · {property.neighborhood}
+            {enumLabel(property.transactionType)} · {enumLabel(property.propertyType)} · {getNeighborhoodLabelByName(property.neighborhood, neighborhoods, lang)}
           </p>
 
           <div className="property-detail-actions">

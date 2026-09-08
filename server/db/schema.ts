@@ -139,6 +139,45 @@ export const properties = pgTable(
   ]
 );
 
+// ——— Materialized View (property_details_mv) ———
+export const propertyDetailsMv = pgTable('property_details_mv', {
+  id: uuid('id').primaryKey(),
+  code: text('code').notNull(),
+  title: text('title').notNull(),
+  description: text('description').notNull(),
+  propertyType: propertyTypeEnum('property_type').notNull(),
+  transactionType: transactionTypeEnum('transaction_type').notNull(),
+  areaSqm: doublePrecision('area_sqm').notNull(),
+  dimensions: text('dimensions'),
+  frontageMeters: doublePrecision('frontage_meters'),
+  streetWidth: doublePrecision('street_width'),
+  streetWidth2: doublePrecision('street_width_2'),
+  isCorner: boolean('is_corner').notNull(),
+  price: doublePrecision('price').notNull(),
+  currency: currencyEnum('currency').notNull(),
+  floors: integer('floors'),
+  bedrooms: integer('bedrooms'),
+  bathrooms: integer('bathrooms'),
+  facing: facingDirectionEnum('facing'),
+  latitude: doublePrecision('latitude').notNull(),
+  longitude: doublePrecision('longitude').notNull(),
+  neighborhood: text('neighborhood').notNull(),
+  nearestLandmark: text('nearest_landmark'),
+  images: text('images').array().notNull(),
+  thumbnailUrl: text('thumbnail_url'),
+  imageCount: integer('image_count').notNull(),
+  videoLink: text('video_link'),
+  status: propertyStatusEnum('status').notNull(),
+  submitterId: uuid('submitter_id'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull(),
+  viewsCount: integer('views_count').notNull(),
+  phoneClicks: integer('phone_clicks').notNull(),
+  whatsappClicks: integer('whatsapp_clicks').notNull(),
+  saleContractsCount: integer('sale_contracts_count').notNull(),
+  rentContractsCount: integer('rent_contracts_count').notNull(),
+});
+
 // ——— Analytics Table ———
 export const analytics = pgTable('analytics', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -189,8 +228,12 @@ export const contracts = pgTable('contracts', {
 export const neighborhoods = pgTable('neighborhoods', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: text('name').notNull().unique(),
+  nameEn: text('nameEn'),
+  nameKu: text('nameKu'),
+  nameAr: text('nameAr'),
   latitude: doublePrecision('latitude').notNull(),
   longitude: doublePrecision('longitude').notNull(),
+  aliases: text('aliases').array().notNull().default(sql`'{}'`),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });
 

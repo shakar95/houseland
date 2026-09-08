@@ -98,3 +98,16 @@ export interface PropertyFilters {
   propertyType?: string;
   transactionType?: string;
 }
+
+export interface Neighborhood {
+  id: string;
+  name: string;
+  nameEn?: string | null;
+  nameKu?: string | null;
+  nameAr?: string | null;
+  latitude: number;
+  longitude: number;
+  aliases: string[];
+  createdAt: string;
+  propertyCount?: number;
+}

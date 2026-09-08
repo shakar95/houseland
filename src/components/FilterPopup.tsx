@@ -3,17 +3,21 @@ import { createPortal } from 'react-dom';
 
 type FilterPopupProps = {
   open: boolean;
+  /** Called when the popup should close WITHOUT committing (Escape key). */
   onClose: () => void;
+  /** Called when the backdrop is clicked — commit + close. Falls back to onClose if omitted. */
+  onCommit?: () => void;
   title: string;
   children: ReactNode;
   size?: 'default' | 'large';
 };
 
-export function FilterPopup({ open, onClose, title, children, size = 'default' }: FilterPopupProps) {
+export function FilterPopup({ open, onClose, onCommit, title, children, size = 'default' }: FilterPopupProps) {
   const [visible, setVisible] = useState(false);
   const [active, setActive] = useState(false);
 
   const close = useCallback(() => onClose(), [onClose]);
+  const commit = useCallback(() => (onCommit ?? onClose)(), [onCommit, onClose]);
 
   useEffect(() => {
     if (open) {
@@ -42,11 +46,11 @@ export function FilterPopup({ open, onClose, title, children, size = 'default' }
   if (!visible) return null;
 
   return createPortal(
-    <div className="filter-popup-root" aria-hidden={!active}>
+    <div className="filter-popup-root">
       <button
         type="button"
         className={`filter-popup-backdrop ${active ? 'filter-popup-backdrop--open' : ''}`}
-        onClick={close}
+        onClick={commit}
         aria-label="Close"
       />
       <div

@@ -15,10 +15,23 @@ async function authHeader(): Promise<HeadersInit> {
 
 export { clearAuthTokenCache };
 
-type RequestOptions = RequestInit & { auth?: boolean };
+type RequestOptions = RequestInit & { auth?: boolean; cacheMs?: number };
+
+const memCache = new Map<string, { data: unknown; expires: number }>();
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { auth = true, ...fetchOptions } = options;
+  const { auth = true, cacheMs = 0, ...fetchOptions } = options;
+  
+  const isGet = !fetchOptions.method || fetchOptions.method === 'GET';
+  const cacheKey = isGet ? path : null;
+
+  if (cacheMs > 0 && cacheKey) {
+    const cached = memCache.get(cacheKey);
+    if (cached && Date.now() < cached.expires) {
+      return cached.data as T;
+    }
+  }
+
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...(auth ? await authHeader() : {}),
@@ -29,7 +42,13 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error(err.error || 'Request failed');
   }
-  return res.json();
+  const data = await res.json();
+  
+  if (cacheMs > 0 && cacheKey) {
+    memCache.set(cacheKey, { data, expires: Date.now() + cacheMs });
+  }
+  
+  return data;
 }
 
 export const api = {

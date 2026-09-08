@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, Search } from 'lucide-react';
-import { useNeighborhoods } from '@/hooks/useNeighborhoods';
+import { useNeighborhoods, getNeighborhoodLabel, getNeighborhoodLabelByName } from '@/hooks/useNeighborhoods';
 import { useLanguage } from '@/context/LanguageContext';
 
 type Props = {
@@ -11,7 +11,7 @@ type Props = {
 };
 
 export function NeighborhoodSingleSelect({ value, onChange, placeholder, className = '' }: Props) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const rootRef = useRef<HTMLDivElement>(null);
@@ -20,12 +20,17 @@ export function NeighborhoodSingleSelect({ value, onChange, placeholder, classNa
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    const sorted = [...neighborhoods].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
-    if (!q) return sorted;
-    return sorted.filter((n) => n.name.toLowerCase().includes(q));
-  }, [search, neighborhoods]);
+    // Server returns neighborhoods pre-sorted by property count (most used first).
+    if (!q) return neighborhoods;
+    return neighborhoods.filter((n) => {
+      const label = getNeighborhoodLabel(n, lang).toLowerCase();
+      return label.includes(q) || n.name.toLowerCase().includes(q);
+    });
+  }, [search, neighborhoods, lang]);
 
-  const triggerLabel = value && value !== 'all' ? value : placeholder || t.filters.selectNeighborhood;
+  const triggerLabel = value && value !== 'all'
+    ? getNeighborhoodLabelByName(value, neighborhoods, lang)
+    : placeholder || t.filters.selectNeighborhood;
 
   useEffect(() => {
     if (!open) return;
@@ -108,7 +113,7 @@ export function NeighborhoodSingleSelect({ value, onChange, placeholder, classNa
                   className={`neighborhood-select-option ${value === n.name ? 'neighborhood-select-option-active' : ''}`}
                   onClick={() => select(n.name)}
                 >
-                  {n.name}
+                  {getNeighborhoodLabel(n, lang)}
                 </button>
               ))
             )}

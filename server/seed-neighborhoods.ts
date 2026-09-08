@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import { db } from './db/index.js';
 import { neighborhoods } from './db/schema.js';
 import { sql } from 'drizzle-orm';
+import { PrismaClient } from '@prisma/client';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -64,7 +65,9 @@ async function main() {
   console.log(`Extracted ${uniqueNeighborhoods.size} unique neighborhoods.`);
 
   console.log('Clearing existing neighborhoods...');
-  await db.delete(neighborhoods);
+  // await db.delete(neighborhoods); // Prisma will do it
+  const prisma = new PrismaClient();
+  await prisma.neighborhood.deleteMany({});
 
   console.log('Inserting neighborhoods...');
   const insertData = Array.from(uniqueNeighborhoods.entries()).map(([name, coords]) => ({
@@ -74,12 +77,10 @@ async function main() {
   }));
 
   if (insertData.length > 0) {
-    // Insert in chunks to avoid query size limits (though usually fine for < 1000 rows)
-    const chunkSize = 100;
-    for (let i = 0; i < insertData.length; i += chunkSize) {
-      const chunk = insertData.slice(i, i + chunkSize);
-      await db.insert(neighborhoods).values(chunk).onConflictDoNothing({ target: neighborhoods.name });
-    }
+    await prisma.neighborhood.createMany({
+      data: insertData,
+      skipDuplicates: true,
+    });
   }
 
   console.log('Done seeding neighborhoods.');

@@ -12,8 +12,8 @@ export function HomePage() {
 
   useEffect(() => {
     api
-      .get<Property[]>('/api/properties?limit=6', { auth: false })
-      .then(setFeatured)
+      .get<{ data: Property[] }>('/api/properties?limit=6', { auth: false, cacheMs: 300000 })
+      .then((res) => setFeatured(res.data))
       .catch(() => {});
   }, []);
 

@@ -10,6 +10,9 @@ const TABS = ['all', 'PENDING', 'APPROVED', 'SOLD', 'RENTED'] as const;
 export function PropertiesPage() {
   const [tab, setTab] = useState<string>('all');
   const [properties, setProperties] = useState<Property[]>([]);
+  const [page, setPage] = useState(1);
+  const [meta, setMeta] = useState({ totalCount: 0, totalPages: 1, currentPage: 1 });
+  const [loading, setLoading] = useState(false);
   const [contractForm, setContractForm] = useState({
     propertyId: '',
     clientName: '',
@@ -19,13 +22,24 @@ export function PropertiesPage() {
   });
 
   const load = () => {
-    const q = tab === 'all' ? '?status=all' : `?status=${tab}`;
-    api.get<Property[]>(`/api/properties${q}`).then(setProperties).catch(() => {});
+    setLoading(true);
+    const q = tab === 'all' ? `?status=all&page=${page}&limit=50` : `?status=${tab}&page=${page}&limit=50`;
+    api.get<{ data: Property[]; meta: any }>(`/api/properties${q}`)
+      .then((res) => {
+        setProperties(res.data);
+        setMeta(res.meta);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => {
-    load();
+    setPage(1);
   }, [tab]);
+
+  useEffect(() => {
+    load();
+  }, [tab, page]);
 
   const approve = async (id: string, status: string) => {
     await api.patch(`/api/properties/${id}`, { status });
@@ -107,6 +121,34 @@ export function PropertiesPage() {
           </tbody>
         </table>
       </div>
+
+      {meta.totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-between border-t border-royal-800 pt-4 text-sm text-royal-300">
+          <div>
+            Showing <span className="font-medium text-gold-400">{(meta.currentPage - 1) * 50 + 1}</span> to{' '}
+            <span className="font-medium text-gold-400">
+              {Math.min(meta.currentPage * 50, meta.totalCount)}
+            </span>{' '}
+            of <span className="font-medium text-gold-400">{meta.totalCount}</span> entries
+          </div>
+          <div className="flex gap-2">
+            <button
+              disabled={meta.currentPage === 1 || loading}
+              onClick={() => setPage((p) => p - 1)}
+              className="rounded bg-royal-800 px-3 py-1.5 hover:bg-royal-700 disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <button
+              disabled={meta.currentPage >= meta.totalPages || loading}
+              onClick={() => setPage((p) => p + 1)}
+              className="rounded bg-royal-800 px-3 py-1.5 hover:bg-royal-700 disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={createContract} className="card-luxury mt-10 space-y-4 p-4">
         <h2 className="text-lg text-gold-300">Generate Contract</h2>

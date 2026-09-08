@@ -5,7 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { prisma } from './prisma.js';
 import { db } from './db/index.js';
-import { agencySettings, staff, profiles, properties, analytics, contracts, crmEntries, neighborhoods } from './db/schema.js';
+import { agencySettings, staff, profiles, properties, analytics, contracts, crmEntries, neighborhoods, propertyDetailsMv } from './db/schema.js';
 import { eq, desc, and, or, sql, inArray, ilike, count } from 'drizzle-orm';
 import { requireAuth, requireRole, type AuthRequest } from './middleware/auth.js';
 import { generatePropertyCode } from './utils/propertyCode.js';
@@ -92,29 +92,158 @@ app.delete('/api/staff/:id', requireAuth, requireRole('ADMIN'), wrap(async (req,
 app.get('/api/neighborhoods', wrap(async (_req, res) => {
   // Cache neighborhoods for 1 hour to reduce DB load
   res.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=7200');
+  const list = await db.select().from(neighborhoods);
+
+  const counts = await db.select({
+    neighborhood: properties.neighborhood,
+    count: count()
+  }).from(properties).groupBy(properties.neighborhood);
+
+  const countMap = Object.fromEntries(counts.map(c => [c.neighborhood, c.count]));
+
+  const sorted = list
+    .map(n => ({ ...n, propertyCount: countMap[n.name] || 0 }))
+    .sort((a, b) => b.propertyCount - a.propertyCount || a.name.localeCompare(b.name));
+
+  res.json(sorted);
+}));
+
+// ——— Neighborhoods (Admin) ———
+app.get('/api/admin/neighborhoods', requireAuth, requireRole('ADMIN'), wrap(async (_req, res) => {
   const list = await db.select().from(neighborhoods).orderBy(neighborhoods.name);
-  res.json(list);
+  
+  const counts = await db.select({
+    neighborhood: properties.neighborhood,
+    count: count()
+  }).from(properties).groupBy(properties.neighborhood);
+  
+  const countMap = Object.fromEntries(counts.map(c => [c.neighborhood, c.count]));
+  
+  res.json(list.map(n => ({
+    ...n,
+    propertyCount: countMap[n.name] || 0
+  })));
+}));
+
+app.put('/api/admin/neighborhoods/:id', requireAuth, requireRole('ADMIN'), wrap(async (req, res) => {
+  const { name, nameEn, nameKu, nameAr, latitude, longitude, aliases } = req.body;
+  const id = param(req.params.id);
+  
+  const [existing] = await db.select().from(neighborhoods).where(eq(neighborhoods.id, id));
+  if (!existing) return res.status(404).json({ error: 'Not found' });
+  
+  try {
+    const [updated] = await db.update(neighborhoods)
+      .set({ name, nameEn, nameKu, nameAr, latitude, longitude, aliases })
+      .where(eq(neighborhoods.id, id))
+      .returning();
+      
+    if (existing.name !== name) {
+      await db.update(properties)
+        .set({ neighborhood: name })
+        .where(eq(properties.neighborhood, existing.name));
+    }
+    
+    res.json(updated);
+  } catch (error: any) {
+    const code = error?.code || error?.cause?.code;
+    const msg = error?.message || error?.cause?.message || '';
+    if (code === '23505' || msg.includes('unique constraint')) {
+      return res.status(400).json({ error: 'A neighborhood with this name already exists. Please use the merge feature instead of renaming.' });
+    }
+    throw error;
+  }
+}));
+
+app.delete('/api/admin/neighborhoods/:id', requireAuth, requireRole('ADMIN'), wrap(async (req, res) => {
+  const id = param(req.params.id);
+  await db.delete(neighborhoods).where(eq(neighborhoods.id, id));
+  res.json({ ok: true });
+}));
+
+app.post('/api/admin/neighborhoods/merge', requireAuth, requireRole('ADMIN'), wrap(async (req, res) => {
+  const { primaryId, duplicateIds, newName, nameEn, nameKu, nameAr } = req.body;
+  
+  const [primary] = await db.select().from(neighborhoods).where(eq(neighborhoods.id, primaryId));
+  if (!primary) return res.status(404).json({ error: 'Primary not found' });
+  
+  const duplicates = await db.select().from(neighborhoods).where(inArray(neighborhoods.id, duplicateIds));
+  if (duplicates.length === 0) return res.status(400).json({ error: 'No duplicates found' });
+  
+  const duplicateNames = duplicates.map(d => d.name);
+  // Collect all aliases: primary's existing + duplicate names + all duplicate aliases
+  const newAliases = new Set([...primary.aliases, ...duplicateNames]);
+  for (const d of duplicates) {
+    d.aliases.forEach(a => newAliases.add(a));
+  }
+  // If renaming, also save the old primary name as an alias
+  const finalName = (newName && newName.trim()) ? newName.trim() : primary.name;
+  const isRenaming = finalName !== primary.name;
+  if (isRenaming) {
+    newAliases.add(primary.name);
+  }
+  // Don't include the final name itself as an alias
+  newAliases.delete(finalName);
+  
+  await db.transaction(async (tx) => {
+    // Move duplicate properties to the final name (covering both rename + old primary name)
+    const allOldNames = [...duplicateNames];
+    if (isRenaming) allOldNames.push(primary.name);
+
+    if (allOldNames.length > 0) {
+      await tx.update(properties)
+        .set({ neighborhood: finalName })
+        .where(inArray(properties.neighborhood, allOldNames));
+    }
+      
+    const updateData: any = { name: finalName, aliases: Array.from(newAliases) };
+    if (isRenaming) {
+      if (nameEn !== undefined) updateData.nameEn = nameEn;
+      if (nameKu !== undefined) updateData.nameKu = nameKu;
+      if (nameAr !== undefined) updateData.nameAr = nameAr;
+    }
+
+    await tx.update(neighborhoods)
+      .set(updateData)
+      .where(eq(neighborhoods.id, primaryId));
+      
+    if (duplicateIds.length > 0) {
+      await tx.delete(neighborhoods).where(inArray(neighborhoods.id, duplicateIds));
+    }
+  });
+  
+  res.json({ ok: true });
 }));
 
 // ——— Properties (public) ———
 app.get('/api/properties', wrap(async (req, res) => {
   const isAdmin = req.query.status !== undefined;
   const whereCond = buildDrizzlePropertyWhere(req.query as Record<string, unknown>, isAdmin);
+  
   const limitRaw = Number(req.query.limit);
-  const take = Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(limitRaw, 500) : undefined;
+  const take = Number.isFinite(limitRaw) && limitRaw > 0 ? limitRaw : 50;
+  
+  const pageRaw = Number(req.query.page);
+  const page = Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 1;
+  const offset = (page - 1) * take;
+
+  // Get total count for pagination
+  let countQuery = db.select({ count: sql<number>`count(*)::int` }).from(properties);
+  if (whereCond) countQuery = countQuery.where(whereCond) as any;
+  const [{ count: totalCount }] = await countQuery;
+  const totalPages = Math.ceil(totalCount / take);
 
   if (isAdmin) {
     let query = db.select(ADMIN_LIST_COLUMNS).from(properties);
     if (whereCond) query = query.where(whereCond) as any;
-    query = query.orderBy(desc(properties.createdAt)) as any;
-    if (take) query = query.limit(take) as any;
+    query = query.orderBy(desc(properties.createdAt)).limit(take).offset(offset) as any;
     
     const results = await query;
-    res.json(results);
+    res.json({ data: results, meta: { totalCount, totalPages, currentPage: page } });
     return;
   }
 
-  const cacheKey = listingCacheKey(req.query as Record<string, unknown>);
+  const cacheKey = listingCacheKey({ ...req.query, page, limit: take } as Record<string, unknown>);
   const cached = getListingCache(cacheKey);
   if (cached) {
     res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=120');
@@ -124,12 +253,15 @@ app.get('/api/properties', wrap(async (req, res) => {
 
   let query = db.select(PUBLIC_LIST_COLUMNS).from(properties);
   if (whereCond) query = query.where(whereCond) as any;
-  query = query.orderBy(desc(properties.createdAt)) as any;
-  if (take) query = query.limit(take) as any;
+  query = query.orderBy(desc(properties.createdAt)).limit(take).offset(offset) as any;
 
   const results = await query;
 
-  const payload = results.map((p) => maskPropertyForPublic(toPublicListingCard(p)));
+  const payload = {
+    data: results.map((p) => maskPropertyForPublic(toPublicListingCard(p))),
+    meta: { totalCount, totalPages, currentPage: page }
+  };
+  
   setListingCache(cacheKey, payload);
   res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=120');
   res.json(payload);
@@ -139,23 +271,55 @@ app.get('/api/properties/:idOrCode', wrap(async (req, res) => {
   const key = param(req.params.idOrCode);
   const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(key);
   const matchCond = isUuid 
-    ? or(eq(properties.id, key), eq(properties.code, key))
-    : eq(properties.code, key);
+    ? or(eq(propertyDetailsMv.id, key), eq(propertyDetailsMv.code, key))
+    : eq(propertyDetailsMv.code, key);
 
-  const [property] = await db.select().from(properties).where(
+  const [row] = await db.select().from(propertyDetailsMv).where(
     and(
       matchCond,
-      req.query.admin !== 'true' ? inArray(properties.status, PUBLIC_STATUSES) : undefined
+      req.query.admin !== 'true' ? inArray(propertyDetailsMv.status, PUBLIC_STATUSES) : undefined
     )
-  );
-  if (!property) return res.status(404).json({ error: 'Not found' });
+  ).catch(async () => {
+    // Fallback if materialized view doesn't exist yet
+    const fallbackMatch = isUuid 
+      ? or(eq(properties.id, key), eq(properties.code, key))
+      : eq(properties.code, key);
+    const [p] = await db.select().from(properties).where(
+      and(
+        fallbackMatch,
+        req.query.admin !== 'true' ? inArray(properties.status, PUBLIC_STATUSES) : undefined
+      )
+    );
+    if (!p) return [];
+    const [a] = await db.select().from(analytics).where(eq(analytics.propertyId, p.id));
+    return [{
+      ...p,
+      viewsCount: a?.viewsCount ?? 0,
+      phoneClicks: a?.phoneClicks ?? 0,
+      whatsappClicks: a?.whatsappClicks ?? 0,
+      saleContractsCount: a?.saleContractsCount ?? 0,
+      rentContractsCount: a?.rentContractsCount ?? 0,
+    }];
+  });
 
-  const [propertyAnalytics] = await db.select().from(analytics).where(eq(analytics.propertyId, property.id));
-  const fullProperty = { ...property, analytics: propertyAnalytics || null };
+  if (!row) return res.status(404).json({ error: 'Not found' });
+
+  const { viewsCount, phoneClicks, whatsappClicks, saleContractsCount, rentContractsCount, ...baseProperty } = row;
+  const fullProperty = { 
+    ...baseProperty, 
+    analytics: { 
+      propertyId: baseProperty.id,
+      viewsCount, 
+      phoneClicks, 
+      whatsappClicks, 
+      saleContractsCount, 
+      rentContractsCount 
+    } 
+  };
 
   if (req.query.admin !== 'true') {
     void db.insert(analytics)
-      .values({ propertyId: property.id, viewsCount: 1 })
+      .values({ propertyId: baseProperty.id, viewsCount: 1 })
       .onConflictDoUpdate({
         target: analytics.propertyId,
         set: { viewsCount: sql`${analytics.viewsCount} + 1` }
@@ -519,10 +683,17 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-// Global error handler
+// --- Global Error Handler ---
 app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   const message = err instanceof Error ? err.message : String(err);
-  console.error('[Houseland API Error]:', message);
+  console.error('[Houseland API Error]:', message, err);
+  
+  // Log to file so we can see it
+  try {
+    const fs = require('fs');
+    fs.appendFileSync('server-error.log', `[${new Date().toISOString()}] ${message}\n${err instanceof Error ? err.stack : ''}\n\n`);
+  } catch (e) {}
+
   if (res.headersSent) return;
   res.status(500).json({ error: 'Server or database error. Please try again.' });
 });

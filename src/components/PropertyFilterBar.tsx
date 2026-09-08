@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ChevronDown, Search, SlidersHorizontal, X } from 'lucide-react';
+import { RotateCcw, Search, SlidersHorizontal, X } from 'lucide-react';
 import { FilterPopup } from '@/components/FilterPopup';
 import { NeighborhoodFilterSelect } from '@/components/NeighborhoodFilterSelect';
 import {
@@ -84,7 +84,17 @@ function FilterPill({
           <X className="h-3 w-3" />
         </span>
       ) : (
-        <ChevronDown className="h-2.5 w-2.5 text-royal-400/80 ms-0.5 shrink-0" />
+        <svg
+          className="h-2.5 w-2.5 text-royal-400/80 ms-0.5 shrink-0"
+          viewBox="0 0 10 6"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M1 1l4 4 4-4" />
+        </svg>
       )}
     </button>
   );
@@ -112,6 +122,7 @@ export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
   const areaActive = Boolean(filters.minArea || filters.maxArea);
   const hasSecondaryFilters =
     transactionActive || typeActive || neighborhoodActive || priceActive || areaActive;
+  const hasAnyFilter = hasSecondaryFilters || Boolean(filters.code);
 
   useEffect(() => {
     if (popup === 'type') setPopupTypes(parseFilterList(filters.propertyType));
@@ -154,6 +165,7 @@ export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
     setModalOpen(true);
   };
 
+  /** Apply draft from the large "more filters" modal */
   const applyDraft = () => {
     const next: PropertyFilters = { ...filters };
     const transactionValue = joinFilterList(draft.transactionTypes);
@@ -185,9 +197,9 @@ export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
     });
   };
 
-  const clearSecondaryFilters = () => {
+  const clearAllFilters = () => {
     onChange({
-      ...filters,
+      code: '',
       transactionType: undefined,
       propertyType: undefined,
       neighborhood: undefined,
@@ -196,6 +208,27 @@ export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
       minArea: '',
       maxArea: '',
     });
+  };
+
+  // ——— Popup commit handlers (apply on outside-click) ———
+  const commitTypes = () => {
+    setListFilter('propertyType', popupTypes);
+    setPopup(null);
+  };
+
+  const commitNeighborhoods = () => {
+    setListFilter('neighborhood', popupNeighborhoods);
+    setPopup(null);
+  };
+
+  const commitPrice = () => {
+    onChange({ ...filters, minPrice: draftMinPrice, maxPrice: draftMaxPrice });
+    setPopup(null);
+  };
+
+  const commitArea = () => {
+    onChange({ ...filters, minArea: draftMinArea, maxArea: draftMaxArea });
+    setPopup(null);
   };
 
   const typeLabel = formatFilterListLabel(selectedTypes, t.filters.type, enumLabel);
@@ -209,26 +242,6 @@ export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
   const areaLabel = areaActive
     ? `${filters.minArea || '0'}, ${filters.maxArea || '∞'} m²`
     : t.filters.areaShort;
-
-  const applyPopupTypes = () => {
-    setListFilter('propertyType', popupTypes);
-    setPopup(null);
-  };
-
-  const applyPopupNeighborhoods = () => {
-    setListFilter('neighborhood', popupNeighborhoods);
-    setPopup(null);
-  };
-
-  const applyPrice = () => {
-    onChange({ ...filters, minPrice: draftMinPrice, maxPrice: draftMaxPrice });
-    setPopup(null);
-  };
-
-  const applyArea = () => {
-    onChange({ ...filters, minArea: draftMinArea, maxArea: draftMaxArea });
-    setPopup(null);
-  };
 
   return (
     <div className="filter-bar">
@@ -263,6 +276,19 @@ export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
             {enumLabel(tx)}
           </button>
         ))}
+
+        {/* Reset all filters icon button */}
+        {hasAnyFilter && (
+          <button
+            type="button"
+            onClick={clearAllFilters}
+            aria-label={t.app.clearFilters}
+            className="filter-reset-btn"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+          </button>
+        )}
+
         <button
           type="button"
           onClick={openModal}
@@ -301,7 +327,13 @@ export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
         />
       </div>
 
-      <FilterPopup open={popup === 'type'} onClose={() => setPopup(null)} title={t.filters.type}>
+      {/* Type popup — commit on outside-click, no apply button */}
+      <FilterPopup
+        open={popup === 'type'}
+        onClose={() => setPopup(null)}
+        onCommit={commitTypes}
+        title={t.filters.type}
+      >
         <div className="filter-popup-list">
           {types.map((type) => (
             <button
@@ -314,23 +346,25 @@ export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
             </button>
           ))}
         </div>
-        <button type="button" onClick={applyPopupTypes} className="btn-gold mt-4 w-full">
-          {t.filters.apply}
-        </button>
       </FilterPopup>
 
+      {/* Neighborhood popup — commit on outside-click */}
       <FilterPopup
         open={popup === 'neighborhood'}
         onClose={() => setPopup(null)}
+        onCommit={commitNeighborhoods}
         title={t.filters.neighborhood}
       >
-        <NeighborhoodFilterSelect value={popupNeighborhoods} onChange={setPopupNeighborhoods} />
-        <button type="button" onClick={applyPopupNeighborhoods} className="btn-gold mt-4 w-full">
-          {t.filters.apply}
-        </button>
+        <NeighborhoodFilterSelect value={popupNeighborhoods} onChange={setPopupNeighborhoods} inline={true} />
       </FilterPopup>
 
-      <FilterPopup open={popup === 'price'} onClose={() => setPopup(null)} title={t.filters.priceShort}>
+      {/* Price popup — commit on outside-click */}
+      <FilterPopup
+        open={popup === 'price'}
+        onClose={() => setPopup(null)}
+        onCommit={commitPrice}
+        title={t.filters.priceShort}
+      >
         <div className="filter-popup-form">
           <label className="filter-label">{t.filters.minPrice}</label>
           <input
@@ -348,13 +382,16 @@ export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
             value={draftMaxPrice}
             onChange={(e) => setDraftMaxPrice(e.target.value)}
           />
-          <button type="button" onClick={applyPrice} className="btn-gold mt-4 w-full">
-            {t.filters.apply}
-          </button>
         </div>
       </FilterPopup>
 
-      <FilterPopup open={popup === 'area'} onClose={() => setPopup(null)} title={t.filters.areaShort}>
+      {/* Area popup — commit on outside-click */}
+      <FilterPopup
+        open={popup === 'area'}
+        onClose={() => setPopup(null)}
+        onCommit={commitArea}
+        title={t.filters.areaShort}
+      >
         <div className="filter-popup-form">
           <label className="filter-label">{t.filters.minArea}</label>
           <input
@@ -372,15 +409,14 @@ export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
             value={draftMaxArea}
             onChange={(e) => setDraftMaxArea(e.target.value)}
           />
-          <button type="button" onClick={applyArea} className="btn-gold mt-4 w-full">
-            {t.filters.apply}
-          </button>
         </div>
       </FilterPopup>
 
+      {/* Large "more filters" modal — still has explicit apply/clear buttons */}
       <FilterPopup
         open={modalOpen}
         onClose={() => setModalOpen(false)}
+        onCommit={applyDraft}
         title={t.app.moreFilters}
         size="large"
       >
@@ -506,11 +542,6 @@ export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
               <strong className="font-semibold text-white">{resultCount}</strong> {t.app.results}
             </span>
           </span>
-          {hasSecondaryFilters && (
-            <button type="button" onClick={clearSecondaryFilters} className="text-[11px] font-medium text-gold-400 hover:text-gold-300 transition">
-              {t.app.clearFilters}
-            </button>
-          )}
         </div>
       )}
     </div>

@@ -7,6 +7,148 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Profile {
+  id                  String     @id @default(uuid())
+  email               String     @unique
+  fullName            String     @map("full_name")
+  role                UserRole   @default(CLIENT)
+  googleAuthId        String?    @unique @map("google_auth_id")
+  createdAt           DateTime   @default(now()) @map("created_at")
+  submittedProperties Property[] @relation("Submitter")
+  staff               Staff?
+
+  @@map("profiles")
+}
+
+model Staff {
+  id          String   @id @default(uuid())
+  profileId   String?  @unique @map("profile_id")
+  name        String
+  photoUrl    String?  @map("photo_url")
+  position    String
+  phoneNumber String   @map("phone_number")
+  bio         String?
+  active      Boolean  @default(true)
+  profile     Profile? @relation(fields: [profileId], references: [id])
+
+  @@map("staff")
+}
+
+model AgencySettings {
+  id             String  @id @default("default")
+  name           String  @default("Houseland Real Estate")
+  logoUrl        String? @map("logo_url")
+  phonePrimary   String  @map("phone_primary")
+  phoneSecondary String? @map("phone_secondary")
+  whatsapp       String
+  address        String
+  email          String?
+
+  @@map("agency_settings")
+}
+
+model Property {
+  id              String           @id @default(uuid())
+  code            String           @unique
+  title           String
+  description     String
+  propertyType    PropertyType     @map("property_type")
+  transactionType TransactionType  @map("transaction_type")
+  areaSqm         Float            @map("area_sqm")
+  dimensions      String?
+  price           Float
+  currency        Currency         @default(USD)
+  floors          Int?
+  bedrooms        Int?
+  bathrooms       Int?
+  facing          FacingDirection?
+  latitude        Float
+  longitude       Float
+  neighborhood    String
+  images          String[]
+  videoLink       String?          @map("video_link")
+  status          PropertyStatus   @default(PENDING)
+  submitterId     String?          @map("submitter_id")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  thumbnailUrl    String?          @map("thumbnail_url")
+  imageCount      Int              @default(0) @map("image_count")
+  frontageMeters  Float?           @map("frontage_meters")
+  streetWidth     Float?           @map("street_width")
+  streetWidth2    Float?           @map("street_width_2")
+  isCorner        Boolean          @default(false) @map("is_corner")
+  nearestLandmark String?          @map("nearest_landmark")
+  analytics       Analytics?
+  contracts       Contract[]
+  submitter       Profile?         @relation("Submitter", fields: [submitterId], references: [id])
+
+  @@index([status])
+  @@index([status, createdAt(sort: Desc)])
+  @@index([neighborhood])
+  @@index([propertyType])
+  @@index([transactionType])
+  @@index([price])
+  @@index([areaSqm])
+  @@map("properties")
+}
+
+model Analytics {
+  id                 String   @id @default(uuid())
+  propertyId         String   @unique @map("property_id")
+  viewsCount         Int      @default(0) @map("views_count")
+  phoneClicks        Int      @default(0) @map("phone_clicks")
+  whatsappClicks     Int      @default(0) @map("whatsapp_clicks")
+  saleContractsCount Int      @default(0) @map("sale_contracts_count")
+  rentContractsCount Int      @default(0) @map("rent_contracts_count")
+  property           Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@map("analytics")
+}
+
+model CrmEntry {
+  id                String    @id @default(uuid())
+  customerName      String    @map("customer_name")
+  phone             String
+  email             String?
+  propertyInterests String[]  @map("property_interests")
+  notes             String?
+  budget            Float?
+  budgetCurrency    Currency? @map("budget_currency")
+  status            CrmStatus @default(LEAD)
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  @@map("crm_entries")
+}
+
+model Contract {
+  id           String       @id @default(uuid())
+  propertyId   String       @map("property_id")
+  clientName   String       @map("client_name")
+  amount       Float
+  date         DateTime
+  contractType ContractType @map("contract_type")
+  documentUrl  String?      @map("document_url")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  property     Property     @relation(fields: [propertyId], references: [id])
+
+  @@map("contracts")
+}
+
+model Neighborhood {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  nameEn    String?
+  nameKu    String?
+  nameAr    String?
+  latitude  Float
+  longitude Float
+  aliases   String[] @default([])
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("neighborhoods")
+}
+
 enum UserRole {
   ADMIN
   STAFF
@@ -57,137 +199,4 @@ enum CrmStatus {
 enum ContractType {
   SALE
   RENT
-}
-
-model Profile {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  fullName     String   @map("full_name")
-  role         UserRole @default(CLIENT)
-  googleAuthId String?  @unique @map("google_auth_id")
-  createdAt    DateTime @default(now()) @map("created_at")
-
-  submittedProperties Property[] @relation("Submitter")
-  staff               Staff?
-
-  @@map("profiles")
-}
-
-model Staff {
-  id          String  @id @default(uuid())
-  profileId   String? @unique @map("profile_id")
-  name        String
-  photoUrl    String? @map("photo_url")
-  position    String
-  phoneNumber String  @map("phone_number")
-  bio         String?
-  active      Boolean @default(true)
-
-  profile Profile? @relation(fields: [profileId], references: [id])
-
-  @@map("staff")
-}
-
-model AgencySettings {
-  id             String @id @default("default")
-  name           String @default("Houseland Real Estate")
-  logoUrl        String? @map("logo_url")
-  phonePrimary   String @map("phone_primary")
-  phoneSecondary String? @map("phone_secondary")
-  whatsapp       String
-  address        String
-  email          String?
-
-  @@map("agency_settings")
-}
-
-model Property {
-  id              String          @id @default(uuid())
-  code            String          @unique
-  title           String
-  description     String
-  propertyType    PropertyType    @map("property_type")
-  transactionType TransactionType @map("transaction_type")
-  areaSqm         Float           @map("area_sqm")
-  dimensions      String?
-  frontageMeters  Float?          @map("frontage_meters")
-  streetWidth     Float?          @map("street_width")
-  streetWidth2    Float?          @map("street_width_2")
-  isCorner        Boolean         @default(false) @map("is_corner")
-  price           Float
-  currency        Currency        @default(USD)
-  floors          Int?
-  bedrooms        Int?
-  bathrooms       Int?
-  facing          FacingDirection?
-  latitude        Float
-  longitude       Float
-  neighborhood    String
-  nearestLandmark String?         @map("nearest_landmark")
-  images          String[]
-  thumbnailUrl    String?         @map("thumbnail_url")
-  imageCount      Int             @default(0) @map("image_count")
-  videoLink       String?         @map("video_link")
-  status          PropertyStatus  @default(PENDING)
-  submitterId     String?         @map("submitter_id")
-  createdAt       DateTime        @default(now()) @map("created_at")
-  updatedAt       DateTime        @updatedAt @map("updated_at")
-
-  submitter Profile?   @relation("Submitter", fields: [submitterId], references: [id])
-  analytics Analytics?
-  contracts Contract[]
-
-  @@index([status])
-  @@index([status, createdAt(sort: Desc)])
-  @@index([neighborhood])
-  @@index([propertyType])
-  @@index([transactionType])
-  @@index([price])
-  @@index([areaSqm])
-  @@map("properties")
-}
-
-model Analytics {
-  id                 String @id @default(uuid())
-  propertyId         String @unique @map("property_id")
-  viewsCount         Int    @default(0) @map("views_count")
-  phoneClicks        Int    @default(0) @map("phone_clicks")
-  whatsappClicks     Int    @default(0) @map("whatsapp_clicks")
-  saleContractsCount Int    @default(0) @map("sale_contracts_count")
-  rentContractsCount Int    @default(0) @map("rent_contracts_count")
-
-  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-
-  @@map("analytics")
-}
-
-model CrmEntry {
-  id                String    @id @default(uuid())
-  customerName      String    @map("customer_name")
-  phone             String
-  email             String?
-  propertyInterests String[]  @map("property_interests")
-  notes             String?
-  budget            Float?
-  budgetCurrency    Currency? @map("budget_currency")
-  status            CrmStatus @default(LEAD)
-  createdAt         DateTime  @default(now()) @map("created_at")
-  updatedAt         DateTime  @updatedAt @map("updated_at")
-
-  @@map("crm_entries")
-}
-
-model Contract {
-  id           String       @id @default(uuid())
-  propertyId   String       @map("property_id")
-  clientName   String       @map("client_name")
-  amount       Float
-  date         DateTime
-  contractType ContractType @map("contract_type")
-  documentUrl  String?      @map("document_url")
-  createdAt    DateTime     @default(now()) @map("created_at")
-
-  property Property @relation(fields: [propertyId], references: [id])
-
-  @@map("contracts")
 }

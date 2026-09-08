@@ -20,13 +20,26 @@ export function ListingsPage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const query = useMemo(() => buildQuery(filters), [filters]);
+  const [page, setPage] = useState(1);
+  const [meta, setMeta] = useState({ totalCount: 0, totalPages: 1, currentPage: 1 });
+
+  const query = useMemo(() => {
+    const base = buildQuery(filters);
+    return base ? `${base}&page=${page}&limit=50` : `?page=${page}&limit=50`;
+  }, [filters, page]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [filters]);
 
   useEffect(() => {
     setLoading(true);
     api
-      .get<Property[]>(`/api/properties${query}`, { auth: false })
-      .then(setProperties)
+      .get<{ data: Property[]; meta: any }>(`/api/properties${query}`, { auth: false, cacheMs: 300000 })
+      .then((res) => {
+        setProperties(res.data);
+        setMeta(res.meta);
+      })
       .catch(() => setProperties([]))
       .finally(() => setLoading(false));
   }, [query]);
@@ -53,6 +66,34 @@ export function ListingsPage() {
             {properties.map((p) => (
               <PropertyGridCard key={p.id} property={p} />
             ))}
+          </div>
+        )}
+
+        {meta.totalPages > 1 && (
+          <div className="mt-8 mb-4 flex items-center justify-between px-4 text-sm text-royal-300">
+            <div>
+              {t.common?.showing || 'Showing'} <span className="font-medium text-gold-400">{(meta.currentPage - 1) * 50 + 1}</span> -{' '}
+              <span className="font-medium text-gold-400">
+                {Math.min(meta.currentPage * 50, meta.totalCount)}
+              </span>{' '}
+              {t.common?.of || 'of'} <span className="font-medium text-gold-400">{meta.totalCount}</span>
+            </div>
+            <div className="flex gap-2">
+              <button
+                disabled={meta.currentPage === 1 || loading}
+                onClick={() => setPage((p) => p - 1)}
+                className="rounded-full bg-royal-800/80 px-4 py-2 hover:bg-royal-700 disabled:opacity-50"
+              >
+                {t.common?.previous || 'Previous'}
+              </button>
+              <button
+                disabled={meta.currentPage >= meta.totalPages || loading}
+                onClick={() => setPage((p) => p + 1)}
+                className="rounded-full bg-royal-800/80 px-4 py-2 hover:bg-royal-700 disabled:opacity-50"
+              >
+                {t.common?.next || 'Next'}
+              </button>
+            </div>
           </div>
         )}
       </div>

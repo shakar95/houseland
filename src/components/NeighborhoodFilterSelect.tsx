@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronDown, Search } from 'lucide-react';
-import { useNeighborhoods } from '@/hooks/useNeighborhoods';
-import { formatFilterListLabel, toggleFilterList } from '@/lib/filterUtils';
+import { ChevronDown, Search, X } from 'lucide-react';
+import { useNeighborhoods, getNeighborhoodLabel, getNeighborhoodLabelByName } from '@/hooks/useNeighborhoods';
+import { toggleFilterList } from '@/lib/filterUtils';
 import { useLanguage } from '@/context/LanguageContext';
 
 type Props = {
   value: string[];
   onChange: (next: string[]) => void;
+  inline?: boolean;
 };
 
-export function NeighborhoodFilterSelect({ value, onChange }: Props) {
-  const { t } = useLanguage();
+export function NeighborhoodFilterSelect({ value, onChange, inline }: Props) {
+  const { t, lang } = useLanguage();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const rootRef = useRef<HTMLDivElement>(null);
@@ -19,12 +20,14 @@ export function NeighborhoodFilterSelect({ value, onChange }: Props) {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    const sorted = [...neighborhoods].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
-    if (!q) return sorted;
-    return sorted.filter((n) => n.name.toLowerCase().includes(q));
-  }, [search, neighborhoods]);
-
-  const triggerLabel = formatFilterListLabel(value, t.filters.selectNeighborhood);
+    // Server returns neighborhoods pre-sorted by property count (most used first).
+    // Only apply search filtering; preserve the server's count-based order.
+    if (!q) return neighborhoods;
+    return neighborhoods.filter((n) => {
+      const label = getNeighborhoodLabel(n, lang).toLowerCase();
+      return label.includes(q) || n.name.toLowerCase().includes(q);
+    });
+  }, [search, neighborhoods, lang]);
 
   useEffect(() => {
     if (!open) return;
@@ -55,20 +58,51 @@ export function NeighborhoodFilterSelect({ value, onChange }: Props) {
   };
 
   return (
-    <div ref={rootRef} className="neighborhood-select">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
+    <div ref={rootRef} className={`neighborhood-select ${inline ? 'neighborhood-select--inline' : ''}`}>
+      <div
+        role="combobox"
         aria-expanded={open}
-        aria-haspopup="listbox"
-        className={`neighborhood-select-trigger ${open ? 'neighborhood-select-trigger-open' : ''}`}
+        aria-controls="neighborhood-listbox"
+        tabIndex={0}
+        onClick={() => setOpen((v) => !v)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setOpen((v) => !v);
+          }
+        }}
+        className={`neighborhood-select-trigger cursor-pointer ${open ? 'neighborhood-select-trigger-open' : ''}`}
       >
-        <span className="neighborhood-select-trigger-label">{triggerLabel}</span>
+        <div className="flex flex-1 flex-wrap gap-1.5 min-w-0">
+          {value.length === 0 ? (
+            <span className="text-sm text-royal-400">{t.filters.selectNeighborhood}</span>
+          ) : (
+            value.map((v) => {
+              const displayLabel = getNeighborhoodLabelByName(v, neighborhoods, lang);
+              return (
+                <span key={v} className="neighborhood-select-chip" title={displayLabel}>
+                  <span className="truncate max-w-[120px]">{displayLabel}</span>
+                  <button
+                    type="button"
+                    aria-label={`Remove ${displayLabel}`}
+                    className="neighborhood-select-chip-remove"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggle(v);
+                    }}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              );
+            })
+          )}
+        </div>
         <ChevronDown className={`neighborhood-select-chevron ${open ? 'neighborhood-select-chevron-open' : ''}`} />
-      </button>
+      </div>
 
       {open && (
-        <div className="neighborhood-select-panel">
+        <div className={`neighborhood-select-panel ${inline ? 'neighborhood-select-panel--inline' : ''}`}>
           <div className="neighborhood-select-search-wrap">
             <Search className="neighborhood-select-search-icon" />
             <input
@@ -103,7 +137,7 @@ export function NeighborhoodFilterSelect({ value, onChange }: Props) {
                   className={`neighborhood-select-option ${value.includes(n.name) ? 'neighborhood-select-option-active' : ''}`}
                   onClick={() => toggle(n.name)}
                 >
-                  {n.name}
+                  {getNeighborhoodLabel(n, lang)}
                 </button>
               ))
             )}
