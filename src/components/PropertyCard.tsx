@@ -3,9 +3,11 @@ import { Bed, Bath, Maximize, MapPin, ChevronLeft, ChevronRight } from 'lucide-r
 import type { Property } from '@/types';
 import { formatPrice } from '@/lib/format';
 import { useLanguage } from '@/context/LanguageContext';
+import { useNeighborhoods, getNeighborhoodLabelByName } from '@/hooks/useNeighborhoods';
 
 export function PropertyCard({ property }: { property: Property }) {
-  const { enumLabel, propertyTitle, rtl } = useLanguage();
+  const { enumLabel, propertyTitle, rtl, lang } = useLanguage();
+  const { neighborhoods } = useNeighborhoods();
   const img = property.images[0] || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400';
   const title = propertyTitle(property.code, property.title);
   const Chevron = rtl ? ChevronLeft : ChevronRight;
@@ -23,7 +25,7 @@ export function PropertyCard({ property }: { property: Property }) {
             <h3 className="property-card-title">{title}</h3>
             <p className="property-card-location">
               <MapPin className="h-3.5 w-3.5 shrink-0" />
-              {property.neighborhood}
+              {getNeighborhoodLabelByName(property.neighborhood, neighborhoods, lang)}
             </p>
           </div>
           <Chevron className="mt-1 h-5 w-5 shrink-0 text-royal-500" />

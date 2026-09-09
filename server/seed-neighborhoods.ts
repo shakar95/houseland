@@ -29,7 +29,7 @@ async function main() {
   const features = data.features || [];
   console.log(`Found ${features.length} features in GeoJSON.`);
 
-  const uniqueNeighborhoods = new Map<string, { lat: number; lng: number }>();
+  const uniqueNeighborhoods = new Map<string, { lat: number; lng: number; nameEn: string | null; nameKu: string | null; nameAr: string | null }>();
 
   for (const feature of features) {
     let name = feature.properties?.name || feature.properties?.['name:ckb'];
@@ -57,8 +57,12 @@ async function main() {
       lat = coords[1];
     }
 
+    const nameEn = feature.properties?.['name:en'] || null;
+    const nameKu = feature.properties?.['name:ckb'] || feature.properties?.['name:ku'] || feature.properties?.['name:ku-Arab'] || null;
+    const nameAr = feature.properties?.['name:ar'] || feature.properties?.['name:ar1'] || null;
+
     if (lat !== 0 && lng !== 0) {
-      uniqueNeighborhoods.set(name, { lat, lng });
+      uniqueNeighborhoods.set(name, { lat, lng, nameEn, nameKu, nameAr });
     }
   }
 
@@ -72,6 +76,9 @@ async function main() {
   console.log('Inserting neighborhoods...');
   const insertData = Array.from(uniqueNeighborhoods.entries()).map(([name, coords]) => ({
     name,
+    nameEn: coords.nameEn,
+    nameKu: coords.nameKu,
+    nameAr: coords.nameAr,
     latitude: coords.lat,
     longitude: coords.lng,
   }));

@@ -90,8 +90,8 @@ app.delete('/api/staff/:id', requireAuth, requireRole('ADMIN'), wrap(async (req,
 
 // ——— Neighborhoods ———
 app.get('/api/neighborhoods', wrap(async (_req, res) => {
-  // Cache neighborhoods for 1 hour to reduce DB load
-  res.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=7200');
+  // Cache neighborhoods for 5 minutes to reduce DB load but allow updates
+  res.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=3600');
   const list = await db.select().from(neighborhoods);
 
   const counts = await db.select({
