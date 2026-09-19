@@ -558,7 +558,17 @@ app.get('/api/resolve-video-url', wrap(async (req, res) => {
 }));
 
 app.post('/api/properties', requireAuth, wrap(async (req: AuthRequest, res) => {
-  const code = await generatePropertyCode();
+  let code = req.body.code?.trim();
+  if (code) {
+    const existing = await db.select({ id: properties.id }).from(properties).where(eq(properties.code, code)).limit(1);
+    if (existing.length > 0) {
+      res.status(400).json({ error: 'Property code already exists (ئەم کۆدە پێشتر بەکارهاتووە)' });
+      return;
+    }
+  } else {
+    code = await generatePropertyCode();
+  }
+
   const sanitized = sanitizePropertyInput(req.body);
   const images = Array.isArray(req.body.images) ? (req.body.images as string[]).filter(Boolean) : [];
   const resolvedVideoLink = await resolveVideoUrl(sanitized.videoLink);
@@ -602,7 +612,7 @@ app.patch('/api/properties/:id', requireAuth, requireRole('ADMIN', 'STAFF'), wra
     ? or(eq(properties.id, target), eq(properties.code, target))
     : eq(properties.code, target);
 
-  const [existing] = await db.select({ id: properties.id }).from(properties).where(matchCond);
+  const [existing] = await db.select({ id: properties.id, code: properties.code }).from(properties).where(matchCond);
   if (!existing) {
     res.status(404).json({ error: 'Property not found' });
     return;
@@ -610,6 +620,18 @@ app.patch('/api/properties/:id', requireAuth, requireRole('ADMIN', 'STAFF'), wra
 
   const body = { ...req.body } as Record<string, unknown>;
   const updateData: Record<string, unknown> = {};
+
+  if (typeof body.code === 'string' && body.code.trim()) {
+    const newCode = body.code.trim();
+    if (newCode !== existing.code) {
+      const codeCheck = await db.select({ id: properties.id }).from(properties).where(eq(properties.code, newCode)).limit(1);
+      if (codeCheck.length > 0) {
+        res.status(400).json({ error: 'Property code already exists (ئەم کۆدە پێشتر بەکارهاتووە)' });
+        return;
+      }
+      updateData.code = newCode;
+    }
+  }
 
   const numOrNull = (val: unknown) => {
     if (val === null || val === undefined || val === '') return null;

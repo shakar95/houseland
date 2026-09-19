@@ -24,6 +24,7 @@ export const propertyTypeEnum = pgEnum('PropertyType', [
   'VILLA',
   'LAND',
   'COMMERCIAL',
+  'SHOP',
   'FARM',
 ]);
 export const transactionTypeEnum = pgEnum('TransactionType', [

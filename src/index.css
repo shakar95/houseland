@@ -1101,22 +1101,6 @@ html[dir='rtl'] * {
     grid-column: span 2;
   }
 }
-
-.property-detail-description {
-  @apply mt-5 text-sm leading-relaxed text-royal-200 sm:mt-6 sm:text-base;
-  white-space: pre-wrap;
-  word-break: break-word;
-  overflow-wrap: break-word;
-}
-
-.property-detail-description--clamped {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 7;
-  line-clamp: 7;
-  overflow: hidden;
-}
-
 /* ——— Legacy / shared ——— */
 .btn-gold {
   @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-gold-400 to-gold-500 px-5 py-2.5 font-semibold text-royal-950 shadow-lg shadow-gold-500/20 transition active:scale-[0.98];

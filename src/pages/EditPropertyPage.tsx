@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Trash2, X, Save, AlertTriangle, ExternalLink } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Trash2, X, Save, AlertTriangle, ExternalLink, ChevronRight, ChevronLeft } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
@@ -14,7 +14,7 @@ import { NeighborhoodSingleSelect } from '@/components/NeighborhoodSingleSelect'
 import { formatPrice } from '@/lib/format';
 import { readNumberInput } from '@/lib/numberInput';
 
-const propertyTypes = ['HOUSE', 'APARTMENT', 'VILLA', 'LAND', 'COMMERCIAL', 'FARM'] as const;
+const propertyTypes = ['HOUSE', 'APARTMENT', 'VILLA', 'LAND', 'COMMERCIAL', 'SHOP', 'FARM'] as const;
 const transactionTypes = ['FOR_SALE', 'FOR_RENT', 'FOR_EXCHANGE'] as const;
 const facingDirections = ['EAST', 'WEST', 'NORTH', 'SOUTH'] as const;
 const residentialTypes = new Set(['HOUSE', 'APARTMENT', 'VILLA']);
@@ -57,6 +57,7 @@ export function EditPropertyPage() {
     longitude: 45.432,
     videoLink: '',
     status: 'APPROVED' as string,
+    code: '',
   });
 
   const isAdmin = profile?.role === 'ADMIN' || profile?.role === 'STAFF';
@@ -90,6 +91,7 @@ export function EditPropertyPage() {
           longitude: prop.longitude || 45.432,
           videoLink: prop.videoLink || '',
           status: prop.status,
+          code: prop.code || '',
         });
       })
       .catch((err) => {
@@ -124,7 +126,6 @@ export function EditPropertyPage() {
   }
 
   const showFloorsField = residentialTypes.has(form.propertyType);
-  const showRoomFields = residentialTypes.has(form.propertyType);
   const isApartment = form.propertyType === 'APARTMENT';
   const floorsLabel = isApartment ? t.submit.floorLevelLabel : t.submit.floorsCountLabel;
   const floorsPlaceholder = isApartment ? t.submit.floorLevelPlaceholder : t.submit.floorsCountPlaceholder;
@@ -132,6 +133,28 @@ export function EditPropertyPage() {
 
   const removeExistingImage = (idx: number) => {
     setExistingImages((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const moveExistingForward = (index: number) => {
+    if (index === 0) return;
+    setExistingImages((prev) => {
+      const next = [...prev];
+      const temp = next[index - 1];
+      next[index - 1] = next[index];
+      next[index] = temp;
+      return next;
+    });
+  };
+
+  const moveExistingBackward = (index: number) => {
+    if (index === existingImages.length - 1) return;
+    setExistingImages((prev) => {
+      const next = [...prev];
+      const temp = next[index + 1];
+      next[index + 1] = next[index];
+      next[index] = temp;
+      return next;
+    });
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -154,7 +177,8 @@ export function EditPropertyPage() {
       }
 
       const payload = {
-        title: `${enumLabel(form.propertyType)} — ${form.neighborhood}`,
+        code: form.code.trim(),
+        title: `${enumLabel(form.propertyType)} — ${getNeighborhoodLabelByName(form.neighborhood, neighborhoods, lang)}`,
         description: form.description,
         propertyType: form.propertyType,
         transactionType: form.transactionType,
@@ -182,7 +206,7 @@ export function EditPropertyPage() {
       await api.patch(`/api/properties/${propertyId}`, payload);
       setMessage(t.submit.editSuccess);
       setTimeout(() => {
-        navigate(`/property/${code}`);
+        navigate(`/property/${form.code.trim()}`);
       }, 1200);
     } catch (err) {
       console.error('Save failed:', err);
@@ -279,7 +303,19 @@ export function EditPropertyPage() {
           </div>
         </div>
 
-        {/* Description */}
+        {/* Code & Description */}
+        <div>
+          <label className="filter-label">کۆدی موڵک</label>
+          <input
+            type="text"
+            className="input-luxury mt-1 mb-4"
+            placeholder="کۆدی موڵک"
+            required
+            value={form.code}
+            onChange={(e) => setForm({ ...form, code: e.target.value })}
+          />
+        </div>
+
         <div>
           <label className="filter-label">وەسفی موڵک</label>
           <textarea
@@ -459,41 +495,22 @@ export function EditPropertyPage() {
           </div>
         )}
 
-        {showRoomFields && (
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="filter-label">{t.submit.bedroomsLabel}</label>
-              <input
-                type="number"
-                min={0}
-                className="input-luxury mt-1"
-                placeholder={t.submit.bedroomsPlaceholder}
-                value={form.bedrooms ?? ''}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    bedrooms: e.target.value ? Number(e.target.value) : undefined,
-                  })
-                }
-              />
-            </div>
-            <div>
-              <label className="filter-label">{t.submit.facingLabel}</label>
-              <select
-                className="input-luxury mt-1"
-                value={form.facing}
-                onChange={(e) => setForm({ ...form, facing: e.target.value })}
-              >
-                <option value="">{t.submit.facingPlaceholder}</option>
-                {facingDirections.map((dir) => (
-                  <option key={dir} value={dir}>
-                    {enumLabel(dir)}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        )}
+
+        <div>
+          <label className="filter-label">{t.submit.facingLabel}</label>
+          <select
+            className="input-luxury mt-1"
+            value={form.facing}
+            onChange={(e) => setForm({ ...form, facing: e.target.value })}
+          >
+            <option value="">{t.submit.facingPlaceholder}</option>
+            {facingDirections.map((dir) => (
+              <option key={dir} value={dir}>
+                {enumLabel(dir)}
+              </option>
+            ))}
+          </select>
+        </div>
 
         {/* Neighborhood & Landmark */}
         <div className="grid gap-4 sm:grid-cols-2">
@@ -556,6 +573,28 @@ export function EditPropertyPage() {
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
+                  
+                  {existingImages.length > 1 && (
+                    <div className="absolute bottom-0 inset-x-0 flex items-center justify-between bg-gradient-to-t from-black/80 to-transparent p-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+                      <button
+                        type="button"
+                        onClick={() => moveExistingForward(index)}
+                        disabled={index === 0}
+                        className="flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white hover:text-gold-400 disabled:opacity-30 disabled:hover:text-white"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                      <div className="text-xs font-bold text-white/80">{index + 1}</div>
+                      <button
+                        type="button"
+                        onClick={() => moveExistingBackward(index)}
+                        disabled={index === existingImages.length - 1}
+                        className="flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white hover:text-gold-400 disabled:opacity-30 disabled:hover:text-white"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

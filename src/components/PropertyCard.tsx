@@ -12,21 +12,21 @@ export function PropertyCard({ property }: { property: Property }) {
     property.images?.[0] ||
     property.thumbnailUrl ||
     'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400';
-  const title = propertyTitle(property.code, property.title);
+  const dynamicTitle = `${enumLabel(property.propertyType)} — ${getNeighborhoodLabelByName(property.neighborhood, neighborhoods, lang)}`;
   const Chevron = rtl ? ChevronLeft : ChevronRight;
   const displayImg = img.replace(/&amp;/gi, '&');
 
   return (
     <Link to={`/property/${property.code}`} className="property-card">
       <div className="property-card-image">
-        <img src={displayImg} alt={title} loading="lazy" referrerPolicy="no-referrer" />
+        <img src={displayImg} alt={dynamicTitle} loading="lazy" referrerPolicy="no-referrer" />
         <span className="property-card-badge">{property.code}</span>
         <span className="property-card-type">{enumLabel(property.transactionType)}</span>
       </div>
       <div className="property-card-body">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <h3 className="property-card-title">{title}</h3>
+            <h3 className="property-card-title">{dynamicTitle}</h3>
             <p className="property-card-location">
               <MapPin className="h-3.5 w-3.5 shrink-0" />
               {getNeighborhoodLabelByName(property.neighborhood, neighborhoods, lang)}

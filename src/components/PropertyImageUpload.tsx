@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ImagePlus, X } from 'lucide-react';
+import { ImagePlus, X, ChevronRight, ChevronLeft } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { MAX_IMAGE_BYTES, MAX_PROPERTY_IMAGES } from '@/lib/uploadPropertyImages';
 
@@ -61,6 +61,24 @@ export function PropertyImageUpload({ files, onChange, disabled, error }: Props)
     setLocalError('');
   };
 
+  const moveForward = (index: number) => {
+    if (disabled || index === 0) return;
+    const next = [...files];
+    const temp = next[index - 1];
+    next[index - 1] = next[index];
+    next[index] = temp;
+    onChange(next);
+  };
+
+  const moveBackward = (index: number) => {
+    if (disabled || index === files.length - 1) return;
+    const next = [...files];
+    const temp = next[index + 1];
+    next[index + 1] = next[index];
+    next[index] = temp;
+    onChange(next);
+  };
+
   const displayError = error || localError;
 
   return (
@@ -72,8 +90,9 @@ export function PropertyImageUpload({ files, onChange, disabled, error }: Props)
 
       <div className="grid grid-cols-3 gap-3">
         {previews.map((preview, index) => (
-          <div key={preview.id} className="relative aspect-square overflow-hidden rounded-xl border border-royal-800/80 bg-royal-900/50">
+          <div key={preview.id} className="group relative aspect-square overflow-hidden rounded-xl border border-royal-800/80 bg-royal-900/50">
             <img src={preview.url} alt="" className="h-full w-full object-cover" />
+            
             {!disabled && (
               <button
                 type="button"
@@ -83,6 +102,28 @@ export function PropertyImageUpload({ files, onChange, disabled, error }: Props)
               >
                 <X className="h-4 w-4" />
               </button>
+            )}
+
+            {!disabled && files.length > 1 && (
+              <div className="absolute bottom-0 inset-x-0 flex items-center justify-between bg-gradient-to-t from-black/80 to-transparent p-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+                <button
+                  type="button"
+                  onClick={() => moveForward(index)}
+                  disabled={index === 0}
+                  className="flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white hover:text-gold-400 disabled:opacity-30 disabled:hover:text-white"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+                <div className="text-xs font-bold text-white/80">{index + 1}</div>
+                <button
+                  type="button"
+                  onClick={() => moveBackward(index)}
+                  disabled={index === files.length - 1}
+                  className="flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white hover:text-gold-400 disabled:opacity-30 disabled:hover:text-white"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+              </div>
             )}
           </div>
         ))}

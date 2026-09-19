@@ -20,7 +20,7 @@ interface Props {
 
 type PopupKey = 'type' | 'neighborhood' | 'price' | 'area';
 
-const types = ['HOUSE', 'APARTMENT', 'VILLA', 'LAND', 'COMMERCIAL', 'FARM'] as const;
+const types = ['HOUSE', 'APARTMENT', 'VILLA', 'LAND', 'COMMERCIAL', 'SHOP', 'FARM'] as const;
 const quickTransactionFilters = ['FOR_SALE', 'FOR_RENT'] as const;
 const transactionFilters = ['FOR_SALE', 'FOR_RENT', 'FOR_EXCHANGE'] as const;
 

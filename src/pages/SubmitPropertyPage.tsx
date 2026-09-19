@@ -14,12 +14,13 @@ import { formatPrice } from '@/lib/format';
 import { readNumberInput } from '@/lib/numberInput';
 import { prefetchPropertyVideo } from '@/lib/videoPrefetch';
 
-const propertyTypes = ['HOUSE', 'APARTMENT', 'VILLA', 'LAND', 'COMMERCIAL', 'FARM'] as const;
+const propertyTypes = ['HOUSE', 'APARTMENT', 'VILLA', 'LAND', 'COMMERCIAL', 'SHOP', 'FARM'] as const;
 const transactionTypes = ['FOR_SALE', 'FOR_RENT', 'FOR_EXCHANGE'] as const;
 const facingDirections = ['EAST', 'WEST', 'NORTH', 'SOUTH'] as const;
 const residentialTypes = new Set(['HOUSE', 'APARTMENT', 'VILLA']);
 
 const empty = {
+  code: '',
   description: '',
   propertyType: 'HOUSE',
   transactionType: 'FOR_SALE',
@@ -73,7 +74,6 @@ export function SubmitPropertyPage() {
   }
 
   const showFloorsField = residentialTypes.has(form.propertyType);
-  const showRoomFields = residentialTypes.has(form.propertyType);
   const isApartment = form.propertyType === 'APARTMENT';
   const floorsLabel = isApartment ? t.submit.floorLevelLabel : t.submit.floorsCountLabel;
   const floorsPlaceholder = isApartment ? t.submit.floorLevelPlaceholder : t.submit.floorsCountPlaceholder;
@@ -99,7 +99,7 @@ export function SubmitPropertyPage() {
       const isStaffSubmit = profile?.role === 'ADMIN' || profile?.role === 'STAFF';
       await api.post('/api/properties', {
         ...form,
-        title: `${enumLabel(form.propertyType)} — ${form.neighborhood}`,
+        title: `${enumLabel(form.propertyType)} — ${getNeighborhoodLabelByName(form.neighborhood, neighborhoods, lang)}`,
         currency: 'USD',
         images,
         frontageMeters: form.frontageMeters ?? null,
@@ -149,6 +149,20 @@ export function SubmitPropertyPage() {
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
         />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="filter-label">کۆدی موڵک (بۆ نموونە: 123)</label>
+            <input
+              type="text"
+              inputMode="numeric"
+              className="input-luxury mt-1"
+              placeholder="بەتاڵ جێبهێڵە بۆ ئۆتۆماتیک..."
+              value={form.code}
+              onChange={(e) => setForm({ ...form, code: e.target.value })}
+            />
+          </div>
+          <div></div>
+        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="filter-label">{t.submit.propertyTypeLabel}</label>
@@ -308,41 +322,22 @@ export function SubmitPropertyPage() {
             />
           </div>
         )}
-        {showRoomFields && (
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="filter-label">{t.submit.bedroomsLabel}</label>
-              <input
-                type="number"
-                min={0}
-                className="input-luxury mt-1"
-                placeholder={t.submit.bedroomsPlaceholder}
-                value={form.bedrooms ?? ''}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    bedrooms: e.target.value ? Number(e.target.value) : undefined,
-                  })
-                }
-              />
-            </div>
-            <div>
-              <label className="filter-label">{t.submit.facingLabel}</label>
-              <select
-                className="input-luxury mt-1"
-                value={form.facing}
-                onChange={(e) => setForm({ ...form, facing: e.target.value })}
-              >
-                <option value="">{t.submit.facingPlaceholder}</option>
-                {facingDirections.map((dir) => (
-                  <option key={dir} value={dir}>
-                    {enumLabel(dir)}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        )}
+
+        <div>
+          <label className="filter-label">{t.submit.facingLabel}</label>
+          <select
+            className="input-luxury mt-1"
+            value={form.facing}
+            onChange={(e) => setForm({ ...form, facing: e.target.value })}
+          >
+            <option value="">{t.submit.facingPlaceholder}</option>
+            {facingDirections.map((dir) => (
+              <option key={dir} value={dir}>
+                {enumLabel(dir)}
+              </option>
+            ))}
+          </select>
+        </div>
         <div>
           <label className="filter-label">{t.submit.neighborhoodLabel}</label>
           <NeighborhoodSingleSelect

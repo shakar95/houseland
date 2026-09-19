@@ -36,13 +36,27 @@ export function getDictionary(lang: Lang): TranslationDict {
 }
 
 export function getPropertyTitle(code: string, lang: Lang, fallback: string) {
-  const raw = DEMO_PROPERTIES[code]?.title[lang] ?? fallback;
-  return lang === 'en' ? raw : normalizeKurdishOrthography(raw);
+  const demo = DEMO_PROPERTIES[code];
+  if (demo) {
+    const isOriginal = fallback === demo.title.en || fallback === demo.title.ku || fallback === demo.title.ar;
+    if (isOriginal || !fallback) {
+      const raw = demo.title[lang] ?? fallback;
+      return lang === 'en' ? raw : normalizeKurdishOrthography(raw);
+    }
+  }
+  return lang === 'en' ? fallback : normalizeKurdishOrthography(fallback);
 }
 
 export function getPropertyDescription(code: string, lang: Lang, fallback: string) {
-  const raw = DEMO_PROPERTIES[code]?.description[lang] ?? fallback;
-  return lang === 'en' ? raw : normalizeKurdishOrthography(raw);
+  const demo = DEMO_PROPERTIES[code];
+  if (demo) {
+    const isOriginal = fallback === demo.description.en || fallback === demo.description.ku || fallback === demo.description.ar;
+    if (isOriginal || !fallback) {
+      const raw = demo.description[lang] ?? fallback;
+      return lang === 'en' ? raw : normalizeKurdishOrthography(raw);
+    }
+  }
+  return lang === 'en' ? fallback : normalizeKurdishOrthography(fallback);
 }
 
 export function labelEnum(lang: Lang, value: string) {

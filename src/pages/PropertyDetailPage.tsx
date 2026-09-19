@@ -51,7 +51,7 @@ export function PropertyDetailPage() {
     api.post(`/api/properties/${property.id}/analytics`, { event }).catch(() => {});
   };
 
-  const title = property ? propertyTitle(property.code, property.title) : '';
+  const title = property ? `${enumLabel(property.propertyType)} — ${getNeighborhoodLabelByName(property.neighborhood, neighborhoods, lang)}` : '';
   const description = property ? propertyDescription(property.code, property.description ?? '') : '';
   const wa = agency?.whatsapp?.replace(/\D/g, '') ?? '';
 
@@ -178,7 +178,7 @@ export function PropertyDetailPage() {
           </div>
           <p className="mt-2 text-xs text-royal-500">{t.property.privacyNote}</p>
 
-          <div className="relative">
+          <div className="relative mt-5 sm:mt-6">
             <div
               ref={descRef}
               onClick={() => {
@@ -189,11 +189,15 @@ export function PropertyDetailPage() {
                   }
                 }
               }}
-              className={`property-detail-description whitespace-pre-wrap break-words ${
-                !isExpanded ? 'property-detail-description--clamped' : ''
+              className={`text-sm leading-relaxed text-royal-200 sm:text-base whitespace-pre-wrap break-words transition-all duration-300 ${
+                !isExpanded ? 'max-h-[14rem] overflow-hidden relative' : ''
               } ${canExpand ? 'cursor-pointer hover:text-white' : ''}`}
             >
               {description}
+              
+              {!isExpanded && canExpand && (
+                <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-royal-950 via-royal-950/80 to-transparent pointer-events-none" />
+              )}
             </div>
 
             {canExpand && (

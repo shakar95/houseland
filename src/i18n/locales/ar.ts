@@ -136,6 +136,7 @@ const ar: TranslationDict = {
     VILLA: 'فيلا',
     LAND: 'أرض',
     COMMERCIAL: 'تجاري',
+    SHOP: 'محل / دكان',
     FARM: 'مزرعة / بستان',
     PENDING: 'قيد المراجعة',
     APPROVED: 'موافق عليه',

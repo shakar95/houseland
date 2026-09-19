@@ -164,6 +164,7 @@ enum PropertyType {
   VILLA
   LAND
   COMMERCIAL
+  SHOP
   FARM
 }
 

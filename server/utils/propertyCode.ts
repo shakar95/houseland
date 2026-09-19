@@ -2,12 +2,11 @@ import { desc, sql } from 'drizzle-orm';
 import { db, properties } from '../db/index.js';
 
 export async function generatePropertyCode(): Promise<string> {
-  // Prefer max numeric suffix so deletes don't reuse / collide with count()+1
   const rows = await db
     .select({ code: properties.code })
     .from(properties)
     .orderBy(desc(properties.createdAt))
-    .limit(500);
+    .limit(2000);
 
   let max = 0;
   for (const { code } of rows) {
@@ -20,5 +19,5 @@ export async function generatePropertyCode(): Promise<string> {
     max = Number(res?.total ?? 0);
   }
 
-  return `SULI-${String(max + 1).padStart(3, '0')}`;
+  return String(max + 1);
 }
