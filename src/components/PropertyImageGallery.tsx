@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Maximize2, Minimize2, Play } from 'lucide-re
 import { useLanguage } from '@/context/LanguageContext';
 import { VideoEmbed } from '@/components/VideoEmbed';
 import { PropertyImageLightbox } from '@/components/PropertyImageLightbox';
+import { prefetchPropertyVideo } from '@/lib/videoPrefetch';
 
 const FALLBACK_IMAGE =
   'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200';
@@ -14,27 +15,38 @@ type Slide = ImageSlide | VideoSlide;
 type Props = {
   images: string[];
   videoUrl?: string | null;
+  imageCount?: number;
   alt: string;
   className?: string;
 };
 
-function buildSlides(images: string[], videoUrl?: string | null): Slide[] {
-  const imgs = images.filter(Boolean);
-  const slides: Slide[] =
-    imgs.length > 0
-      ? imgs.map((src, i) => ({ type: 'image' as const, src, key: `img-${i}-${src}` }))
-      : [{ type: 'image' as const, src: FALLBACK_IMAGE, key: 'fallback' }];
-
+function buildSlides(images: string[], videoUrl?: string | null, imageCount?: number): Slide[] {
+  const all = images.filter(Boolean).map((u) => u.replace(/&amp;/gi, '&'));
+  // imageCount===0 means images[] only holds a video poster — don't show it as a photo slide
+  const imgs = imageCount === 0 && videoUrl?.trim() ? [] : all;
   const url = videoUrl?.trim();
+  const slides: Slide[] = [];
+
+  if (imgs.length > 0) {
+    for (let i = 0; i < imgs.length; i++) {
+      slides.push({ type: 'image', src: imgs[i], key: `img-${i}-${imgs[i]}` });
+    }
+  }
+
   if (url) {
-    const at = Math.min(1, slides.length);
+    const at = imgs.length > 0 ? Math.min(1, slides.length) : 0;
     slides.splice(at, 0, { type: 'video', url, key: 'video' });
+  }
+
+  if (slides.length === 0) {
+    const poster = all[0] || FALLBACK_IMAGE;
+    slides.push({ type: 'image', src: poster, key: 'fallback' });
   }
 
   return slides;
 }
 
-export function PropertyImageGallery({ images, videoUrl, alt, className }: Props) {
+export function PropertyImageGallery({ images, videoUrl, imageCount, alt, className }: Props) {
   const { rtl, t, formatNum } = useLanguage();
   const [index, setIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -44,8 +56,14 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const isSwipingRef = useRef<boolean | null>(null);
   const touchHandledRef = useRef(false);
-  const slides = useMemo(() => buildSlides(images, videoUrl), [images, videoUrl]);
-  const imageUrls = useMemo(() => images.filter(Boolean), [images]);
+  const slides = useMemo(
+    () => buildSlides(images, videoUrl, imageCount),
+    [images, videoUrl, imageCount],
+  );
+  const imageUrls = useMemo(
+    () => images.filter(Boolean).map((u) => u.replace(/&amp;/gi, '&')),
+    [images],
+  );
   const poster = imageUrls[0] ?? FALLBACK_IMAGE;
   const multi = slides.length > 1;
 
@@ -59,8 +77,61 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
     () => slides.findIndex((s) => s.type === 'video'),
     [slides],
   );
+  const isVideoOnly = useMemo(() => {
+    if (!videoUrl?.trim()) return false;
+    if (imageCount === 0) return true;
+    return slides.length === 1 && slides[0]?.type === 'video';
+  }, [videoUrl, imageCount, slides]);
   const prevIndexRef = useRef(index);
   const [videoKey, setVideoKey] = useState(0);
+  const autoFullscreenFor = useRef<string | null>(null);
+  const videoIsActive = videoSlideIndex >= 0 && index === videoSlideIndex;
+
+  useEffect(() => {
+    if (videoUrl) void prefetchPropertyVideo(videoUrl);
+  }, [videoUrl]);
+
+  useEffect(() => {
+    setIndex(0);
+    if (!isVideoOnly) {
+      setIsVideoFullscreen(false);
+      autoFullscreenFor.current = null;
+    }
+  }, [videoUrl, images, isVideoOnly]);
+
+  // Video-only listings: open immersive fullscreen with autoplay immediately
+  useEffect(() => {
+    if (!isVideoOnly || !videoUrl) return;
+    if (autoFullscreenFor.current === videoUrl) return;
+    autoFullscreenFor.current = videoUrl;
+
+    const videoIdx = videoSlideIndex >= 0 ? videoSlideIndex : 0;
+    setIndex(videoIdx);
+    setLoadedSlides((prev) => new Set(prev).add(videoIdx));
+    setIsVideoFullscreen(true);
+    setVideoKey((k) => k + 1);
+
+    const timer = window.setTimeout(() => {
+      void videoContainerRef.current?.requestFullscreen?.().catch(() => {});
+    }, 80);
+    return () => window.clearTimeout(timer);
+  }, [isVideoOnly, videoUrl, videoSlideIndex]);
+
+  useEffect(() => {
+    if (!isVideoFullscreen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      setIsVideoFullscreen(false);
+      void document.exitFullscreen?.().catch(() => {});
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [isVideoFullscreen]);
 
   useEffect(() => {
     if (prevIndexRef.current === videoSlideIndex && index !== videoSlideIndex) {
@@ -277,7 +348,7 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
                           key={`video-${slide.key}-${videoKey}`}
                           url={slide.url}
                           aspect="reel"
-                          autoPlay={false}
+                          autoPlay={videoIsActive || isVideoOnly}
                         />
                       ) : null}
                     </div>
@@ -393,7 +464,7 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
                     onClick={() => goTo(i)}
                     aria-label={`${formatNum(i + 1)} / ${formatNum(slides.length)}`}
                   >
-                    <img src={slide.src} alt="" loading="lazy" draggable={false} />
+                    <img src={slide.src} alt="" loading="lazy" draggable={false} referrerPolicy="no-referrer" />
                   </button>
                 ) : (
                   <button
@@ -407,7 +478,7 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
                     onClick={() => goTo(i)}
                     aria-label={t.property.video}
                   >
-                    <img src={poster} alt="" loading="lazy" draggable={false} />
+                    <img src={poster} alt="" loading="lazy" draggable={false} referrerPolicy="no-referrer" />
                     <span className="property-gallery-thumb-play">
                       <Play className="h-4 w-4 fill-white text-white" />
                     </span>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { parseVideoLink, type VideoAspect } from '@/lib/videoEmbed';
 import { ExternalLink } from 'lucide-react';
+import { getResolvedVideoUrl, prefetchPropertyVideo } from '@/lib/videoPrefetch';
 
 type Props = {
   url: string;
@@ -10,22 +11,17 @@ type Props = {
 };
 
 export function VideoEmbed({ url, aspect = 'video', className, autoPlay = false }: Props) {
-  const [currentUrl, setCurrentUrl] = useState(url);
+  const [currentUrl, setCurrentUrl] = useState(() => getResolvedVideoUrl(url) || url);
 
   useEffect(() => {
-    setCurrentUrl(url);
+    const cached = getResolvedVideoUrl(url);
+    setCurrentUrl(cached || url);
     if (!url) return;
 
-    if (url.includes('facebook.com/share/') || url.includes('fb.watch/')) {
-      fetch(`/api/resolve-video-url?url=${encodeURIComponent(url)}`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data?.resolvedUrl && data.resolvedUrl !== url) {
-            setCurrentUrl(data.resolvedUrl);
-          }
-        })
-        .catch(() => {});
-    }
+    void prefetchPropertyVideo(url).then(() => {
+      const next = getResolvedVideoUrl(url);
+      if (next) setCurrentUrl(next);
+    });
   }, [url]);
 
   const embed = parseVideoLink(currentUrl, aspect, autoPlay);
@@ -45,6 +41,7 @@ export function VideoEmbed({ url, aspect = 'video', className, autoPlay = false 
   return (
     <div className="relative flex items-center justify-center w-full h-full">
       <div
+        key={`${currentUrl}-${autoPlay ? 'auto' : 'manual'}`}
         className={className ?? (aspect === 'reel' ? 'property-gallery-video-wrap' : 'w-full h-full')}
         dangerouslySetInnerHTML={{ __html: embed.embedHtml }}
       />

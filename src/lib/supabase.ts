@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { clearAuthTokenCache } from './authTokenCache';
+import { clearAuthTokenCache, setCachedAuthToken } from './authTokenCache';
 
 const url = import.meta.env.VITE_SUPABASE_URL ?? '';
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY ?? '';
@@ -23,8 +23,10 @@ export async function signInWithGoogle() {
 
 export async function signInWithPassword(email: string, password: string) {
   if (!supabaseConfigured) throw new Error('Supabase not configured');
+  clearAuthTokenCache();
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
+  setCachedAuthToken(data.session?.access_token ?? null);
   return data;
 }
 

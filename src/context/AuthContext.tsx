@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import { supabase, supabaseConfigured } from '@/lib/supabase';
-import { api } from '@/lib/api';
+import { api, clearAuthTokenCache } from '@/lib/api';
+import { setCachedAuthToken } from '@/lib/authTokenCache';
 import type { Profile } from '@/types';
 
 interface AuthContextValue {
@@ -19,14 +20,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const refreshProfile = async () => {
+  const refreshProfile = useCallback(async () => {
     try {
       const me = await api.get<Profile>('/api/me');
       setProfile(me);
     } catch {
       setProfile(null);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (!supabaseConfigured) {
@@ -34,15 +35,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) refreshProfile().finally(() => setLoading(false));
-      else setLoading(false);
+      if (data.session?.access_token) {
+        setCachedAuthToken(data.session.access_token);
+        refreshProfile().finally(() => setLoading(false));
+      } else {
+        setLoading(false);
+      }
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      if (session) refreshProfile();
-      else setProfile(null);
+      // Defer so Supabase can finish persisting the session before we call getSession/API
+      queueMicrotask(() => {
+        if (session?.access_token) {
+          setCachedAuthToken(session.access_token);
+          void refreshProfile();
+        } else {
+          clearAuthTokenCache();
+          setProfile(null);
+        }
+      });
     });
     return () => sub.subscription.unsubscribe();
-  }, []);
+  }, [refreshProfile]);
 
   return (
     <AuthContext.Provider value={{ profile, loading, refreshProfile }}>

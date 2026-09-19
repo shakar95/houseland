@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '@/lib/api';
+import { api, clearApiCache } from '@/lib/api';
 import { Link } from 'react-router-dom';
 import { signInWithGoogle } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
@@ -12,6 +12,7 @@ import { useNeighborhoods } from '@/hooks/useNeighborhoods';
 import { NeighborhoodSingleSelect } from '@/components/NeighborhoodSingleSelect';
 import { formatPrice } from '@/lib/format';
 import { readNumberInput } from '@/lib/numberInput';
+import { prefetchPropertyVideo } from '@/lib/videoPrefetch';
 
 const propertyTypes = ['HOUSE', 'APARTMENT', 'VILLA', 'LAND', 'COMMERCIAL', 'FARM'] as const;
 const transactionTypes = ['FOR_SALE', 'FOR_RENT', 'FOR_EXCHANGE'] as const;
@@ -79,21 +80,23 @@ export function SubmitPropertyPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!imageFiles.length) {
-      setImageError(t.submit.imageRequired);
+    const hasVideo = Boolean(form.videoLink?.trim());
+    if (!imageFiles.length && !hasVideo) {
+      setImageError(t.submit.imageOrVideoRequired);
       setMessageIsError(true);
-      setMessage(t.submit.imageRequired);
+      setMessage(t.submit.imageOrVideoRequired);
       return;
     }
 
     setSubmitting(true);
-    setUploadingImages(true);
+    setUploadingImages(Boolean(imageFiles.length));
     setMessage('');
     setMessageIsError(false);
     setImageError('');
     try {
-      const images = await uploadPropertyImages(imageFiles);
+      const images = imageFiles.length ? await uploadPropertyImages(imageFiles) : [];
       setUploadingImages(false);
+      const isStaffSubmit = profile?.role === 'ADMIN' || profile?.role === 'STAFF';
       await api.post('/api/properties', {
         ...form,
         title: `${enumLabel(form.propertyType)} — ${form.neighborhood}`,
@@ -111,8 +114,10 @@ export function SubmitPropertyPage() {
         dimensions: form.dimensions || null,
         videoLink: form.videoLink || null,
       });
-      setMessage(profile?.role === 'ADMIN' ? t.submit.successApproved : t.submit.success);
-      setTimeout(() => navigate('/'), 2000);
+      clearApiCache('/api/properties');
+      if (form.videoLink) void prefetchPropertyVideo(form.videoLink);
+      setMessage(isStaffSubmit ? t.submit.successApproved : t.submit.success);
+      navigate('/');
     } catch (err) {
       setUploadingImages(false);
       setMessageIsError(true);

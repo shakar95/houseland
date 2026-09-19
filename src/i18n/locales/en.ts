@@ -185,6 +185,7 @@ const en: TranslationDict = {
     removeImage: 'Remove photo',
     uploadingImages: 'Uploading photos...',
     imageRequired: 'At least one photo is required',
+    imageOrVideoRequired: 'At least one photo or a video link is required',
     imageTooLarge: 'Photo is too large (max 15MB)',
     imageLimit: 'You can add up to 8 photos',
     storageNotConfigured: 'Supabase Storage is not configured — check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY',

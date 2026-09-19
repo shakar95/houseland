@@ -18,6 +18,7 @@ import {
   maskPropertyForPublic,
 } from './utils/propertyQueries.js';
 import { toPublicListingCard, syncPropertyMedia } from './utils/propertyMedia.js';
+import { resolveVideoThumbnail } from './utils/videoThumbnail.js';
 import {
   getListingCache,
   setListingCache,
@@ -271,21 +272,26 @@ app.get('/api/properties', wrap(async (req, res) => {
   const page = Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 1;
   const offset = (page - 1) * take;
 
-  // Get total count for pagination
+  if (isAdmin) {
+    let countQuery = db.select({ count: sql<number>`count(*)::int` }).from(properties);
+    if (whereCond) countQuery = countQuery.where(whereCond) as any;
+
+    let listQuery = db.select(ADMIN_LIST_COLUMNS).from(properties);
+    if (whereCond) listQuery = listQuery.where(whereCond) as any;
+    listQuery = listQuery.orderBy(desc(properties.createdAt)).limit(take).offset(offset) as any;
+
+    // Run count + page fetch in parallel — sequential was making tab switches feel slow
+    const [[{ count: totalCount }], results] = await Promise.all([countQuery, listQuery]);
+    const totalPages = Math.ceil(totalCount / take) || 1;
+    res.json({ data: results, meta: { totalCount, totalPages, currentPage: page } });
+    return;
+  }
+
+  // Get total count for pagination (public path)
   let countQuery = db.select({ count: sql<number>`count(*)::int` }).from(properties);
   if (whereCond) countQuery = countQuery.where(whereCond) as any;
   const [{ count: totalCount }] = await countQuery;
   const totalPages = Math.ceil(totalCount / take);
-
-  if (isAdmin) {
-    let query = db.select(ADMIN_LIST_COLUMNS).from(properties);
-    if (whereCond) query = query.where(whereCond) as any;
-    query = query.orderBy(desc(properties.createdAt)).limit(take).offset(offset) as any;
-    
-    const results = await query;
-    res.json({ data: results, meta: { totalCount, totalPages, currentPage: page } });
-    return;
-  }
 
   const cacheKey = listingCacheKey({ ...req.query, page, limit: take } as Record<string, unknown>);
   const cached = getListingCache(cacheKey);
@@ -553,21 +559,37 @@ app.get('/api/resolve-video-url', wrap(async (req, res) => {
 
 app.post('/api/properties', requireAuth, wrap(async (req: AuthRequest, res) => {
   const code = await generatePropertyCode();
-  const media = syncPropertyMedia((req.body.images as string[]) ?? []);
   const sanitized = sanitizePropertyInput(req.body);
+  const images = Array.isArray(req.body.images) ? (req.body.images as string[]).filter(Boolean) : [];
   const resolvedVideoLink = await resolveVideoUrl(sanitized.videoLink);
+
+  if (!images.length && !resolvedVideoLink) {
+    res.status(400).json({ error: 'At least one photo or a video link is required' });
+    return;
+  }
+
+  const videoThumb =
+    images.length === 0 && resolvedVideoLink
+      ? await resolveVideoThumbnail(resolvedVideoLink)
+      : null;
+  const media = syncPropertyMedia(images, videoThumb);
+
+  // Staff/admin listings go live immediately; public/client submissions need approval
   const status =
-    req.userRole === 'ADMIN' ? 'APPROVED' : 'PENDING';
-  
-  const [property] = await db.insert(properties).values({
-    ...sanitized,
-    videoLink: resolvedVideoLink,
-    ...media,
-    code,
-    status,
-    submitterId: req.userId,
-  }).returning();
-  
+    req.userRole === 'ADMIN' || req.userRole === 'STAFF' ? 'APPROVED' : 'PENDING';
+
+  const [property] = await db
+    .insert(properties)
+    .values({
+      ...sanitized,
+      videoLink: resolvedVideoLink,
+      ...media,
+      code,
+      status,
+      submitterId: req.userId,
+    })
+    .returning();
+
   await db.insert(analytics).values({ propertyId: property.id });
   invalidateListingCache();
   res.json(property);
@@ -630,16 +652,30 @@ app.patch('/api/properties/:id', requireAuth, requireRole('ADMIN', 'STAFF'), wra
     updateData.status = body.status as any;
   }
 
-  if (Array.isArray(body.images)) {
-    Object.assign(updateData, syncPropertyMedia(body.images as string[]));
-  }
-
   if (body.videoLink !== undefined) {
     if (typeof body.videoLink === 'string' && body.videoLink.trim()) {
       updateData.videoLink = await resolveVideoUrl(body.videoLink);
     } else {
       updateData.videoLink = null;
     }
+  }
+
+  if (Array.isArray(body.images)) {
+    const images = (body.images as string[]).filter(Boolean);
+    let videoThumb: string | null = null;
+    if (images.length === 0) {
+      const link =
+        updateData.videoLink !== undefined
+          ? (updateData.videoLink as string | null)
+          : (
+              await db
+                .select({ videoLink: properties.videoLink })
+                .from(properties)
+                .where(eq(properties.id, existing.id))
+            )[0]?.videoLink ?? null;
+      videoThumb = await resolveVideoThumbnail(link);
+    }
+    Object.assign(updateData, syncPropertyMedia(images, videoThumb));
   }
 
   const [property] = await db.update(properties)
@@ -789,16 +825,32 @@ if (process.env.NODE_ENV === 'production') {
 // --- Global Error Handler ---
 app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   const message = err instanceof Error ? err.message : String(err);
-  console.error('[Houseland API Error]:', message, err);
-  
-  // Log to file so we can see it
+  const cause =
+    err && typeof err === 'object' && 'cause' in err && (err as { cause?: unknown }).cause instanceof Error
+      ? (err as { cause: Error }).cause.message
+      : '';
+  console.error('[Houseland API Error]:', message, cause || err);
+
   try {
     const fs = require('fs');
-    fs.appendFileSync('server-error.log', `[${new Date().toISOString()}] ${message}\n${err instanceof Error ? err.stack : ''}\n\n`);
-  } catch (e) {}
+    fs.appendFileSync(
+      'server-error.log',
+      `[${new Date().toISOString()}] ${message}${cause ? ` | ${cause}` : ''}\n${err instanceof Error ? err.stack : ''}\n\n`,
+    );
+  } catch {
+    /* ignore */
+  }
 
   if (res.headersSent) return;
-  res.status(500).json({ error: 'Server or database error. Please try again.' });
+  const detail = cause || message;
+  const isUnique = /unique|duplicate/i.test(detail);
+  res.status(isUnique ? 409 : 500).json({
+    error: isUnique
+      ? 'A record with this value already exists. Please try again.'
+      : process.env.NODE_ENV === 'development'
+        ? detail || 'Server or database error. Please try again.'
+        : 'Server or database error. Please try again.',
+  });
 });
 
 process.on('unhandledRejection', (reason) => {

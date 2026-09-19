@@ -42,7 +42,7 @@ export function PropertyDetailPage() {
 
   useEffect(() => {
     if (!code) return;
-    api.get<Property>(`/api/properties/${code}`, { auth: false, cacheMs: 300000 }).then(setProperty).catch(() => {});
+    api.get<Property>(`/api/properties/${code}`, { auth: false, cacheMs: 30_000 }).then(setProperty).catch(() => {});
     api.get<AgencySettings>('/api/agency').then(setAgency).catch(() => {});
   }, [code]);
 
@@ -85,6 +85,7 @@ export function PropertyDetailPage() {
             className="property-gallery--detail"
             images={property.images}
             videoUrl={property.videoLink}
+            imageCount={property.imageCount}
             alt={title}
           />
         </section>

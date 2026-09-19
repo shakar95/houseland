@@ -33,6 +33,7 @@ export interface Property {
   longitude?: number;
   neighborhood: string;
   images: string[];
+  thumbnailUrl?: string | null;
   imageCount?: number;
   videoLink?: string | null;
   status: string;

@@ -137,6 +137,7 @@ export type TranslationDict = {
     removeImage: string;
     uploadingImages: string;
     imageRequired: string;
+    imageOrVideoRequired: string;
     imageTooLarge: string;
     imageLimit: string;
     storageNotConfigured: string;

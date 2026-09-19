@@ -5,8 +5,8 @@ const BASE = import.meta.env.VITE_API_URL ?? '';
 
 async function authHeader(): Promise<HeadersInit> {
   const cached = getCachedAuthToken();
-  if (cached !== undefined) {
-    return cached ? { Authorization: `Bearer ${cached}` } : {};
+  if (cached) {
+    return { Authorization: `Bearer ${cached}` };
   }
   const token = await getAccessToken();
   setCachedAuthToken(token);
@@ -18,6 +18,17 @@ export { clearAuthTokenCache };
 type RequestOptions = RequestInit & { auth?: boolean; cacheMs?: number };
 
 const memCache = new Map<string, { data: unknown; expires: number }>();
+
+/** Drop client-side GET caches (e.g. after creating a property so home updates immediately). */
+export function clearApiCache(pathPrefix?: string) {
+  if (!pathPrefix) {
+    memCache.clear();
+    return;
+  }
+  for (const key of memCache.keys()) {
+    if (key.startsWith(pathPrefix)) memCache.delete(key);
+  }
+}
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { auth = true, cacheMs = 0, ...fetchOptions } = options;

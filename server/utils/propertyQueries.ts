@@ -35,6 +35,7 @@ export const PUBLIC_LIST_COLUMNS = {
   status: properties.status,
   thumbnailUrl: properties.thumbnailUrl,
   imageCount: properties.imageCount,
+  videoLink: properties.videoLink,
   frontageMeters: properties.frontageMeters,
   streetWidth: properties.streetWidth,
   streetWidth2: properties.streetWidth2,
@@ -53,6 +54,7 @@ export const ADMIN_LIST_COLUMNS = {
   propertyType: properties.propertyType,
   transactionType: properties.transactionType,
   neighborhood: properties.neighborhood,
+  thumbnailUrl: properties.thumbnailUrl,
 };
 
 /** Fields needed for listing cards / grid — thumbnail only, no full images array (Prisma). */
@@ -71,6 +73,7 @@ export const PUBLIC_LIST_SELECT = {
   status: true,
   thumbnailUrl: true,
   imageCount: true,
+  videoLink: true,
   frontageMeters: true,
   streetWidth: true,
   streetWidth2: true,
@@ -89,6 +92,7 @@ export const ADMIN_LIST_SELECT = {
   propertyType: true,
   transactionType: true,
   neighborhood: true,
+  thumbnailUrl: true,
 } satisfies Prisma.PropertySelect;
 
 export function parseMulti(value: unknown) {

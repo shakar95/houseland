@@ -487,7 +487,7 @@ export function PropertyImageLightbox({
             ) : (
               <div key={slide.key} className="property-lightbox-slide">
                 <div className="w-full h-full max-w-4xl max-h-[85vh] mx-auto flex items-center justify-center pointer-events-auto">
-                  <VideoEmbed url={slide.url} aspect="reel" autoPlay={false} />
+                  <VideoEmbed url={slide.url} aspect="reel" autoPlay />
                 </div>
               </div>
             ),

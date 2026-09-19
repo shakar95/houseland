@@ -185,6 +185,7 @@ const ar: TranslationDict = {
     removeImage: 'حذف الصورة',
     uploadingImages: 'جاري رفع الصور...',
     imageRequired: 'صورة واحدة على الأقل مطلوبة',
+    imageOrVideoRequired: 'صورة واحدة أو رابط فيديو مطلوب على الأقل',
     imageTooLarge: 'الصورة كبيرة جداً (حد أقصى 15MB)',
     imageLimit: 'يمكنك إضافة 8 صور كحد أقصى',
     storageNotConfigured: 'Supabase Storage غير مُعد — تحقق من VITE_SUPABASE_URL و VITE_SUPABASE_ANON_KEY',

@@ -1,9 +1,14 @@
+import { decodeHtmlEntities } from './videoThumbnail.js';
+
 /** Sync denormalized listing media fields from the images array. */
-export function syncPropertyMedia(images: string[]) {
-  const urls = images.filter(Boolean);
+export function syncPropertyMedia(images: string[], videoThumbnail?: string | null) {
+  const urls = images.filter(Boolean).map((u) => decodeHtmlEntities(u.trim()));
+  const thumbRaw = urls[0] ?? videoThumbnail ?? null;
+  const thumbnailUrl = thumbRaw ? decodeHtmlEntities(thumbRaw) : null;
   return {
-    images: urls,
-    thumbnailUrl: urls[0] ?? null,
+    // Persist video poster into images so listing cards always have a displayable URL
+    images: urls.length ? urls : thumbnailUrl ? [thumbnailUrl] : [],
+    thumbnailUrl,
     imageCount: urls.length,
   };
 }
@@ -17,7 +22,8 @@ export function toPublicListingCard<
 >(p: T) {
   const { thumbnailUrl, imageCount, images: _images, ...rest } = p;
   const count = imageCount ?? p.images?.filter(Boolean).length ?? 0;
-  const thumb = thumbnailUrl ?? p.images?.find(Boolean) ?? null;
+  const rawThumb = thumbnailUrl ?? p.images?.find(Boolean) ?? null;
+  const thumb = rawThumb ? decodeHtmlEntities(rawThumb) : null;
   return {
     ...rest,
     images: thumb ? [thumb] : [],

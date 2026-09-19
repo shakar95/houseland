@@ -81,7 +81,8 @@ export function parseVideoLink(url: string, aspect: VideoAspect = 'video', autoP
 
   const ytId = extractYouTubeId(trimmed);
   if (ytId) {
-    const autoParam = autoPlay ? '&autoplay=1' : '';
+    // mute=1 helps browsers allow autoplay; user already interacted by opening the listing
+    const autoParam = autoPlay ? '&autoplay=1&mute=0&playsinline=1' : '';
     const src =
       aspect === 'reel'
         ? `https://www.youtube.com/embed/${ytId}?playsinline=1&enablejsapi=1${autoParam}`
@@ -98,13 +99,13 @@ export function parseVideoLink(url: string, aspect: VideoAspect = 'video', autoP
     return {
       provider: 'tiktok',
       originalUrl: trimmed,
-      embedHtml: `<iframe class="${cls}" src="https://www.tiktok.com/embed/v2/${ttId}" title="TikTok" frameborder="0" allowfullscreen></iframe>`,
+      embedHtml: `<iframe class="${cls}" src="https://www.tiktok.com/embed/v2/${ttId}" title="TikTok" frameborder="0" allow="autoplay; clipboard-write; encrypted-media" allowfullscreen></iframe>`,
     };
   }
 
   const fbUrl = extractFacebookEmbed(trimmed);
   if (fbUrl) {
-    const autoParam = autoPlay ? '&autoplay=true' : '';
+    const autoParam = autoPlay ? '&autoplay=true&mute=0' : '';
     return {
       provider: 'facebook',
       originalUrl: trimmed,

@@ -8,14 +8,18 @@ import { useNeighborhoods, getNeighborhoodLabelByName } from '@/hooks/useNeighbo
 export function PropertyCard({ property }: { property: Property }) {
   const { enumLabel, propertyTitle, rtl, lang } = useLanguage();
   const { neighborhoods } = useNeighborhoods();
-  const img = property.images[0] || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400';
+  const img =
+    property.images?.[0] ||
+    property.thumbnailUrl ||
+    'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400';
   const title = propertyTitle(property.code, property.title);
   const Chevron = rtl ? ChevronLeft : ChevronRight;
+  const displayImg = img.replace(/&amp;/gi, '&');
 
   return (
     <Link to={`/property/${property.code}`} className="property-card">
       <div className="property-card-image">
-        <img src={img} alt={title} loading="lazy" />
+        <img src={displayImg} alt={title} loading="lazy" referrerPolicy="no-referrer" />
         <span className="property-card-badge">{property.code}</span>
         <span className="property-card-type">{enumLabel(property.transactionType)}</span>
       </div>

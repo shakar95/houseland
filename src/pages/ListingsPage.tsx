@@ -35,7 +35,7 @@ export function ListingsPage() {
   useEffect(() => {
     setLoading(true);
     api
-      .get<{ data: Property[]; meta: any }>(`/api/properties${query}`, { auth: false, cacheMs: 300000 })
+      .get<{ data: Property[]; meta: any }>(`/api/properties${query}`, { auth: false, cacheMs: 15_000 })
       .then((res) => {
         setProperties(res.data);
         setMeta(res.meta);

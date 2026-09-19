@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { relations, sql } from 'drizzle-orm';
 import {
   boolean,
@@ -11,6 +12,9 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import type { InferInsertModel, InferSelectModel } from 'drizzle-orm';
+
+/** App-side UUID — DB columns often have no gen_random_uuid() default (Prisma @default(uuid())). */
+const uuidPk = () => uuid('id').primaryKey().$defaultFn(() => randomUUID());
 
 // ——— Enums (exact match to PostgreSQL types created by Prisma) ———
 export const userRoleEnum = pgEnum('UserRole', ['ADMIN', 'STAFF', 'CLIENT']);
@@ -56,17 +60,19 @@ export type ContractType = (typeof contractTypeEnum.enumValues)[number];
 
 // ——— Profiles Table ———
 export const profiles = pgTable('profiles', {
-  id: uuid('id').defaultRandom().primaryKey(),
+  id: uuidPk(),
   email: text('email').notNull().unique(),
   fullName: text('full_name').notNull(),
   role: userRoleEnum('role').default('CLIENT').notNull(),
   googleAuthId: text('google_auth_id').unique(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .$defaultFn(() => new Date())
+    .notNull(),
 });
 
 // ——— Staff Table ———
 export const staff = pgTable('staff', {
-  id: uuid('id').defaultRandom().primaryKey(),
+  id: uuidPk(),
   profileId: uuid('profile_id')
     .unique()
     .references(() => profiles.id),
@@ -94,7 +100,7 @@ export const agencySettings = pgTable('agency_settings', {
 export const properties = pgTable(
   'properties',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
+    id: uuidPk(),
     code: text('code').notNull().unique(),
     title: text('title').notNull(),
     description: text('description').notNull(),
@@ -122,9 +128,11 @@ export const properties = pgTable(
     videoLink: text('video_link'),
     status: propertyStatusEnum('status').default('PENDING').notNull(),
     submitterId: uuid('submitter_id').references(() => profiles.id),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .$defaultFn(() => new Date())
+      .notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true })
-      .defaultNow()
+      .$defaultFn(() => new Date())
       .$onUpdate(() => new Date())
       .notNull(),
   },
@@ -180,7 +188,7 @@ export const propertyDetailsMv = pgTable('property_details_mv', {
 
 // ——— Analytics Table ———
 export const analytics = pgTable('analytics', {
-  id: uuid('id').defaultRandom().primaryKey(),
+  id: uuidPk(),
   propertyId: uuid('property_id')
     .notNull()
     .unique()
@@ -194,7 +202,7 @@ export const analytics = pgTable('analytics', {
 
 // ——— CRM Entries Table ———
 export const crmEntries = pgTable('crm_entries', {
-  id: uuid('id').defaultRandom().primaryKey(),
+  id: uuidPk(),
   customerName: text('customer_name').notNull(),
   phone: text('phone').notNull(),
   email: text('email'),
@@ -203,16 +211,18 @@ export const crmEntries = pgTable('crm_entries', {
   budget: doublePrecision('budget'),
   budgetCurrency: currencyEnum('budget_currency'),
   status: crmStatusEnum('status').default('LEAD').notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .$defaultFn(() => new Date())
+    .notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true })
-    .defaultNow()
+    .$defaultFn(() => new Date())
     .$onUpdate(() => new Date())
     .notNull(),
 });
 
 // ——— Contracts Table ———
 export const contracts = pgTable('contracts', {
-  id: uuid('id').defaultRandom().primaryKey(),
+  id: uuidPk(),
   propertyId: uuid('property_id')
     .notNull()
     .references(() => properties.id),
@@ -221,12 +231,14 @@ export const contracts = pgTable('contracts', {
   date: timestamp('date', { withTimezone: true }).notNull(),
   contractType: contractTypeEnum('contract_type').notNull(),
   documentUrl: text('document_url'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .$defaultFn(() => new Date())
+    .notNull(),
 });
 
 // ——— Neighborhoods Table ———
 export const neighborhoods = pgTable('neighborhoods', {
-  id: uuid('id').defaultRandom().primaryKey(),
+  id: uuidPk(),
   name: text('name').notNull().unique(),
   /** City/district within the governorate — e.g. sulaymaniyah, kalar */
   city: text('city').notNull().default('sulaymaniyah'),
@@ -236,7 +248,9 @@ export const neighborhoods = pgTable('neighborhoods', {
   latitude: doublePrecision('latitude').notNull(),
   longitude: doublePrecision('longitude').notNull(),
   aliases: text('aliases').array().notNull().default(sql`'{}'`),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .$defaultFn(() => new Date())
+    .notNull(),
 });
 
 // ——— Drizzle Relations (for relational queries) ———

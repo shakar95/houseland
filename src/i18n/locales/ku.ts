@@ -185,6 +185,7 @@ const ku: TranslationDict = {
     removeImage: 'سڕینەوەی وێنە',
     uploadingImages: 'ئەپلۆدی وێنەکان...',
     imageRequired: 'لانیکەم یەک وێنە پێویستە',
+    imageOrVideoRequired: 'لانیکەم یەک وێنە یان لینکی ڤیدۆ پێویستە',
     imageTooLarge: 'وێنە زۆر گەورەیە (حداکثر ١٥MB)',
     imageLimit: 'زۆرترین ٨ وێنە دەتوانیت زیاد بکەیت',
     storageNotConfigured: 'Supabase Storage رێکنەخراوە — VITE_SUPABASE_URL و VITE_SUPABASE_ANON_KEY پشکنین بکە',
