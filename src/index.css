@@ -1046,7 +1046,7 @@ html[dir='rtl'] body {
 }
 
 .property-detail-stats {
-  @apply mt-6 grid grid-cols-1 gap-2.5 text-sm sm:mt-8 sm:gap-3;
+  @apply mt-5 grid grid-cols-1 gap-2.5 text-sm sm:mt-6 sm:gap-3;
 }
 
 @media (min-width: 480px) {

@@ -102,6 +102,8 @@ export interface PropertyFilters {
 export interface Neighborhood {
   id: string;
   name: string;
+  /** City/district id — e.g. sulaymaniyah, kalar */
+  city?: string | null;
   nameEn?: string | null;
   nameKu?: string | null;
   nameAr?: string | null;

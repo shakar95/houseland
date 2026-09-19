@@ -90,8 +90,7 @@ app.delete('/api/staff/:id', requireAuth, requireRole('ADMIN'), wrap(async (req,
 
 // ——— Neighborhoods ———
 app.get('/api/neighborhoods', wrap(async (_req, res) => {
-  // Cache neighborhoods for 5 minutes to reduce DB load but allow updates
-  res.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=3600');
+  res.set('Cache-Control', 'no-store');
   const list = await db.select().from(neighborhoods);
 
   const counts = await db.select({
@@ -125,16 +124,61 @@ app.get('/api/admin/neighborhoods', requireAuth, requireRole('ADMIN'), wrap(asyn
   })));
 }));
 
+app.post('/api/admin/neighborhoods', requireAuth, requireRole('ADMIN'), wrap(async (req, res) => {
+  const { name, city, nameEn, nameKu, nameAr, latitude, longitude, aliases } = req.body;
+  if (!name || typeof name !== 'string' || !name.trim()) {
+    return res.status(400).json({ error: 'Name is required' });
+  }
+  const lat = Number(latitude);
+  const lng = Number(longitude);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    return res.status(400).json({ error: 'Valid latitude and longitude are required' });
+  }
+
+  try {
+    const [created] = await db.insert(neighborhoods).values({
+      name: name.trim(),
+      city: typeof city === 'string' && city.trim() ? city.trim() : 'sulaymaniyah',
+      nameEn: nameEn ?? null,
+      nameKu: nameKu ?? null,
+      nameAr: nameAr ?? null,
+      latitude: lat,
+      longitude: lng,
+      aliases: Array.isArray(aliases) ? aliases : [],
+    }).returning();
+    res.status(201).json(created);
+  } catch (error: any) {
+    const code = error?.code || error?.cause?.code;
+    const msg = error?.message || error?.cause?.message || '';
+    if (code === '23505' || msg.includes('unique constraint')) {
+      return res.status(400).json({ error: 'A neighborhood with this name already exists.' });
+    }
+    throw error;
+  }
+}));
+
 app.put('/api/admin/neighborhoods/:id', requireAuth, requireRole('ADMIN'), wrap(async (req, res) => {
-  const { name, nameEn, nameKu, nameAr, latitude, longitude, aliases } = req.body;
+  const { name, city, nameEn, nameKu, nameAr, latitude, longitude, aliases } = req.body;
   const id = param(req.params.id);
   
   const [existing] = await db.select().from(neighborhoods).where(eq(neighborhoods.id, id));
   if (!existing) return res.status(404).json({ error: 'Not found' });
+
+  const cityValue =
+    typeof city === 'string' && city.trim() ? city.trim() : existing.city || 'sulaymaniyah';
   
   try {
     const [updated] = await db.update(neighborhoods)
-      .set({ name, nameEn, nameKu, nameAr, latitude, longitude, aliases })
+      .set({
+        name,
+        city: cityValue,
+        nameEn,
+        nameKu,
+        nameAr,
+        latitude,
+        longitude,
+        aliases,
+      })
       .where(eq(neighborhoods.id, id))
       .returning();
       

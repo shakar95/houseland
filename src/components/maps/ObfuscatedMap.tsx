@@ -1,5 +1,6 @@
 import { MapContainer, TileLayer, Circle } from 'react-leaflet';
-import { useNeighborhoods } from '@/hooks/useNeighborhoods';
+import { useNeighborhoods, getNeighborhoodLabelByName } from '@/hooks/useNeighborhoods';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Props {
   neighborhood: string;
@@ -8,11 +9,13 @@ interface Props {
 /** Public map: blurred radius over neighborhood zone — exact coords hidden */
 export function ObfuscatedMap({ neighborhood }: Props) {
   const { neighborhoods } = useNeighborhoods();
+  const { lang } = useLanguage();
   
   const nData = neighborhoods.find((n) => n.name === neighborhood);
   const lat = nData?.latitude ?? 35.556;
   const lng = nData?.longitude ?? 45.432;
   const radiusMeters = 800;
+  const label = getNeighborhoodLabelByName(neighborhood, neighborhoods, lang);
 
   // We need key on MapContainer so it remounts when lat/lng change significantly
   return (
@@ -32,7 +35,7 @@ export function ObfuscatedMap({ neighborhood }: Props) {
         />
       </MapContainer>
       <p className="mt-2 text-center text-sm text-royal-300">
-        Approximate area: <span className="text-gold-400">{neighborhood}</span> — exact address protected
+        Approximate area: <span className="text-gold-400">{label}</span> — exact address protected
       </p>
     </div>
   );

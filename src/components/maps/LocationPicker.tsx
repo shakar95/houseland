@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { useLanguage } from '@/context/LanguageContext';
 
@@ -39,14 +38,6 @@ function DraggableMarker({
   );
 }
 
-function MapUpdater({ position }: { position: [number, number] }) {
-  const map = useMap();
-  useEffect(() => {
-    map.flyTo(position, 14, { animate: true, duration: 1 });
-  }, [position, map]);
-  return null;
-}
-
 interface Props {
   latitude: number;
   longitude: number;
@@ -55,23 +46,22 @@ interface Props {
 
 export function LocationPicker({ latitude, longitude, onChange }: Props) {
   const { t } = useLanguage();
-  const [pos, setPos] = useState<[number, number]>([latitude || SULAY_CENTER[0], longitude || SULAY_CENTER[1]]);
-
-  useEffect(() => {
-    if (latitude && longitude) setPos([latitude, longitude]);
-  }, [latitude, longitude]);
-
-  const handle = (lat: number, lng: number) => {
-    setPos([lat, lng]);
-    onChange(lat, lng);
-  };
+  const lat = Number.isFinite(latitude) ? latitude : SULAY_CENTER[0];
+  const lng = Number.isFinite(longitude) ? longitude : SULAY_CENTER[1];
+  const pos: [number, number] = [lat, lng];
 
   return (
     <div className="h-64 w-full overflow-hidden rounded-xl border border-royal-600">
-      <MapContainer center={pos} zoom={14} className="h-full w-full" scrollWheelZoom>
+      {/* Remount when neighborhood coords change so the pin cannot stick on the old city */}
+      <MapContainer
+        key={`${lat.toFixed(5)}-${lng.toFixed(5)}`}
+        center={pos}
+        zoom={14}
+        className="h-full w-full"
+        scrollWheelZoom
+      >
         <TileLayer attribution='&copy; OpenStreetMap' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        <MapUpdater position={pos} />
-        <DraggableMarker position={pos} onChange={handle} />
+        <DraggableMarker position={pos} onChange={onChange} />
       </MapContainer>
       <p className="mt-2 text-xs text-royal-400">{t.submit.mapHint}</p>
     </div>

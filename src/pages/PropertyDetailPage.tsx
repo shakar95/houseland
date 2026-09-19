@@ -97,26 +97,6 @@ export function PropertyDetailPage() {
             {enumLabel(property.transactionType)} · {enumLabel(property.propertyType)} · {getNeighborhoodLabelByName(property.neighborhood, neighborhoods, lang)}
           </p>
 
-          <div className="property-detail-actions">
-            <a
-              href={`tel:${agency?.phonePrimary}`}
-              onClick={() => track('phone')}
-              className="btn-gold property-detail-btn"
-            >
-              <Phone className="h-4 w-4" /> {t.property.call}
-            </a>
-            <a
-              href={`https://wa.me/${wa}?text=${encodeURIComponent(`${property.code}: ${title}`)}`}
-              target="_blank"
-              rel="noreferrer"
-              onClick={() => track('whatsapp')}
-              className="btn-outline-gold property-detail-btn"
-            >
-              <MessageCircle className="h-4 w-4" /> {t.property.whatsapp}
-            </a>
-          </div>
-          <p className="mt-2 text-xs text-royal-500">{t.property.privacyNote}</p>
-
           <div className="property-detail-stats">
             <div className="property-detail-stat">
               <Maximize className="shrink-0 text-gold-500" />
@@ -173,6 +153,26 @@ export function PropertyDetailPage() {
               </div>
             )}
           </div>
+
+          <div className="property-detail-actions">
+            <a
+              href={`tel:${agency?.phonePrimary}`}
+              onClick={() => track('phone')}
+              className="btn-gold property-detail-btn"
+            >
+              <Phone className="h-4 w-4" /> {t.property.call}
+            </a>
+            <a
+              href={`https://wa.me/${wa}?text=${encodeURIComponent(`${property.code}: ${title}`)}`}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => track('whatsapp')}
+              className="btn-outline-gold property-detail-btn"
+            >
+              <MessageCircle className="h-4 w-4" /> {t.property.whatsapp}
+            </a>
+          </div>
+          <p className="mt-2 text-xs text-royal-500">{t.property.privacyNote}</p>
 
           <div className="relative">
             <div

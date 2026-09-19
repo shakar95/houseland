@@ -9,6 +9,7 @@ import {
   toggleFilterList,
 } from '@/lib/filterUtils';
 import { useLanguage } from '@/context/LanguageContext';
+import { useNeighborhoods, getNeighborhoodLabelByName } from '@/hooks/useNeighborhoods';
 import type { PropertyFilters } from '@/types';
 
 interface Props {
@@ -101,7 +102,8 @@ function FilterPill({
 }
 
 export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
-  const { t, enumLabel } = useLanguage();
+  const { t, enumLabel, lang } = useLanguage();
+  const { neighborhoods } = useNeighborhoods();
   const [modalOpen, setModalOpen] = useState(false);
   const [popup, setPopup] = useState<PopupKey | null>(null);
   const [draft, setDraft] = useState<DraftFilters>(() => toDraft(filters));
@@ -235,6 +237,7 @@ export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
   const neighborhoodLabel = formatFilterListLabel(
     selectedNeighborhoods,
     t.filters.neighborhood,
+    (name) => getNeighborhoodLabelByName(name, neighborhoods, lang),
   );
   const priceLabel = priceActive
     ? `${filters.minPrice || '0'}, ${filters.maxPrice || '∞'}`

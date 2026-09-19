@@ -138,6 +138,8 @@ model Contract {
 model Neighborhood {
   id        String   @id @default(uuid())
   name      String   @unique
+  /// City/district within the governorate — e.g. sulaymaniyah, kalar
+  city      String   @default("sulaymaniyah")
   nameEn    String?
   nameKu    String?
   nameAr    String?
@@ -146,6 +148,7 @@ model Neighborhood {
   aliases   String[] @default([])
   createdAt DateTime @default(now()) @map("created_at")
 
+  @@index([city])
   @@map("neighborhoods")
 }
 

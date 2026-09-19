@@ -228,6 +228,8 @@ export const contracts = pgTable('contracts', {
 export const neighborhoods = pgTable('neighborhoods', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: text('name').notNull().unique(),
+  /** City/district within the governorate — e.g. sulaymaniyah, kalar */
+  city: text('city').notNull().default('sulaymaniyah'),
   nameEn: text('nameEn'),
   nameKu: text('nameKu'),
   nameAr: text('nameAr'),

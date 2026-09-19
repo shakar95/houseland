@@ -3,10 +3,22 @@ import { api } from '@/lib/api';
 import type { Neighborhood } from '@/types';
 import { Edit3, Trash2, GitMerge, Search, X } from 'lucide-react';
 import { isSimilarName } from '@/lib/similarity';
+import { CITIES, DEFAULT_CITY_ID, getCityLabel } from '@/lib/cities';
 
-export function EditNeighborhoodModal({ editItem, onClose, onSave }: { editItem: Neighborhood, onClose: () => void, onSave: (form: any) => void }) {
+export function EditNeighborhoodModal({
+  editItem,
+  isCreate = false,
+  onClose,
+  onSave,
+}: {
+  editItem: Neighborhood;
+  isCreate?: boolean;
+  onClose: () => void;
+  onSave: (form: any) => void;
+}) {
   const [editForm, setEditForm] = useState({
     name: editItem.name,
+    city: editItem.city || DEFAULT_CITY_ID,
     nameEn: editItem.nameEn || '',
     nameKu: editItem.nameKu || '',
     nameAr: editItem.nameAr || '',
@@ -20,14 +32,37 @@ export function EditNeighborhoodModal({ editItem, onClose, onSave }: { editItem:
     onSave(editForm);
   };
 
+  const previewKu = `${getCityLabel(editForm.city, 'ku')} ${editForm.nameKu || editForm.name}`.trim();
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
       <form onSubmit={handleSubmit} className="w-full max-w-md rounded-2xl border border-royal-700 bg-royal-950 p-6 shadow-2xl">
-        <h2 className="mb-4 text-xl font-bold text-gold-400">Edit Neighborhood</h2>
+        <h2 className="mb-4 text-xl font-bold text-gold-400">
+          {isCreate ? 'Add Neighborhood' : 'Edit Neighborhood'}
+        </h2>
         
         <div className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-royal-300">Name</label>
+            <label className="mb-1 block text-sm font-medium text-royal-300">City / شار</label>
+            <select
+              required
+              className="w-full rounded-lg border border-royal-700 bg-royal-900/50 p-2 text-white focus:border-gold-500 focus:outline-none"
+              value={editForm.city}
+              onChange={e => setEditForm({ ...editForm, city: e.target.value })}
+            >
+              {CITIES.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.ku} — {c.en}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-royal-500">
+              بۆ جیاکردنەوەی گەڕەکی هاوشێوە: سلێمانی ئازادی ≠ کەلار ئازادی
+            </p>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-royal-300">Name (canonical key)</label>
             <input
               type="text"
               required
@@ -35,7 +70,10 @@ export function EditNeighborhoodModal({ editItem, onClose, onSave }: { editItem:
               value={editForm.name}
               onChange={e => setEditForm({ ...editForm, name: e.target.value })}
             />
-            <p className="mt-1 text-xs text-royal-500">Changing this will update all properties attached to the old name.</p>
+            <p className="mt-1 text-xs text-royal-500">
+              دەبێت تایبەت بێت. بۆ ئازادیی کەلار بنووسە: Azadi Kalar — ناوە کورتەکە لە خوارەوە.
+              Changing this will update all properties attached to the old name.
+            </p>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
@@ -46,6 +84,7 @@ export function EditNeighborhoodModal({ editItem, onClose, onSave }: { editItem:
                 className="w-full rounded-lg border border-royal-700 bg-royal-900/50 p-2 text-white text-sm focus:border-gold-500 focus:outline-none"
                 value={editForm.nameEn}
                 onChange={e => setEditForm({ ...editForm, nameEn: e.target.value })}
+                placeholder="Azadi"
               />
             </div>
             <div>
@@ -55,6 +94,7 @@ export function EditNeighborhoodModal({ editItem, onClose, onSave }: { editItem:
                 className="w-full rounded-lg border border-royal-700 bg-royal-900/50 p-2 text-white text-sm focus:border-gold-500 focus:outline-none"
                 value={editForm.nameKu}
                 onChange={e => setEditForm({ ...editForm, nameKu: e.target.value })}
+                placeholder="ئازادی"
               />
             </div>
             <div>
@@ -67,6 +107,10 @@ export function EditNeighborhoodModal({ editItem, onClose, onSave }: { editItem:
               />
             </div>
           </div>
+
+          <p className="rounded-lg border border-gold-500/20 bg-gold-500/5 px-3 py-2 text-xs text-gold-300">
+            پیشاندان: <span className="font-semibold text-gold-200">{previewKu}</span>
+          </p>
 
           <div>
             <label className="mb-1 block text-sm font-medium text-royal-300">Aliases (comma separated)</label>
@@ -114,7 +158,7 @@ export function EditNeighborhoodModal({ editItem, onClose, onSave }: { editItem:
             Cancel
           </button>
           <button type="submit" className="rounded-lg bg-gold-500 px-4 py-2 text-sm font-semibold text-royal-950 hover:bg-gold-400">
-            Save Changes
+            {isCreate ? 'Create' : 'Save Changes'}
           </button>
         </div>
       </form>
@@ -128,6 +172,7 @@ export function NeighborhoodsAdminPage() {
 
   // Edit Modal State
   const [editItem, setEditItem] = useState<Neighborhood | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
 
   // Merge Scanner State
   const [similarGroups, setSimilarGroups] = useState<Neighborhood[][]>([]);
@@ -182,7 +227,12 @@ export function NeighborhoodsAdminPage() {
     if (!search.trim()) return neighborhoods;
     const q = search.toLowerCase();
     return neighborhoods.filter(n => 
-      n.name.toLowerCase().includes(q) || 
+      n.name.toLowerCase().includes(q) ||
+      (n.city || '').toLowerCase().includes(q) ||
+      (n.nameKu || '').toLowerCase().includes(q) ||
+      (n.nameEn || '').toLowerCase().includes(q) ||
+      getCityLabel(n.city || DEFAULT_CITY_ID, 'ku').includes(search.trim()) ||
+      getCityLabel(n.city || DEFAULT_CITY_ID, 'en').toLowerCase().includes(q) ||
       n.aliases?.some(a => a.toLowerCase().includes(q))
     );
   }, [neighborhoods, search]);
@@ -231,22 +281,45 @@ export function NeighborhoodsAdminPage() {
 
   const handleSaveEdit = async (id: string, form: any) => {
     const aliases = form.aliases.split(',').map((s: string) => s.trim()).filter(Boolean);
+    const payload = {
+      name: form.name,
+      city: form.city || DEFAULT_CITY_ID,
+      nameEn: form.nameEn || null,
+      nameKu: form.nameKu || null,
+      nameAr: form.nameAr || null,
+      latitude: Number(form.latitude),
+      longitude: Number(form.longitude),
+      aliases,
+    };
     
     try {
-      await api.put(`/api/admin/neighborhoods/${id}`, {
-        name: form.name,
-        nameEn: form.nameEn || null,
-        nameKu: form.nameKu || null,
-        nameAr: form.nameAr || null,
-        latitude: Number(form.latitude),
-        longitude: Number(form.longitude),
-        aliases,
-      });
+      if (isCreating || id === '__new__') {
+        await api.post('/api/admin/neighborhoods', payload);
+      } else {
+        await api.put(`/api/admin/neighborhoods/${id}`, payload);
+      }
       setEditItem(null);
+      setIsCreating(false);
       load(true);
     } catch (error: any) {
-      alert(error?.response?.data?.error || error?.message || 'Failed to update neighborhood');
+      alert(error?.response?.data?.error || error?.message || 'Failed to save neighborhood');
     }
+  };
+
+  const openCreate = () => {
+    setIsCreating(true);
+    setEditItem({
+      id: '__new__',
+      name: '',
+      city: DEFAULT_CITY_ID,
+      nameEn: '',
+      nameKu: '',
+      nameAr: '',
+      latitude: 35.556,
+      longitude: 45.432,
+      aliases: [],
+      createdAt: new Date().toISOString(),
+    });
   };
 
   const deleteNeighborhood = async (id: string, name: string) => {
@@ -311,10 +384,19 @@ export function NeighborhoodsAdminPage() {
             {loading ? 'Refreshing...' : 'Refresh Data'}
           </button>
         </div>
-        <button onClick={() => scanForDuplicates(false)} disabled={scanning} className="btn-gold flex items-center gap-2">
-          <GitMerge className="h-4 w-4" />
-          {scanning ? 'Scanning...' : 'Scan Duplicates'}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={openCreate}
+            className="rounded-lg border border-gold-500/40 bg-gold-500/10 px-3 py-2 text-sm font-semibold text-gold-300 hover:bg-gold-500/20"
+          >
+            + Add Neighborhood
+          </button>
+          <button onClick={() => scanForDuplicates(false)} disabled={scanning} className="btn-gold flex items-center gap-2">
+            <GitMerge className="h-4 w-4" />
+            {scanning ? 'Scanning...' : 'Scan Duplicates'}
+          </button>
+        </div>
       </div>
 
       {showScanner && (
@@ -401,6 +483,7 @@ export function NeighborhoodsAdminPage() {
           <thead className="border-b border-royal-800 text-royal-400">
             <tr>
               <th className="px-4 py-3">Name</th>
+              <th className="px-4 py-3">City</th>
               <th className="px-4 py-3">Properties</th>
               <th className="px-4 py-3">Aliases</th>
               <th className="px-4 py-3">Coordinates</th>
@@ -410,16 +493,22 @@ export function NeighborhoodsAdminPage() {
           <tbody className="divide-y divide-royal-800/50">
             {loading ? (
               <tr>
-                <td colSpan={5} className="py-8 text-center text-royal-500">Loading...</td>
+                <td colSpan={6} className="py-8 text-center text-royal-500">Loading...</td>
               </tr>
             ) : filteredNeighborhoods.length === 0 ? (
               <tr>
-                <td colSpan={5} className="py-8 text-center text-royal-500">No neighborhoods found.</td>
+                <td colSpan={6} className="py-8 text-center text-royal-500">No neighborhoods found.</td>
               </tr>
             ) : (
               filteredNeighborhoods.map((n) => (
                 <tr key={n.id} className="transition hover:bg-royal-800/20">
-                  <td className="px-4 py-3 font-medium text-gold-200">{n.name}</td>
+                  <td className="px-4 py-3 font-medium text-gold-200">
+                    <div>{n.nameKu || n.name}</div>
+                    <div className="text-xs text-royal-500">{n.name}</div>
+                  </td>
+                  <td className="px-4 py-3 text-royal-200">
+                    {getCityLabel(n.city || DEFAULT_CITY_ID, 'ku')}
+                  </td>
                   <td className="px-4 py-3">{n.propertyCount || 0}</td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1">
@@ -457,8 +546,12 @@ export function NeighborhoodsAdminPage() {
       {/* Edit Modal */}
       {editItem && (
         <EditNeighborhoodModal 
-          editItem={editItem} 
-          onClose={() => setEditItem(null)} 
+          editItem={editItem}
+          isCreate={isCreating}
+          onClose={() => {
+            setEditItem(null);
+            setIsCreating(false);
+          }} 
           onSave={(form) => handleSaveEdit(editItem.id, form)} 
         />
       )}
