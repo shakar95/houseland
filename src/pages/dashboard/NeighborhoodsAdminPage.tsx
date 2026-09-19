@@ -4,6 +4,7 @@ import type { Neighborhood } from '@/types';
 import { Edit3, Trash2, GitMerge, Search, X } from 'lucide-react';
 import { isSimilarName } from '@/lib/similarity';
 import { CITIES, DEFAULT_CITY_ID, getCityLabel } from '@/lib/cities';
+import { LocationPicker } from '@/components/maps/LocationPicker';
 
 export function EditNeighborhoodModal({
   editItem,
@@ -36,7 +37,7 @@ export function EditNeighborhoodModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <form onSubmit={handleSubmit} className="w-full max-w-md rounded-2xl border border-royal-700 bg-royal-950 p-6 shadow-2xl">
+      <form onSubmit={handleSubmit} className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-royal-700 bg-royal-950 p-6 shadow-2xl">
         <h2 className="mb-4 text-xl font-bold text-gold-400">
           {isCreate ? 'Add Neighborhood' : 'Edit Neighborhood'}
         </h2>
@@ -123,28 +124,16 @@ export function EditNeighborhoodModal({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-royal-300">Latitude</label>
-              <input
-                type="number"
-                step="any"
-                required
-                className="w-full rounded-lg border border-royal-700 bg-royal-900/50 p-2 text-white focus:border-gold-500 focus:outline-none"
-                value={editForm.latitude}
-                onChange={e => setEditForm({ ...editForm, latitude: parseFloat(e.target.value) })}
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-royal-300">Longitude</label>
-              <input
-                type="number"
-                step="any"
-                required
-                className="w-full rounded-lg border border-royal-700 bg-royal-900/50 p-2 text-white focus:border-gold-500 focus:outline-none"
-                value={editForm.longitude}
-                onChange={e => setEditForm({ ...editForm, longitude: parseFloat(e.target.value) })}
-              />
+          <div>
+            <label className="mb-2 block text-sm font-medium text-royal-300">Location</label>
+            <LocationPicker
+              latitude={editForm.latitude}
+              longitude={editForm.longitude}
+              onChange={(lat, lng) => setEditForm({ ...editForm, latitude: lat, longitude: lng })}
+            />
+            <div className="mt-2 flex gap-4 text-xs text-royal-400">
+              <span>Lat: {editForm.latitude.toFixed(6)}</span>
+              <span>Lng: {editForm.longitude.toFixed(6)}</span>
             </div>
           </div>
         </div>
