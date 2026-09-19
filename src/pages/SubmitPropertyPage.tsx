@@ -8,7 +8,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { LocationPicker } from '@/components/maps/LocationPicker';
 import { PropertyImageUpload } from '@/components/PropertyImageUpload';
 import { uploadPropertyImages } from '@/lib/uploadPropertyImages';
-import { useNeighborhoods } from '@/hooks/useNeighborhoods';
+import { useNeighborhoods, getNeighborhoodLabelByName } from '@/hooks/useNeighborhoods';
 import { NeighborhoodSingleSelect } from '@/components/NeighborhoodSingleSelect';
 import { formatPrice } from '@/lib/format';
 import { readNumberInput } from '@/lib/numberInput';

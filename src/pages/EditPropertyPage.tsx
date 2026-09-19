@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight, Trash2, X, Save, AlertTriangle, ExternalLink, Ch
 import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { useNeighborhoods } from '@/hooks/useNeighborhoods';
+import { useNeighborhoods, getNeighborhoodLabelByName } from '@/hooks/useNeighborhoods';
 import { LocationPicker } from '@/components/maps/LocationPicker';
 import { PropertyImageUpload } from '@/components/PropertyImageUpload';
 import { uploadPropertyImages } from '@/lib/uploadPropertyImages';

@@ -6,7 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useNeighborhoods, getNeighborhoodLabelByName } from '@/hooks/useNeighborhoods';
 
 export function PropertyCard({ property }: { property: Property }) {
-  const { enumLabel, propertyTitle, rtl, lang } = useLanguage();
+  const { enumLabel, rtl, lang } = useLanguage();
   const { neighborhoods } = useNeighborhoods();
   const img =
     property.images?.[0] ||

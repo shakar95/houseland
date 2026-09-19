@@ -26,7 +26,7 @@ import { useNeighborhoods, getNeighborhoodLabelByName } from '@/hooks/useNeighbo
 
 
 export function PropertyDetailPage() {
-  const { t, lang, enumLabel, propertyTitle, propertyDescription } = useLanguage();
+  const { t, lang, enumLabel, propertyDescription } = useLanguage();
   const { neighborhoods } = useNeighborhoods();
   const { profile } = useAuth();
   const { code } = useParams();
