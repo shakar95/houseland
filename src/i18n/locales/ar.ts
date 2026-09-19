@@ -148,6 +148,7 @@ const ar: TranslationDict = {
     WEST: 'غرب',
   },
   submit: {
+    pageTitle: 'تسجيل عقار',
     signInTitle: 'سجّل الدخول للإضافة',
     signInDesc: 'استخدم Google لتسجيل عقارك للمراجعة.',
     continueGoogle: 'المتابعة مع Google',

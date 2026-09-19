@@ -102,7 +102,7 @@ function FilterPill({
 }
 
 export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
-  const { t, enumLabel, lang } = useLanguage();
+  const { t, enumLabel, lang, formatNum } = useLanguage();
   const { neighborhoods } = useNeighborhoods();
   const [modalOpen, setModalOpen] = useState(false);
   const [popup, setPopup] = useState<PopupKey | null>(null);
@@ -240,10 +240,10 @@ export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
     (name) => getNeighborhoodLabelByName(name, neighborhoods, lang),
   );
   const priceLabel = priceActive
-    ? `${filters.minPrice || '0'}, ${filters.maxPrice || '∞'}`
+    ? `${formatNum(Number(filters.minPrice) || 0)}, ${filters.maxPrice ? formatNum(Number(filters.maxPrice)) : '∞'}`
     : t.filters.priceShort;
   const areaLabel = areaActive
-    ? `${filters.minArea || '0'}, ${filters.maxArea || '∞'} m²`
+    ? `${formatNum(Number(filters.minArea) || 0)}, ${filters.maxArea ? formatNum(Number(filters.maxArea)) : '∞'} m²`
     : t.filters.areaShort;
 
   return (
@@ -542,7 +542,7 @@ export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
           <span className="flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-gold-400 shadow-sm shadow-gold-400/50" />
             <span>
-              <strong className="font-semibold text-white">{resultCount}</strong> {t.app.results}
+              <strong className="font-semibold text-white">{formatNum(resultCount)}</strong> {t.app.results}
             </span>
           </span>
         </div>

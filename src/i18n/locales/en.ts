@@ -148,6 +148,7 @@ const en: TranslationDict = {
     WEST: 'West',
   },
   submit: {
+    pageTitle: 'Submit Property',
     signInTitle: 'Sign in to Submit',
     signInDesc: 'Use Google to register and submit your property for review.',
     continueGoogle: 'Continue with Google',

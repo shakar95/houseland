@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import type { CrmEntry, Property } from '@/types';
 import { formatPrice, labelEnum } from '@/lib/format';
+import { useLanguage } from '@/context/LanguageContext';
 
 export function CrmPage() {
+  const { lang } = useLanguage();
   const [entries, setEntries] = useState<CrmEntry[]>([]);
   const [inventory, setInventory] = useState<Property[]>([]);
   const [form, setForm] = useState({
@@ -99,7 +101,7 @@ export function CrmPage() {
             </p>
             {entry.budget && (
               <p className="text-sm text-gold-400">
-                Budget: {formatPrice(entry.budget, entry.budgetCurrency ?? 'USD')}
+                Budget: {formatPrice(entry.budget, entry.budgetCurrency ?? 'USD', lang)}
               </p>
             )}
             {entry.notes && <p className="mt-2 text-sm text-royal-400 whitespace-pre-wrap break-words">{entry.notes}</p>}
@@ -108,7 +110,7 @@ export function CrmPage() {
               <ul className="mt-1 text-sm">
                 {matches(entry).map((p) => (
                   <li key={p.id}>
-                    {p.code} — {formatPrice(p.price, p.currency)}
+                    {p.code} — {formatPrice(p.price, p.currency, lang)}
                   </li>
                 ))}
               </ul>

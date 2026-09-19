@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/*
+  Rudaw's OpenType mis-shapes Kurdish ڵ (PUA / wrong joining form),
+  so موڵک appears with ڵ and ک disconnected. For ku/ar we use
+  Noto Sans Arabic which joins correctly. Rudaw stays for Latin UI.
+*/
 @font-face {
   font-family: 'Rudaw';
   src: url('/fonts/rudawregular.ttf') format('truetype');
@@ -10,7 +15,7 @@
 
 @font-face {
   font-family: 'Rudaw';
-  src: url('/fonts/rudawbold.ttf') format('truetype');
+  src: url('/fonts/rudawregular.ttf') format('truetype');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -37,6 +42,7 @@
   --color-gold-600: #946b09;
   --font-display: "Cormorant Garamond", Georgia, serif;
   --font-sans: "Rudaw", "Inter", system-ui, sans-serif;
+  --font-arabic: "Noto Naskh Arabic", "Noto Sans Arabic", "Segoe UI", Tahoma, sans-serif;
 }
 
 body {
@@ -44,14 +50,33 @@ body {
   overscroll-behavior-y: none;
 }
 
+/* Kurdish & Arabic: Noto — correct cursive joining for ڵ/ڕ/ێ/ە + ک */
+html[lang='ku'] body,
+html[lang='ar'] body,
 html[dir='rtl'] body {
-  /* Noto Sans Arabic یەکەمە چونکە هەموو گلیفەکانی کوردی تێدایە.
-     Rudaw بەجێیە بەڵام تەنها بە fallback بۆ گلیفەکانی تر. */
-  font-family: 'Noto Sans Arabic', 'Rudaw', 'Inter', system-ui, sans-serif;
+  font-family: var(--font-arabic);
+  font-feature-settings: 'liga' 1, 'calt' 1, 'kern' 1;
+  text-rendering: optimizeLegibility;
 }
 
 .font-display {
   font-family: var(--font-display);
+}
+
+html[lang='ku'] .font-display,
+html[lang='ar'] .font-display,
+html[dir='rtl'] .font-display {
+  font-family: var(--font-arabic);
+  font-weight: 700;
+  font-feature-settings: 'liga' 1, 'calt' 1, 'kern' 1;
+  text-rendering: optimizeLegibility;
+}
+
+html[lang='ku'] *,
+html[lang='ar'] *,
+html[dir='rtl'] * {
+  letter-spacing: normal;
+  font-variant-ligatures: common-ligatures contextual;
 }
 
 /* ——— App shell ——— */
@@ -595,7 +620,7 @@ html[dir='rtl'] body {
 }
 
 .property-grid-tile-type {
-  @apply absolute start-2 top-2 rounded-md bg-gold-500/95 px-1.5 py-0.5 text-[9px] font-bold text-royal-950;
+  @apply absolute start-2 top-2 max-w-[calc(100%-2.5rem)] truncate rounded-md bg-gold-500/95 px-1.5 py-0.5 text-[9px] font-bold text-royal-950;
 }
 
 .property-grid-tile-meta {
@@ -603,7 +628,7 @@ html[dir='rtl'] body {
 }
 
 .property-grid-tile-price {
-  @apply text-[11px] font-bold leading-tight text-gold-300;
+  @apply text-sm font-bold leading-tight text-gold-300;
 }
 
 .property-grid-tile-code {

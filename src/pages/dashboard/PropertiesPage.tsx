@@ -4,10 +4,12 @@ import { Edit3 } from 'lucide-react';
 import { api } from '@/lib/api';
 import type { Property } from '@/types';
 import { labelEnum } from '@/lib/format';
+import { useLanguage } from '@/context/LanguageContext';
 
 const TABS = ['all', 'PENDING', 'APPROVED', 'SOLD', 'RENTED'] as const;
 
 export function PropertiesPage() {
+  const { formatNum } = useLanguage();
   const [tab, setTab] = useState<string>('all');
   const [properties, setProperties] = useState<Property[]>([]);
   const [page, setPage] = useState(1);
@@ -125,11 +127,11 @@ export function PropertiesPage() {
       {meta.totalPages > 1 && (
         <div className="mt-4 flex items-center justify-between border-t border-royal-800 pt-4 text-sm text-royal-300">
           <div>
-            Showing <span className="font-medium text-gold-400">{(meta.currentPage - 1) * 50 + 1}</span> to{' '}
+            Showing <span className="font-medium text-gold-400">{formatNum((meta.currentPage - 1) * 50 + 1)}</span> to{' '}
             <span className="font-medium text-gold-400">
-              {Math.min(meta.currentPage * 50, meta.totalCount)}
+              {formatNum(Math.min(meta.currentPage * 50, meta.totalCount))}
             </span>{' '}
-            of <span className="font-medium text-gold-400">{meta.totalCount}</span> entries
+            of <span className="font-medium text-gold-400">{formatNum(meta.totalCount)}</span> entries
           </div>
           <div className="flex gap-2">
             <button

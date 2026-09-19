@@ -15,7 +15,7 @@ function buildQuery(f: PropertyFilters) {
 }
 
 export function ListingsPage() {
-  const { t } = useLanguage();
+  const { t, formatNum } = useLanguage();
   const [filters, setFilters] = useState<PropertyFilters>({});
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,11 +72,16 @@ export function ListingsPage() {
         {meta.totalPages > 1 && (
           <div className="mt-8 mb-4 flex items-center justify-between px-4 text-sm text-royal-300">
             <div>
-              {t.common?.showing || 'Showing'} <span className="font-medium text-gold-400">{(meta.currentPage - 1) * 50 + 1}</span> -{' '}
+              {t.common?.showing || 'Showing'}{' '}
               <span className="font-medium text-gold-400">
-                {Math.min(meta.currentPage * 50, meta.totalCount)}
+                {formatNum((meta.currentPage - 1) * 50 + 1)}
               </span>{' '}
-              {t.common?.of || 'of'} <span className="font-medium text-gold-400">{meta.totalCount}</span>
+              -{' '}
+              <span className="font-medium text-gold-400">
+                {formatNum(Math.min(meta.currentPage * 50, meta.totalCount))}
+              </span>{' '}
+              {t.common?.of || 'of'}{' '}
+              <span className="font-medium text-gold-400">{formatNum(meta.totalCount)}</span>
             </div>
             <div className="flex gap-2">
               <button

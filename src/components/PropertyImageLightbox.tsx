@@ -29,7 +29,7 @@ export function PropertyImageLightbox({
   onClose,
   onIndexChange,
 }: Props) {
-  const { rtl, t } = useLanguage();
+  const { rtl, t, formatNum } = useLanguage();
   const [scale, setScale] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const lightboxRef = useRef<HTMLDivElement>(null);
@@ -380,7 +380,7 @@ export function PropertyImageLightbox({
       <div className="property-lightbox-toolbar">
         {multi && (
           <span className="property-lightbox-counter font-semibold">
-            {index + 1} / {slides.length}
+            {formatNum(index + 1)} / {formatNum(slides.length)}
           </span>
         )}
         <div className="property-lightbox-zoom-actions">

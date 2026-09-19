@@ -11,6 +11,8 @@ import { uploadPropertyImages } from '@/lib/uploadPropertyImages';
 import type { Property } from '@/types';
 
 import { NeighborhoodSingleSelect } from '@/components/NeighborhoodSingleSelect';
+import { formatPrice } from '@/lib/format';
+import { readNumberInput } from '@/lib/numberInput';
 
 const propertyTypes = ['HOUSE', 'APARTMENT', 'VILLA', 'LAND', 'COMMERCIAL', 'FARM'] as const;
 const transactionTypes = ['FOR_SALE', 'FOR_RENT', 'FOR_EXCHANGE'] as const;
@@ -21,7 +23,7 @@ const statusOptions = ['APPROVED', 'PENDING', 'REJECTED', 'SOLD', 'RENTED'] as c
 export function EditPropertyPage() {
   const { code } = useParams();
   const navigate = useNavigate();
-  const { t, enumLabel, rtl } = useLanguage();
+  const { t, enumLabel, rtl, lang, formatNum } = useLanguage();
   const { profile, loading: authLoading } = useAuth();
   const { neighborhoods } = useNeighborhoods();
 
@@ -326,24 +328,31 @@ export function EditPropertyPage() {
           <div>
             <label className="filter-label">ڕووبەر (مەتر دووجا m²)</label>
             <input
-              type="number"
+              type="text"
+              inputMode="decimal"
               className="input-luxury mt-1"
               placeholder={t.submit.areaPlaceholder}
               required
               value={form.areaSqm || ''}
-              onChange={(e) => setForm({ ...form, areaSqm: Number(e.target.value) })}
+              onChange={(e) => setForm({ ...form, areaSqm: readNumberInput(e.target.value) ?? 0 })}
             />
           </div>
           <div>
             <label className="filter-label">نرخ</label>
             <input
-              type="number"
+              type="text"
+              inputMode="decimal"
               className="input-luxury mt-1"
               placeholder={t.submit.pricePlaceholder}
               required
               value={form.price || ''}
-              onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
+              onChange={(e) => setForm({ ...form, price: readNumberInput(e.target.value) ?? 0 })}
             />
+            {lang !== 'en' && form.price > 0 && (
+              <p className="mt-1.5 text-sm font-medium text-gold-400">
+                {formatPrice(form.price, form.currency, lang)}
+              </p>
+            )}
           </div>
         </div>
 
@@ -530,7 +539,7 @@ export function EditPropertyPage() {
           <div className="rounded-xl border border-royal-800/80 bg-royal-950/40 p-4 space-y-3">
             <div className="flex items-center justify-between">
               <label className="filter-label text-gold-400">{t.submit.existingImages}</label>
-              <span className="text-xs text-royal-400">{existingImages.length} وێنە</span>
+              <span className="text-xs text-royal-400">{formatNum(existingImages.length)} وێنە</span>
             </div>
             <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
               {existingImages.map((imgUrl, index) => (

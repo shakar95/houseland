@@ -148,6 +148,7 @@ const ku: TranslationDict = {
     WEST: 'خۆرئاوا',
   },
   submit: {
+    pageTitle: 'تۆمارکردنی موڵک',
     signInTitle: 'بۆ تۆمارکردن بچۆرە ژوورەوە',
     signInDesc: 'بە گووگڵ خۆت تۆمار بکە و موڵکەکەت بنێرە بۆ پێداچوونەوە.',
     continueGoogle: 'بەردەوام بە لەگەڵ گووگڵ',

@@ -20,7 +20,7 @@ import { useAuth } from '@/context/AuthContext';
 import { PropertyImageGallery } from '@/components/PropertyImageGallery';
 import { ObfuscatedMap } from '@/components/maps/ObfuscatedMap';
 import type { AgencySettings, Property } from '@/types';
-import { formatPrice, formatCountLabel, pickCountLabel } from '@/lib/format';
+import { formatPrice, formatCountLabel, pickCountLabel, formatNumber } from '@/lib/format';
 import { useLanguage } from '@/context/LanguageContext';
 import { useNeighborhoods, getNeighborhoodLabelByName } from '@/hooks/useNeighborhoods';
 
@@ -92,7 +92,7 @@ export function PropertyDetailPage() {
         <section className="property-detail-info">
           <span className="text-sm text-gold-500">{property.code}</span>
           <h1 className="property-detail-title">{title}</h1>
-          <p className="property-detail-price">{formatPrice(property.price, property.currency)}</p>
+          <p className="property-detail-price">{formatPrice(property.price, property.currency, lang)}</p>
           <p className="property-detail-meta text-royal-300">
             {enumLabel(property.transactionType)} · {enumLabel(property.propertyType)} · {getNeighborhoodLabelByName(property.neighborhood, neighborhoods, lang)}
           </p>
@@ -100,24 +100,24 @@ export function PropertyDetailPage() {
           <div className="property-detail-stats">
             <div className="property-detail-stat">
               <Maximize className="shrink-0 text-gold-500" />
-              <span>{formatCountLabel(t.property.areaSqm, property.areaSqm)}</span>
+              <span>{formatCountLabel(t.property.areaSqm, property.areaSqm, lang)}</span>
             </div>
             {property.bedrooms != null && (
               <div className="property-detail-stat">
                 <Bed className="shrink-0 text-gold-500" />
-                <span>{pickCountLabel(property.bedrooms, t.property.bedroom, t.property.bedrooms)}</span>
+                <span>{pickCountLabel(property.bedrooms, t.property.bedroom, t.property.bedrooms, lang)}</span>
               </div>
             )}
             {property.bathrooms != null && (
               <div className="property-detail-stat">
                 <Bath className="shrink-0 text-gold-500" />
-                <span>{pickCountLabel(property.bathrooms, t.property.bathroom, t.property.bathrooms)}</span>
+                <span>{pickCountLabel(property.bathrooms, t.property.bathroom, t.property.bathrooms, lang)}</span>
               </div>
             )}
             {property.floors != null && (
               <div className="property-detail-stat">
                 <Layers className="shrink-0 text-gold-500" />
-                <span>{formatCountLabel(t.property.floors, property.floors)}</span>
+                <span>{formatCountLabel(t.property.floors, property.floors, lang)}</span>
               </div>
             )}
             {property.facing && (
@@ -131,15 +131,18 @@ export function PropertyDetailPage() {
             {property.frontageMeters != null && (
               <div className="property-detail-stat">
                 <Ruler className="shrink-0 text-gold-500" />
-                <span>{t.property.frontage}: {property.frontageMeters} m</span>
+                <span>
+                  {t.property.frontage}: {formatNumber(property.frontageMeters, lang)} m
+                </span>
               </div>
             )}
             {property.streetWidth != null && (
               <div className="property-detail-stat">
                 <Route className="shrink-0 text-gold-500" />
                 <span>
-                  {t.property.streetWidth}: {property.streetWidth} m
-                  {property.isCorner && property.streetWidth2 != null && ` × ${property.streetWidth2} m`}
+                  {t.property.streetWidth}: {formatNumber(property.streetWidth, lang)} m
+                  {property.isCorner && property.streetWidth2 != null &&
+                    ` × ${formatNumber(property.streetWidth2, lang)} m`}
                   {property.isCorner && ` (${t.property.corner})`}
                 </span>
               </div>

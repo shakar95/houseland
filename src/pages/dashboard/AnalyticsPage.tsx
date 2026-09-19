@@ -10,6 +10,7 @@ import {
 } from 'recharts';
 import { api } from '@/lib/api';
 import type { Analytics } from '@/types';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface DashboardData {
   totals: { views: number; phone: number; whatsapp: number };
@@ -21,6 +22,7 @@ interface DashboardData {
 }
 
 export function AnalyticsPage() {
+  const { formatNum } = useLanguage();
   const [data, setData] = useState<DashboardData | null>(null);
 
   useEffect(() => {
@@ -49,7 +51,7 @@ export function AnalyticsPage() {
         {stats.map((s) => (
           <div key={s.label} className="card-luxury p-4">
             <p className="text-sm text-royal-400">{s.label}</p>
-            <p className="font-display text-3xl text-gold-400">{s.value}</p>
+            <p className="font-display text-3xl text-gold-400">{formatNum(s.value)}</p>
           </div>
         ))}
       </div>
@@ -60,8 +62,11 @@ export function AnalyticsPage() {
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#2a4499" />
               <XAxis dataKey="name" stroke="#8aa3f5" />
-              <YAxis stroke="#8aa3f5" />
-              <Tooltip contentStyle={{ background: '#0c1835', border: '1px solid #d4a017' }} />
+              <YAxis stroke="#8aa3f5" tickFormatter={(v) => formatNum(Number(v))} />
+              <Tooltip
+                contentStyle={{ background: '#0c1835', border: '1px solid #d4a017' }}
+                formatter={(value: number) => [formatNum(value), '']}
+              />
               <Bar dataKey="value" fill="#d4a017" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -75,7 +80,7 @@ export function AnalyticsPage() {
               <span>
                 {a.property?.code} — {a.property?.title}
               </span>
-              <span className="text-gold-400">{a.viewsCount} views</span>
+              <span className="text-gold-400">{formatNum(a.viewsCount)} views</span>
             </li>
           ))}
         </ul>

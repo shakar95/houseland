@@ -35,7 +35,7 @@ function buildSlides(images: string[], videoUrl?: string | null): Slide[] {
 }
 
 export function PropertyImageGallery({ images, videoUrl, alt, className }: Props) {
-  const { rtl, t } = useLanguage();
+  const { rtl, t, formatNum } = useLanguage();
   const [index, setIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -362,7 +362,7 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
                 <NextIcon className="h-5 w-5" />
               </button>
               <span className="property-gallery-counter" aria-live="polite">
-                {index + 1} / {slides.length}
+                {formatNum(index + 1)} / {formatNum(slides.length)}
               </span>
             </>
           )}
@@ -377,7 +377,7 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
                   type="button"
                   role="tab"
                   aria-selected={i === index}
-                  aria-label={slide.type === 'video' ? t.property.video : `${i + 1} / ${slides.length}`}
+                  aria-label={slide.type === 'video' ? t.property.video : `${formatNum(i + 1)} / ${formatNum(slides.length)}`}
                   className={i === index ? 'property-gallery-dot is-active' : 'property-gallery-dot'}
                   onClick={() => goTo(i)}
                 />
@@ -391,7 +391,7 @@ export function PropertyImageGallery({ images, videoUrl, alt, className }: Props
                     type="button"
                     className={i === index ? 'property-gallery-thumb is-active' : 'property-gallery-thumb'}
                     onClick={() => goTo(i)}
-                    aria-label={`${i + 1} / ${slides.length}`}
+                    aria-label={`${formatNum(i + 1)} / ${formatNum(slides.length)}`}
                   >
                     <img src={slide.src} alt="" loading="lazy" draggable={false} />
                   </button>

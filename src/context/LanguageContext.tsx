@@ -10,6 +10,7 @@ import {
   type Lang,
   type TranslationDict,
 } from '@/i18n';
+import { formatNumber, toLocalizedDigits } from '@/lib/format';
 
 type LanguageContextValue = {
   lang: Lang;
@@ -19,6 +20,10 @@ type LanguageContextValue = {
   propertyTitle: (code: string, fallback: string) => string;
   propertyDescription: (code: string, fallback: string) => string;
   rtl: boolean;
+  /** Format a number with language-appropriate digits (ku/ar → ٠١٢…). */
+  formatNum: (value: number, options?: Intl.NumberFormatOptions) => string;
+  /** Convert any Western digits in a string to localized digits. */
+  localizeDigits: (value: number | string) => string;
 };
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
@@ -45,18 +50,30 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     document.documentElement.dir = rtl ? 'rtl' : 'ltr';
   }, [lang, rtl]);
 
+  const formatNum = useCallback(
+    (value: number, options?: Intl.NumberFormatOptions) => formatNumber(value, lang, options),
+    [lang],
+  );
+
+  const localizeDigits = useCallback(
+    (value: number | string) => toLocalizedDigits(value, lang),
+    [lang],
+  );
+
   const value = useMemo<LanguageContextValue>(
     () => ({
       lang,
       setLang,
       t,
-      enumLabel: (value: string) => enumLabel(lang, value),
+      enumLabel: (v: string) => enumLabel(lang, v),
       propertyTitle: (code: string, fallback: string) => getPropertyTitle(code, lang, fallback),
       propertyDescription: (code: string, fallback: string) =>
         getPropertyDescription(code, lang, fallback),
       rtl,
+      formatNum,
+      localizeDigits,
     }),
-    [lang, setLang, t, rtl],
+    [lang, setLang, t, rtl, formatNum, localizeDigits],
   );
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;

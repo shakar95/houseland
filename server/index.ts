@@ -415,6 +415,58 @@ function sanitizePropertyInput(body: Record<string, unknown>) {
   };
 }
 
+const FB_RESOLVE_UA =
+  'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)';
+
+function cleanFacebookTrackingParams(rawUrl: string): string {
+  try {
+    const parsed = new URL(rawUrl);
+    ['rdid', 'share_url', 'ref', 'mibextid', 'sfnsn', 'fs', 's', 'extid', '__tn__', 'locale', '_rdr', 'fbclid'].forEach(
+      (p) => parsed.searchParams.delete(p),
+    );
+    return parsed.toString();
+  } catch {
+    return rawUrl;
+  }
+}
+
+/** Prefer a stable Facebook embed URL: /reel/{id}/ or /videos/.../{id}/ */
+function canonicalizeFacebookVideoUrl(rawUrl: string): string {
+  try {
+    const u = rawUrl.trim();
+    const reel = u.match(/facebook\.com\/(?:reel|reels)\/(\d+)/i);
+    if (reel) return `https://www.facebook.com/reel/${reel[1]}/`;
+
+    const videos = u.match(/facebook\.com\/(?:[^/?#]+\/)?videos\/(?:[^/?#]+\/)?(\d+)/i);
+    if (videos) return `https://www.facebook.com/watch/?v=${videos[1]}`;
+
+    const watch = u.match(/[?&]v=(\d{10,})/);
+    if (watch && u.includes('facebook.com')) return `https://www.facebook.com/watch/?v=${watch[1]}`;
+
+    return cleanFacebookTrackingParams(u);
+  } catch {
+    return rawUrl;
+  }
+}
+
+function extractFacebookUrlFromHtml(html: string): string | null {
+  const patterns = [
+    /property=["']og:url["']\s+content=["']([^"']+)["']/i,
+    /content=["']([^"']+)["']\s+property=["']og:url["']/i,
+    /rel=["']canonical["']\s+href=["']([^"']+)["']/i,
+    /href=["']([^"']+)["']\s+rel=["']canonical["']/i,
+    /https:\/\/(?:www\.)?facebook\.com\/(?:reel|reels)\/\d+/i,
+    /https:\/\/(?:www\.)?facebook\.com\/[^"'\\\s]+\/videos\/[^"'\\\s]+/i,
+  ];
+  for (const re of patterns) {
+    const m = html.match(re);
+    if (!m) continue;
+    const raw = m[1] || m[0];
+    if (raw && /facebook\.com/i.test(raw)) return raw;
+  }
+  return null;
+}
+
 export async function resolveVideoUrl(rawUrl: string | null | undefined): Promise<string | null> {
   if (!rawUrl) return null;
   let currentUrl = rawUrl.trim();
@@ -424,61 +476,68 @@ export async function resolveVideoUrl(rawUrl: string | null | undefined): Promis
     return currentUrl;
   }
 
-  try {
-    // 1. Follow shortlinks / share redirects (/share/r/, /share/v/, fb.watch/)
-    if (currentUrl.includes('/share/') || currentUrl.includes('fb.watch/')) {
-      for (let i = 0; i < 3; i++) {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 4000);
-        const res = await fetch(currentUrl, {
-          method: 'HEAD',
-          redirect: 'manual',
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          },
-          signal: controller.signal,
-        });
-        clearTimeout(timeout);
-        const location = res.headers.get('location');
-        if (!location) break;
-        currentUrl = new URL(location, currentUrl).toString();
-        if (currentUrl.includes('/videos/') || currentUrl.includes('/reel/')) break;
-      }
-    }
+  // Already a reel/video/watch URL — just canonicalize
+  if (
+    /facebook\.com\/(?:reel|reels)\//i.test(currentUrl) ||
+    /facebook\.com\/.*\/videos\//i.test(currentUrl) ||
+    /facebook\.com\/watch/i.test(currentUrl)
+  ) {
+    return canonicalizeFacebookVideoUrl(currentUrl);
+  }
 
-    // 2. If it is NOT already a reel or video and has a numeric video ID, check canonical redirect
-    if (!currentUrl.includes('/reel/') && !currentUrl.includes('/videos/')) {
+  try {
+    // Share shortlinks (/share/r/, /share/v/, fb.watch) need GET+follow — HEAD often returns 400
+    if (currentUrl.includes('/share/') || currentUrl.includes('fb.watch/')) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 12000);
+      const res = await fetch(currentUrl, {
+        method: 'GET',
+        redirect: 'follow',
+        headers: {
+          'User-Agent': FB_RESOLVE_UA,
+          Accept: 'text/html,application/xhtml+xml',
+          'Accept-Language': 'en-US,en;q=0.9',
+        },
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+
+      // Final URL after redirects (e.g. /reel/123...)
+      if (res.url && res.url !== currentUrl) {
+        currentUrl = res.url;
+      }
+
+      // If still a share link, parse HTML meta (og:url / canonical)
+      if (currentUrl.includes('/share/') || currentUrl.includes('fb.watch')) {
+        const html = await res.text();
+        const fromHtml = extractFacebookUrlFromHtml(html);
+        if (fromHtml) currentUrl = fromHtml;
+      }
+    } else if (!currentUrl.includes('/reel/') && !currentUrl.includes('/videos/')) {
+      // Numeric id → try watch redirect
       const numericIdMatch = currentUrl.match(/(\d{10,})/);
       if (numericIdMatch) {
         try {
           const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 4000);
+          const timeout = setTimeout(() => controller.abort(), 8000);
           const watchRes = await fetch(`https://www.facebook.com/watch/?v=${numericIdMatch[1]}`, {
-            method: 'HEAD',
-            redirect: 'manual',
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            },
+            method: 'GET',
+            redirect: 'follow',
+            headers: { 'User-Agent': FB_RESOLVE_UA, Accept: 'text/html' },
             signal: controller.signal,
           });
           clearTimeout(timeout);
-          const watchLoc = watchRes.headers.get('location');
-          if (watchLoc && (watchLoc.includes('/videos/') || watchLoc.includes('/reel/'))) {
-            currentUrl = new URL(watchLoc, currentUrl).toString();
-          }
-        } catch {}
+          if (watchRes.url) currentUrl = watchRes.url;
+        } catch {
+          /* keep current */
+        }
       }
     }
 
-    // 3. Clean tracking query parameters
-    const parsed = new URL(currentUrl);
-    ['rdid', 'share_url', 'ref', 'mibextid', 'sfnsn', 'fs', 's', 'extid', '__tn__', 'locale', '_rdr'].forEach((p) =>
-      parsed.searchParams.delete(p)
-    );
-    return parsed.toString();
+    return canonicalizeFacebookVideoUrl(currentUrl);
   } catch (e) {
     console.warn('[VideoResolver] Could not resolve video URL redirect:', e);
-    return currentUrl;
+    return canonicalizeFacebookVideoUrl(currentUrl);
   }
 }
 

@@ -10,6 +10,8 @@ import { PropertyImageUpload } from '@/components/PropertyImageUpload';
 import { uploadPropertyImages } from '@/lib/uploadPropertyImages';
 import { useNeighborhoods } from '@/hooks/useNeighborhoods';
 import { NeighborhoodSingleSelect } from '@/components/NeighborhoodSingleSelect';
+import { formatPrice } from '@/lib/format';
+import { readNumberInput } from '@/lib/numberInput';
 
 const propertyTypes = ['HOUSE', 'APARTMENT', 'VILLA', 'LAND', 'COMMERCIAL', 'FARM'] as const;
 const transactionTypes = ['FOR_SALE', 'FOR_RENT', 'FOR_EXCHANGE'] as const;
@@ -40,7 +42,7 @@ const empty = {
 };
 
 export function SubmitPropertyPage() {
-  const { t, enumLabel } = useLanguage();
+  const { t, enumLabel, lang } = useLanguage();
   const { profile, loading } = useAuth();
   const { neighborhoods } = useNeighborhoods();
   const navigate = useNavigate();
@@ -132,7 +134,7 @@ export function SubmitPropertyPage() {
 
   return (
     <div className="app-page pb-6">
-      <h1 className="text-xl font-bold text-gold-400">{t.nav.submit}</h1>
+      <h1 className="text-xl font-bold text-gold-400">{t.submit.pageTitle}</h1>
       <p className="mt-2 text-royal-300">{t.submit.intro}</p>
       <form onSubmit={handleSubmit} className="mt-8 space-y-6">
         <textarea
@@ -174,21 +176,30 @@ export function SubmitPropertyPage() {
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <input
-            type="number"
+            type="text"
+            inputMode="decimal"
             className="input-luxury"
             placeholder={t.submit.areaPlaceholder}
             required
             value={form.areaSqm || ''}
-            onChange={(e) => setForm({ ...form, areaSqm: Number(e.target.value) })}
+            onChange={(e) => setForm({ ...form, areaSqm: readNumberInput(e.target.value) ?? 0 })}
           />
-          <input
-            type="number"
-            className="input-luxury"
-            placeholder={t.submit.pricePlaceholder}
-            required
-            value={form.price || ''}
-            onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
-          />
+          <div>
+            <input
+              type="text"
+              inputMode="decimal"
+              className="input-luxury w-full"
+              placeholder={t.submit.pricePlaceholder}
+              required
+              value={form.price || ''}
+              onChange={(e) => setForm({ ...form, price: readNumberInput(e.target.value) ?? 0 })}
+            />
+            {lang !== 'en' && form.price > 0 && (
+              <p className="mt-1.5 text-sm font-medium text-gold-400">
+                {formatPrice(form.price, form.currency, lang)}
+              </p>
+            )}
+          </div>
         </div>
 
         {/* پێش (Frontage) و کۆڵان (Street Width) و ڕوکن (Corner) */}

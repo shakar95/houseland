@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Bed, Bath, Maximize, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Property } from '@/types';
-import { formatPrice } from '@/lib/format';
+import { formatPrice, formatNumber } from '@/lib/format';
 import { useLanguage } from '@/context/LanguageContext';
 import { useNeighborhoods, getNeighborhoodLabelByName } from '@/hooks/useNeighborhoods';
 
@@ -30,19 +30,19 @@ export function PropertyCard({ property }: { property: Property }) {
           </div>
           <Chevron className="mt-1 h-5 w-5 shrink-0 text-royal-500" />
         </div>
-        <p className="property-card-price">{formatPrice(property.price, property.currency)}</p>
+        <p className="property-card-price">{formatPrice(property.price, property.currency, lang)}</p>
         <div className="property-card-stats">
           <span>
-            <Maximize className="h-3.5 w-3.5" /> {property.areaSqm} m²
+            <Maximize className="h-3.5 w-3.5" /> {formatNumber(property.areaSqm, lang)} m²
           </span>
           {property.bedrooms != null && (
             <span>
-              <Bed className="h-3.5 w-3.5" /> {property.bedrooms}
+              <Bed className="h-3.5 w-3.5" /> {formatNumber(property.bedrooms, lang)}
             </span>
           )}
           {property.bathrooms != null && (
             <span>
-              <Bath className="h-3.5 w-3.5" /> {property.bathrooms}
+              <Bath className="h-3.5 w-3.5" /> {formatNumber(property.bathrooms, lang)}
             </span>
           )}
           <span className="text-royal-500">{enumLabel(property.propertyType)}</span>

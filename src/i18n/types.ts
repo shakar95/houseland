@@ -100,6 +100,7 @@ export type TranslationDict = {
   };
   enums: Record<string, string>;
   submit: {
+    pageTitle: string;
     signInTitle: string;
     signInDesc: string;
     continueGoogle: string;
