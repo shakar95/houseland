@@ -5,7 +5,7 @@ import type { Property } from '@/types';
 import { formatPrice } from '@/lib/format';
 import { useLanguage } from '@/context/LanguageContext';
 import { prefetchPropertyVideo } from '@/lib/videoPrefetch';
-import { resolveThumbnailUrl, FALLBACK_PROPERTY_IMAGE } from '@/lib/media';
+import { resolveThumbnailUrl, FALLBACK_PROPERTY_IMAGE, isRealVideoUrl } from '@/lib/media';
 
 export function PropertyGridCard({ property }: { property: Property }) {
   const { enumLabel, propertyTitle, lang } = useLanguage();
@@ -16,7 +16,7 @@ export function PropertyGridCard({ property }: { property: Property }) {
   const img = resolveThumbnailUrl(rawImg, property.videoLink);
   const title = propertyTitle(property.code, property.title);
   const hasMultipleImages = (property.imageCount ?? property.images?.filter(Boolean).length ?? 0) > 1;
-  const hasVideo = Boolean(property.videoLink?.trim());
+  const hasVideo = isRealVideoUrl(property.videoLink);
 
   useEffect(() => {
     const el = rootRef.current;
