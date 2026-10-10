@@ -23,88 +23,119 @@ async function getAdminToken(): Promise<string> {
   return data.access_token;
 }
 
-async function uploadImagesInExactSequence(
-  imageUrls: string[],
+// Uploads a single image to Supabase Storage under admin user directory
+async function uploadSingleImage(
+  imgUrl: string,
+  userId: string,
   token: string
-): Promise<string[]> {
+): Promise<string> {
+  // If already hosted on Supabase, keep as-is
+  if (imgUrl.includes('supabase.co')) {
+    return imgUrl;
+  }
+
   try {
-    const payloadBase64 = token.split('.')[1];
-    const payload = JSON.parse(Buffer.from(payloadBase64, 'base64').toString('utf-8'));
-    const userId = payload.sub;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    const res = await fetch(imgUrl, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+      },
+    });
+    clearTimeout(timeout);
 
-    const urlsToUpload = imageUrls.slice(0, 8);
-    const uploadedUrls: string[] = [];
+    if (!res.ok) return imgUrl;
+    const arrayBuf = await res.arrayBuffer();
+    const buffer = Buffer.from(arrayBuf);
+    if (buffer.length < 3000) return ''; // ignore tiny spacer icons
 
-    for (const imgUrl of urlsToUpload) {
-      try {
-        const res = await fetch(imgUrl, {
-          headers: {
-            'User-Agent':
-              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-          },
-        });
-        if (!res.ok) continue;
-        const arrayBuf = await res.arrayBuffer();
-        const buffer = Buffer.from(arrayBuf);
-        if (buffer.length < 3000) continue;
+    const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}.jpg`;
+    const storagePath = `${userId}/${filename}`;
 
-        const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}.jpg`;
-        const storagePath = `${userId}/${filename}`;
+    const uploadRes = await fetch(
+      `${SUPABASE_URL}/storage/v1/object/property-images/${storagePath}`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'image/jpeg',
+        },
+        body: buffer,
+      }
+    );
 
-        const uploadRes = await fetch(
-          `${SUPABASE_URL}/storage/v1/object/property-images/${storagePath}`,
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'image/jpeg',
-            },
-            body: buffer,
-          }
-        );
-
-        if (uploadRes.ok) {
-          uploadedUrls.push(
-            `${SUPABASE_URL}/storage/v1/object/public/property-images/${storagePath}`
-          );
-        }
-      } catch {}
+    if (uploadRes.ok) {
+      return `${SUPABASE_URL}/storage/v1/object/public/property-images/${storagePath}`;
     }
-    return uploadedUrls;
+    return imgUrl;
   } catch {
-    return [];
+    return imgUrl;
   }
 }
 
-async function updatePropertyPhotos(code: string, data: any, token: string) {
-  const res = await fetch(`${API_URL}/api/properties/${encodeURIComponent(code)}`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(data),
+// Uploads all images for a property in parallel while preserving strictly the order (index 0 = cover)
+async function uploadImagesPreservingOrder(
+  imageUrls: string[],
+  userId: string,
+  token: string
+): Promise<string[]> {
+  const validUrls = imageUrls.filter(Boolean).slice(0, 8);
+  if (validUrls.length === 0) return [];
+
+  const uploadPromises = validUrls.map(async (url, idx) => {
+    const finalUrl = await uploadSingleImage(url, userId, token);
+    return { idx, finalUrl };
   });
-  return res.ok;
+
+  const results = await Promise.all(uploadPromises);
+  results.sort((a, b) => a.idx - b.idx);
+  return results.map((r) => r.finalUrl).filter(Boolean);
+}
+
+async function updatePropertyPhotos(code: string, data: any, token: string) {
+  try {
+    const res = await fetch(`${API_URL}/api/properties/${encodeURIComponent(code)}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
 
 async function main() {
   console.log('====================================================');
-  console.log('🖼️ Houseland Accurate Photos Updater (Sequence Sync)');
+  console.log('🖼️ Houseland Accurate Photos Fast Parallel Sync');
   console.log('====================================================\n');
 
   const downloadsDir = path.resolve(process.env.USERPROFILE || '', 'Downloads');
-  const possiblePaths = [
-    path.join(downloadsDir, 'houseland_accurate_photos.json'),
-    path.resolve(process.cwd(), 'houseland_accurate_photos.json'),
-  ];
 
   let filePath = '';
-  for (const p of possiblePaths) {
-    if (fs.existsSync(p)) {
-      filePath = p;
-      break;
+  if (fs.existsSync(downloadsDir)) {
+    const candidates = fs
+      .readdirSync(downloadsDir)
+      .filter((f) => f.startsWith('houseland_accurate_photos') && f.endsWith('.json'))
+      .map((f) => ({
+        path: path.join(downloadsDir, f),
+        mtime: fs.statSync(path.join(downloadsDir, f)).mtimeMs,
+      }))
+      .sort((a, b) => b.mtime - a.mtime);
+
+    if (candidates.length > 0) {
+      filePath = candidates[0].path;
     }
+  }
+
+  if (!filePath) {
+    const fallback = path.resolve(process.cwd(), 'houseland_accurate_photos.json');
+    if (fs.existsSync(fallback)) filePath = fallback;
   }
 
   if (!filePath) {
@@ -112,49 +143,57 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(`📂 خوێندنەوەی فایل لە: ${filePath}`);
+  console.log(`📂 بەکارهێنانی تازەترین فایل: ${filePath}`);
   const items: any[] = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-  console.log(`📦 ژمارەی موڵکەکان: ${items.length}`);
+  console.log(`📦 ژمارەی گشتی موڵکەکان: ${items.length}`);
 
   console.log('🔑 لۆگینی ئەدمین دەکرێت...');
   const token = await getAdminToken();
-  console.log('✅ لۆگینی ئەدمین سەرکەوتوو بوو!\n');
+  const payloadBase64 = token.split('.')[1];
+  const payload = JSON.parse(Buffer.from(payloadBase64, 'base64').toString('utf-8'));
+  const userId = payload.sub;
+  console.log(`✅ لۆگین سەرکەوتوو بوو (Admin ID: ${userId})\n`);
 
-  let updated = 0;
-  for (let i = 0; i < items.length; i++) {
-    const item = items[i];
-    if (!item.code) continue;
+  let updatedCount = 0;
+  const CONCURRENCY = 4;
 
-    console.log(`📸 [${i + 1}/${items.length}] ئەپلۆدکردنی وێنەکانی کۆدی #${item.code} بە ڕیزبەندی دروست...`);
+  for (let i = 0; i < items.length; i += CONCURRENCY) {
+    const chunk = items.slice(i, i + CONCURRENCY);
 
-    let finalImages: string[] = [];
-    if (Array.isArray(item.images) && item.images.length > 0) {
-      finalImages = await uploadImagesInExactSequence(item.images, token);
-    }
-    if (finalImages.length === 0 && Array.isArray(item.images) && item.images.length > 0) {
-      finalImages = item.images.slice(0, 8);
-    }
+    await Promise.all(
+      chunk.map(async (item, chunkIdx) => {
+        const itemIndex = i + chunkIdx + 1;
+        if (!item.code) return;
 
-    const updatePayload: any = {};
-    if (finalImages.length > 0) {
-      updatePayload.images = finalImages;
-    }
-    if (item.videoLink) {
-      updatePayload.videoLink = item.videoLink;
-    } else {
-      updatePayload.videoLink = '';
-    }
+        let finalImages: string[] = [];
+        if (Array.isArray(item.images) && item.images.length > 0) {
+          finalImages = await uploadImagesPreservingOrder(item.images, userId, token);
+        }
 
-    const success = await updatePropertyPhotos(item.code, updatePayload, token);
-    if (success) {
-      updated++;
-      console.log(`✅ [${updated}] کۆدی #${item.code} نوێکرایەوە -> سەمبنەیل: وێنەی یەکەمی موڵکەکە`);
-    } else {
-      console.log(`⚠️ نەتوانرا کۆدی #${item.code} نوێ بکرێتەوە.`);
-    }
+        const updatePayload: any = {};
+        if (finalImages.length > 0) {
+          updatePayload.images = finalImages;
+        }
+        if (item.videoLink) {
+          updatePayload.videoLink = item.videoLink;
+        } else {
+          updatePayload.videoLink = '';
+        }
+
+        const success = await updatePropertyPhotos(item.code, updatePayload, token);
+        if (success) {
+          updatedCount++;
+          console.log(
+            `✅ [${itemIndex}/${items.length}] موڵکی #${item.code} نوێکرایەوە -> ${finalImages.length} وێنە (سەمبنەیل: وێنەی یەکەم)`
+          );
+        } else {
+          console.log(`⚠️ کێشە لە نوێکردنەوەی موڵکی #${item.code}`);
+        }
+      })
+    );
   }
 
-  console.log(`\n🎉 سەرکەوتووانە وێنەی ${updated} موڵک بە تەواوی و بە ڕیزبەندی ڕاستەقینە نوێکرانەوە!`);
+  console.log(`\n🎉 هەموو موڵکەکان (${updatedCount} دانە) بە سەرکەوتوویی نوێکرانەوە!`);
 }
 
 main().catch(console.error);
