@@ -25,6 +25,8 @@ export function ListingsPage() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
+  const [totalCount, setTotalCount] = useState<number | undefined>(undefined);
+
   const observerTarget = useRef<HTMLDivElement | null>(null);
 
   // Fetch initial batch when filters change
@@ -32,12 +34,19 @@ export function ListingsPage() {
     setPage(1);
     setHasMore(true);
     setInitialLoading(true);
+    setTotalCount(undefined);
 
     const query = buildQuery(filters, 1, 24);
     api
       .get<{ data: Property[]; meta: any }>(`/api/properties${query}`, { auth: false, cacheMs: 15_000 })
       .then((res) => {
         setProperties(res.data);
+        if (res.meta && typeof res.meta.totalCount === 'number') {
+          setTotalCount(res.meta.totalCount);
+        } else {
+          setTotalCount(res.data.length);
+        }
+
         if (res.meta && res.meta.currentPage >= res.meta.totalPages) {
           setHasMore(false);
         } else if (res.data.length < 24) {
@@ -46,6 +55,7 @@ export function ListingsPage() {
       })
       .catch(() => {
         setProperties([]);
+        setTotalCount(0);
         setHasMore(false);
       })
       .finally(() => setInitialLoading(false));
@@ -105,7 +115,7 @@ export function ListingsPage() {
         <PropertyFilterBar
           filters={filters}
           onChange={setFilters}
-          resultCount={initialLoading ? undefined : properties.length}
+          resultCount={initialLoading ? undefined : totalCount}
         />
       </div>
 
