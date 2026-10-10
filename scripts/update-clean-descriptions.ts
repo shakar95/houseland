@@ -50,6 +50,7 @@ async function main() {
   console.log('====================================================\n');
 
   const possiblePaths = [
+    path.resolve(process.env.USERPROFILE || '', 'Downloads', 'houseland_clean_descriptions (1).json'),
     path.resolve(process.cwd(), 'houseland_clean_descriptions.json'),
     path.resolve(process.env.USERPROFILE || '', 'Downloads', 'houseland_clean_descriptions.json'),
   ];
@@ -91,18 +92,22 @@ async function main() {
     const propType = item.propertyType || 'HOUSE';
     const typeKu = TYPE_NAMES_KU[propType] || 'خانوو';
 
+    let cleanDesc = (item.description || '').replace(/See less/gi, '').trim();
+
     const updateBody: any = {
       propertyType: propType,
-      description: item.description,
+      description: cleanDesc,
     };
-    if (item.nearestLandmark) {
-      updateBody.nearestLandmark = item.nearestLandmark;
+
+    let cleanLandmark = (item.nearestLandmark || '').replace(/^[:\-\s]+/, '').trim();
+    if (cleanLandmark) {
+      updateBody.nearestLandmark = cleanLandmark;
     }
 
     // Set elegant Kurdish title
     let loc = item.neighborhood || '';
-    if (!loc && item.nearestLandmark) {
-      loc = item.nearestLandmark.split('-')[0].trim();
+    if (!loc && cleanLandmark) {
+      loc = cleanLandmark.split('-')[0].trim();
     }
     if (loc) {
       updateBody.title = `${typeKu} — ${loc}`;
