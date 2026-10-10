@@ -126,20 +126,35 @@ async function main() {
   console.log('🚀 Houseland Properties Importer دەستیپێکرد');
   console.log('====================================================\n');
 
-  // Look for houseland_posts.json in root or downloads
-  let filePath = path.resolve(process.cwd(), 'houseland_posts.json');
-  if (!fs.existsSync(filePath)) {
-    const userDownloads = path.resolve(process.env.USERPROFILE || '', 'Downloads', 'houseland_posts.json');
-    if (fs.existsSync(userDownloads)) {
-      filePath = userDownloads;
-    } else {
-      console.error(`❌ فایلی houseland_posts.json نەدۆزرایەوە لە:\n   - ${filePath}\n   - ${userDownloads}`);
-      console.log('تکایە دڵنیابە فایلەکە لە فۆڵدەری پڕۆژە یان Downloads دانراوە.');
-      process.exit(1);
+  // Look for houseland_all_posts*.json or houseland_posts*.json
+  const downloadsDir = path.resolve(process.env.USERPROFILE || '', 'Downloads');
+  const searchDirs = [process.cwd(), downloadsDir];
+  const candidates: string[] = [];
+
+  for (const dir of searchDirs) {
+    if (fs.existsSync(dir)) {
+      const files = fs.readdirSync(dir);
+      for (const f of files) {
+        if (
+          f.endsWith('.json') &&
+          (f.includes('houseland_all_posts') || f.includes('houseland_posts'))
+        ) {
+          candidates.push(path.join(dir, f));
+        }
+      }
     }
   }
 
-  console.log(`📂 خوێندنەوەی فایل لە: ${filePath}`);
+  // Sort by modification time descending
+  candidates.sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs);
+
+  if (candidates.length === 0) {
+    console.error('❌ هیچ فایلێکی پۆست نەدۆزرایەوە لە فۆڵدەری پڕۆژە یان Downloads.');
+    process.exit(1);
+  }
+
+  const filePath = candidates[0];
+  console.log(`📂 خوێندنەوەی نوێترین فایل لە: ${filePath}`);
   const rawData = fs.readFileSync(filePath, 'utf-8');
   const posts = JSON.parse(rawData);
 
@@ -168,22 +183,25 @@ async function main() {
     // Check duplicate
     const exists = await isCodeAlreadyExists(post.code);
     if (exists) {
-      // If it exists, update its photos and landmark if it has them!
+      console.log(`🔄 [${i + 1}/${posts.length}] کۆدی #${post.code} پێشتر هەیە — نوێکردنەوەی زانیارییەکان...`);
+      let finalImages: string[] | undefined = undefined;
       if (Array.isArray(post.images) && post.images.length > 0) {
-        console.log(`🔄 [${i + 1}/${posts.length}] کۆدی #${post.code} هەیە — نوێکردنەوەی ${post.images.length} وێنە و ناونیشان...`);
-        let finalImages = await uploadImagesToSupabase(post.images.slice(0, 8), token);
+        finalImages = await uploadImagesToSupabase(post.images.slice(0, 8), token);
         if (finalImages.length === 0) finalImages = post.images.slice(0, 8);
-        await updateProperty(post.code, {
-          images: finalImages,
-          nearestLandmark: post.nearestLandmark || undefined,
-          videoLink: post.videoLink || undefined,
-        }, token);
-        updatedCount++;
-        console.log(`✅ [${updatedCount}] وێنەکانی کۆدی #${post.code} بە سەرکەوتوویی نوێکرانەوە!`);
-      } else {
-        console.log(`⏩ [${i + 1}/${posts.length}] کۆدی #${post.code} پێشتر لە ئەپەکەدا هەیە، تێپەڕێنرا.`);
-        skippedCount++;
       }
+      const updateData: any = {
+        title: post.title || undefined,
+        propertyType: post.propertyType || undefined,
+        description: post.description || undefined,
+        nearestLandmark: post.nearestLandmark || undefined,
+        videoLink: post.videoLink || undefined,
+      };
+      if (finalImages && finalImages.length > 0) {
+        updateData.images = finalImages;
+      }
+      await updateProperty(post.code, updateData, token);
+      updatedCount++;
+      console.log(`✅ [${updatedCount}] کۆدی #${post.code} بە سەرکەوتوویی نوێکرایەوە!`);
       continue;
     }
 
