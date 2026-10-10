@@ -18,7 +18,7 @@ import {
   maskPropertyForPublic,
 } from './utils/propertyQueries.js';
 import { toPublicListingCard, syncPropertyMedia } from './utils/propertyMedia.js';
-import { resolveVideoThumbnail } from './utils/videoThumbnail.js';
+import { resolveVideoThumbnail, fetchVideoThumbnailBuffer } from './utils/videoThumbnail.js';
 import {
   getListingCache,
   setListingCache,
@@ -367,6 +367,18 @@ app.get('/api/properties/:idOrCode', wrap(async (req, res) => {
     } 
   };
 
+  if (fullProperty.videoLink) {
+    const proxyThumb = `/api/video-thumbnail?url=${encodeURIComponent(fullProperty.videoLink)}`;
+    if (fullProperty.thumbnailUrl && (fullProperty.thumbnailUrl.includes('fbcdn.net') || fullProperty.thumbnailUrl.includes('facebook.com'))) {
+      fullProperty.thumbnailUrl = proxyThumb;
+    }
+    if (Array.isArray(fullProperty.images)) {
+      fullProperty.images = fullProperty.images.map((img: string) =>
+        (img && (img.includes('fbcdn.net') || img.includes('facebook.com'))) ? proxyThumb : img
+      );
+    }
+  }
+
   if (req.query.admin !== 'true') {
     void db.insert(analytics)
       .values({ propertyId: baseProperty.id, viewsCount: 1 })
@@ -555,6 +567,26 @@ app.get('/api/resolve-video-url', wrap(async (req, res) => {
   }
   const resolved = await resolveVideoUrl(url);
   res.json({ resolvedUrl: resolved || url });
+}));
+
+app.get('/api/video-thumbnail', wrap(async (req, res) => {
+  const rawUrl = String(req.query.url || '').trim();
+  if (!rawUrl) {
+    res.redirect(302, 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800');
+    return;
+  }
+
+  const result = await fetchVideoThumbnailBuffer(rawUrl);
+  if (result) {
+    res.set({
+      'Content-Type': result.contentType,
+      'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
+    });
+    res.send(result.buffer);
+    return;
+  }
+
+  res.redirect(302, 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800');
 }));
 
 app.post('/api/properties', requireAuth, wrap(async (req: AuthRequest, res) => {

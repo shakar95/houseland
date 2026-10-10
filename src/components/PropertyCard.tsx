@@ -1,25 +1,36 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Bed, Bath, Maximize, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Property } from '@/types';
 import { formatPrice, formatNumber } from '@/lib/format';
 import { useLanguage } from '@/context/LanguageContext';
 import { useNeighborhoods, getNeighborhoodLabelByName } from '@/hooks/useNeighborhoods';
+import { resolveThumbnailUrl, FALLBACK_PROPERTY_IMAGE } from '@/lib/media';
 
 export function PropertyCard({ property }: { property: Property }) {
   const { enumLabel, rtl, lang } = useLanguage();
   const { neighborhoods } = useNeighborhoods();
-  const img =
-    property.images?.[0] ||
-    property.thumbnailUrl ||
-    'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400';
+  const [imgError, setImgError] = useState(false);
+
+  const displayImg = resolveThumbnailUrl(
+    property.images?.[0] || property.thumbnailUrl,
+    property.videoLink
+  );
   const dynamicTitle = `${enumLabel(property.propertyType)} — ${getNeighborhoodLabelByName(property.neighborhood, neighborhoods, lang)}`;
   const Chevron = rtl ? ChevronLeft : ChevronRight;
-  const displayImg = img.replace(/&amp;/gi, '&');
 
   return (
     <Link to={`/property/${property.code}`} className="property-card">
       <div className="property-card-image">
-        <img src={displayImg} alt={dynamicTitle} loading="lazy" referrerPolicy="no-referrer" />
+        <img
+          src={imgError ? FALLBACK_PROPERTY_IMAGE : displayImg}
+          alt=""
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={() => {
+            if (!imgError) setImgError(true);
+          }}
+        />
         <span className="property-card-badge">{property.code}</span>
         <span className="property-card-type">{enumLabel(property.transactionType)}</span>
       </div>

@@ -4,6 +4,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { VideoEmbed } from '@/components/VideoEmbed';
 import { PropertyImageLightbox } from '@/components/PropertyImageLightbox';
 import { prefetchPropertyVideo } from '@/lib/videoPrefetch';
+import { resolveThumbnailUrl } from '@/lib/media';
 
 const FALLBACK_IMAGE =
   'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200';
@@ -39,7 +40,7 @@ function buildSlides(images: string[], videoUrl?: string | null, imageCount?: nu
   }
 
   if (slides.length === 0) {
-    const poster = all[0] || FALLBACK_IMAGE;
+    const poster = resolveThumbnailUrl(all[0], videoUrl);
     slides.push({ type: 'image', src: poster, key: 'fallback' });
   }
 
@@ -64,7 +65,7 @@ export function PropertyImageGallery({ images, videoUrl, imageCount, alt, classN
     () => images.filter(Boolean).map((u) => u.replace(/&amp;/gi, '&')),
     [images],
   );
-  const poster = imageUrls[0] ?? FALLBACK_IMAGE;
+  const poster = resolveThumbnailUrl(imageUrls[0], videoUrl);
   const multi = slides.length > 1;
 
   // Track which slides have been loaded to prevent fetching all images at once
@@ -478,7 +479,16 @@ export function PropertyImageGallery({ images, videoUrl, imageCount, alt, classN
                     onClick={() => goTo(i)}
                     aria-label={t.property.video}
                   >
-                    <img src={poster} alt="" loading="lazy" draggable={false} referrerPolicy="no-referrer" />
+                    <img
+                      src={poster}
+                      alt=""
+                      loading="lazy"
+                      draggable={false}
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src = FALLBACK_IMAGE;
+                      }}
+                    />
                     <span className="property-gallery-thumb-play">
                       <Play className="h-4 w-4 fill-white text-white" />
                     </span>

@@ -18,11 +18,17 @@ export function toPublicListingCard<
     thumbnailUrl?: string | null;
     imageCount?: number;
     images?: string[];
+    videoLink?: string | null;
   },
 >(p: T) {
   const { thumbnailUrl, imageCount, images: _images, ...rest } = p;
   const count = imageCount ?? p.images?.filter(Boolean).length ?? 0;
-  const rawThumb = thumbnailUrl ?? p.images?.find(Boolean) ?? null;
+  let rawThumb = thumbnailUrl ?? p.images?.find(Boolean) ?? null;
+
+  if (rawThumb && (rawThumb.includes('fbcdn.net') || rawThumb.includes('facebook.com')) && p.videoLink) {
+    rawThumb = `/api/video-thumbnail?url=${encodeURIComponent(p.videoLink)}`;
+  }
+
   const thumb = rawThumb ? decodeHtmlEntities(rawThumb) : null;
   return {
     ...rest,

@@ -564,6 +564,8 @@ html[dir='rtl'] * {
 
 .property-card-image img {
   @apply h-full min-h-[120px] w-full object-cover;
+  font-size: 0;
+  color: transparent;
 }
 
 .property-card-badge {
@@ -609,6 +611,8 @@ html[dir='rtl'] * {
 
 .property-grid-tile img {
   @apply h-full w-full object-cover;
+  font-size: 0;
+  color: transparent;
 }
 
 .property-grid-tile-overlay {

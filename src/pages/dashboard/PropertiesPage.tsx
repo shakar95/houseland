@@ -6,6 +6,7 @@ import type { Property } from '@/types';
 import { labelEnum } from '@/lib/format';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
+import { resolveThumbnailUrl } from '@/lib/media';
 
 const TABS = ['all', 'PENDING', 'APPROVED', 'SOLD', 'RENTED'] as const;
 const FALLBACK_THUMB =
@@ -167,7 +168,7 @@ export function PropertiesPage() {
           </thead>
           <tbody>
             {properties.map((p) => {
-              const thumb = p.thumbnailUrl || p.images?.[0] || FALLBACK_THUMB;
+              const thumb = resolveThumbnailUrl(p.thumbnailUrl || p.images?.[0], p.videoLink);
               return (
                 <tr key={p.id} className="border-b border-royal-800/50">
                   <td className="py-2 pe-3">
@@ -180,6 +181,9 @@ export function PropertiesPage() {
                         alt=""
                         className="h-full w-full object-cover"
                         loading="lazy"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = FALLBACK_THUMB;
+                        }}
                       />
                     </Link>
                   </td>

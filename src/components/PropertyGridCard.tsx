@@ -1,19 +1,19 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Images, Play } from 'lucide-react';
 import type { Property } from '@/types';
 import { formatPrice } from '@/lib/format';
 import { useLanguage } from '@/context/LanguageContext';
-import { decodeMediaUrl, prefetchPropertyVideo } from '@/lib/videoPrefetch';
-
-const FALLBACK =
-  'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=600';
+import { prefetchPropertyVideo } from '@/lib/videoPrefetch';
+import { resolveThumbnailUrl, FALLBACK_PROPERTY_IMAGE } from '@/lib/media';
 
 export function PropertyGridCard({ property }: { property: Property }) {
   const { enumLabel, propertyTitle, lang } = useLanguage();
   const rootRef = useRef<HTMLAnchorElement>(null);
-  const rawImg = property.images?.[0] || property.thumbnailUrl || FALLBACK;
-  const img = decodeMediaUrl(rawImg);
+  const [imgError, setImgError] = useState(false);
+
+  const rawImg = property.images?.[0] || property.thumbnailUrl;
+  const img = resolveThumbnailUrl(rawImg, property.videoLink);
   const title = propertyTitle(property.code, property.title);
   const hasMultipleImages = (property.imageCount ?? property.images?.filter(Boolean).length ?? 0) > 1;
   const hasVideo = Boolean(property.videoLink?.trim());
@@ -52,7 +52,15 @@ export function PropertyGridCard({ property }: { property: Property }) {
         if (hasVideo) void prefetchPropertyVideo(property.videoLink);
       }}
     >
-      <img src={img} alt={title} loading="lazy" referrerPolicy="no-referrer" />
+      <img
+        src={imgError ? FALLBACK_PROPERTY_IMAGE : img}
+        alt=""
+        loading="lazy"
+        referrerPolicy="no-referrer"
+        onError={() => {
+          if (!imgError) setImgError(true);
+        }}
+      />
       <div className="property-grid-tile-overlay" />
       {hasVideo && (
         <span className="property-grid-tile-play" aria-hidden="true">
