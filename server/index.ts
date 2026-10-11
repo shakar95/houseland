@@ -609,6 +609,78 @@ app.get('/api/video-thumbnail', wrap(async (req, res) => {
   res.redirect(302, 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800');
 }));
 
+async function attachPropertyOwner(
+  propCode: string,
+  ownerData: { customerName?: string; phone?: string; contactId?: string; notes?: string } | null
+) {
+  if (!ownerData || !propCode) return null;
+  const ownerTag = `OWNER_OF:${propCode}`;
+
+  try {
+    const allCrm = await db.select().from(crmEntries);
+
+    // Remove existing owner tag from any CRM entries for this property
+    for (const item of allCrm) {
+      if (item.propertyInterests?.includes(ownerTag)) {
+        const updated = item.propertyInterests.filter((t) => t !== ownerTag);
+        await db.update(crmEntries).set({ propertyInterests: updated }).where(eq(crmEntries.id, item.id));
+      }
+    }
+
+    const customerName = ownerData.customerName?.trim();
+    const phone = ownerData.phone?.trim();
+    if (!customerName || !phone) return null;
+
+    if (ownerData.contactId) {
+      const existing = allCrm.find((c) => c.id === ownerData.contactId);
+      if (existing) {
+        const interests = Array.from(new Set([...(existing.propertyInterests || []), 'ROLE:SELLER', ownerTag]));
+        const [updated] = await db
+          .update(crmEntries)
+          .set({
+            customerName,
+            phone,
+            propertyInterests: interests,
+          })
+          .where(eq(crmEntries.id, ownerData.contactId))
+          .returning();
+        return updated;
+      }
+    }
+
+    // Check if phone matches any existing contact
+    const existingByPhone = allCrm.find((c) => c.phone?.trim() === phone);
+    if (existingByPhone) {
+      const interests = Array.from(new Set([...(existingByPhone.propertyInterests || []), 'ROLE:SELLER', ownerTag]));
+      const [updated] = await db
+        .update(crmEntries)
+        .set({
+          customerName,
+          propertyInterests: interests,
+        })
+        .where(eq(crmEntries.id, existingByPhone.id))
+        .returning();
+      return updated;
+    }
+
+    // Otherwise insert new CRM entry
+    const [created] = await db
+      .insert(crmEntries)
+      .values({
+        customerName,
+        phone,
+        notes: ownerData.notes || `خاوەنی موڵکی #${propCode}`,
+        propertyInterests: ['ROLE:SELLER', ownerTag],
+        status: 'LEAD',
+      })
+      .returning();
+    return created;
+  } catch (err) {
+    console.warn('[AttachPropertyOwner] Error attaching owner:', err);
+    return null;
+  }
+}
+
 app.post('/api/properties', requireAuth, wrap(async (req: AuthRequest, res) => {
   let code = req.body.code?.trim();
   if (code) {
@@ -651,6 +723,10 @@ app.post('/api/properties', requireAuth, wrap(async (req: AuthRequest, res) => {
       submitterId: req.userId,
     })
     .returning();
+
+  if (req.body.ownerContact && (req.userRole === 'ADMIN' || req.userRole === 'STAFF')) {
+    await attachPropertyOwner(property.code, req.body.ownerContact);
+  }
 
   await db.insert(analytics).values({ propertyId: property.id });
   invalidateListingCache();
@@ -752,6 +828,10 @@ app.patch('/api/properties/:id', requireAuth, requireRole('ADMIN', 'STAFF'), wra
     Object.assign(updateData, syncPropertyMedia(images, videoThumb));
   }
 
+  if (body.ownerContact !== undefined) {
+    await attachPropertyOwner(existing.code, body.ownerContact as any);
+  }
+
   const [property] = await db.update(properties)
     .set(updateData)
     .where(eq(properties.id, existing.id))
@@ -805,6 +885,51 @@ app.patch('/api/crm/:id', requireAuth, requireRole('ADMIN', 'STAFF'), wrap(async
     .where(eq(crmEntries.id, param(req.params.id)))
     .returning();
   res.json(entry);
+}));
+
+app.delete('/api/crm/:id', requireAuth, requireRole('ADMIN', 'STAFF'), wrap(async (req, res) => {
+  await db.delete(crmEntries).where(eq(crmEntries.id, param(req.params.id)));
+  res.json({ ok: true });
+}));
+
+// ——— Property Owner Contact (Admin & Staff Only) ———
+app.get('/api/properties/:id/owner', requireAuth, requireRole('ADMIN', 'STAFF'), wrap(async (req, res) => {
+  const target = param(req.params.id);
+  const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(target);
+  const matchCond = isUuid 
+    ? or(eq(properties.id, target), eq(properties.code, target))
+    : eq(properties.code, target);
+
+  const [prop] = await db.select({ id: properties.id, code: properties.code }).from(properties).where(matchCond).limit(1);
+  if (!prop) {
+    res.status(404).json({ error: 'Property not found' });
+    return;
+  }
+
+  const allCrm = await db.select().from(crmEntries);
+  const owner = allCrm.find((e) =>
+    e.propertyInterests?.includes(`OWNER_OF:${prop.code}`) ||
+    e.propertyInterests?.includes(`OWNER_OF:${prop.id}`)
+  ) || null;
+
+  res.json({ owner });
+}));
+
+app.post('/api/properties/:id/owner', requireAuth, requireRole('ADMIN', 'STAFF'), wrap(async (req, res) => {
+  const target = param(req.params.id);
+  const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(target);
+  const matchCond = isUuid 
+    ? or(eq(properties.id, target), eq(properties.code, target))
+    : eq(properties.code, target);
+
+  const [prop] = await db.select({ id: properties.id, code: properties.code }).from(properties).where(matchCond).limit(1);
+  if (!prop) {
+    res.status(404).json({ error: 'Property not found' });
+    return;
+  }
+
+  const owner = await attachPropertyOwner(prop.code, req.body);
+  res.json({ ok: true, owner });
 }));
 
 // ——— Contracts ———

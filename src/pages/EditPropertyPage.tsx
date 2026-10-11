@@ -13,6 +13,8 @@ import type { Property } from '@/types';
 import { NeighborhoodSingleSelect } from '@/components/NeighborhoodSingleSelect';
 import { formatPrice } from '@/lib/format';
 import { readNumberInput } from '@/lib/numberInput';
+import { OwnerContactPicker, type OwnerContactData } from '@/components/OwnerContactPicker';
+import { getOwnerContact, saveOwnerContact } from '@/lib/ownerContactService';
 
 const propertyTypes = ['HOUSE', 'APARTMENT', 'VILLA', 'LAND', 'COMMERCIAL', 'SHOP', 'FARM'] as const;
 const transactionTypes = ['FOR_SALE', 'FOR_RENT', 'FOR_EXCHANGE'] as const;
@@ -29,6 +31,7 @@ export function EditPropertyPage() {
 
   const [loadingProperty, setLoadingProperty] = useState(true);
   const [propertyId, setPropertyId] = useState('');
+  const [ownerContact, setOwnerContact] = useState<OwnerContactData | null>(null);
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
   const [saving, setSaving] = useState(false);
@@ -102,6 +105,8 @@ export function EditPropertyPage() {
       .finally(() => {
         setLoadingProperty(false);
       });
+
+    getOwnerContact(code).then(setOwnerContact).catch(() => {});
   }, [code]);
 
   if (authLoading || loadingProperty) {
@@ -201,9 +206,11 @@ export function EditPropertyPage() {
         videoLink: form.videoLink || null,
         status: form.status,
         images: finalImages,
+        ownerContact: ownerContact ? ownerContact : null,
       };
 
       await api.patch(`/api/properties/${propertyId}`, payload);
+      await saveOwnerContact(form.code.trim(), ownerContact).catch(() => {});
       setMessage(t.submit.editSuccess);
       setTimeout(() => {
         navigate(`/property/${form.code.trim()}`);
@@ -272,6 +279,13 @@ export function EditPropertyPage() {
       </div>
 
       <form onSubmit={handleSave} className="mt-6 space-y-6">
+        {isAdmin && (
+          <OwnerContactPicker
+            value={ownerContact}
+            onChange={setOwnerContact}
+          />
+        )}
+
         {/* Status & Featured selector for Admin */}
         <div className="rounded-xl border border-gold-500/30 bg-gold-950/20 p-4">
           <div className="grid gap-4 sm:grid-cols-2">

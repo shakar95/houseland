@@ -13,6 +13,9 @@ import { NeighborhoodSingleSelect } from '@/components/NeighborhoodSingleSelect'
 import { formatPrice } from '@/lib/format';
 import { readNumberInput } from '@/lib/numberInput';
 import { prefetchPropertyVideo } from '@/lib/videoPrefetch';
+import { OwnerContactPicker, type OwnerContactData } from '@/components/OwnerContactPicker';
+import { saveOwnerContact } from '@/lib/ownerContactService';
+import type { Property } from '@/types';
 
 const propertyTypes = ['HOUSE', 'APARTMENT', 'VILLA', 'LAND', 'COMMERCIAL', 'SHOP', 'FARM'] as const;
 const transactionTypes = ['FOR_SALE', 'FOR_RENT', 'FOR_EXCHANGE'] as const;
@@ -49,6 +52,7 @@ export function SubmitPropertyPage() {
   const { neighborhoods } = useNeighborhoods();
   const navigate = useNavigate();
   const [form, setForm] = useState(empty);
+  const [ownerContact, setOwnerContact] = useState<OwnerContactData | null>(null);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
@@ -97,11 +101,12 @@ export function SubmitPropertyPage() {
       const images = imageFiles.length ? await uploadPropertyImages(imageFiles) : [];
       setUploadingImages(false);
       const isStaffSubmit = profile?.role === 'ADMIN' || profile?.role === 'STAFF';
-      await api.post('/api/properties', {
+      const created = await api.post<Property>('/api/properties', {
         ...form,
         title: `${enumLabel(form.propertyType)} — ${getNeighborhoodLabelByName(form.neighborhood, neighborhoods, lang)}`,
         currency: 'USD',
         images,
+        ownerContact: isStaffSubmit && ownerContact ? ownerContact : null,
         frontageMeters: form.frontageMeters ?? null,
         streetWidth: form.streetWidth ?? null,
         streetWidth2: form.isCorner ? (form.streetWidth2 ?? null) : null,
@@ -114,6 +119,14 @@ export function SubmitPropertyPage() {
         dimensions: form.dimensions || null,
         videoLink: form.videoLink || null,
       });
+
+      if (isStaffSubmit && ownerContact) {
+        const targetCode = created?.code || form.code.trim();
+        if (targetCode) {
+          await saveOwnerContact(targetCode, ownerContact).catch(() => {});
+        }
+      }
+
       clearApiCache('/api/properties');
       if (form.videoLink) void prefetchPropertyVideo(form.videoLink);
       setMessage(isStaffSubmit ? t.submit.successApproved : t.submit.success);
@@ -149,6 +162,14 @@ export function SubmitPropertyPage() {
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
         />
+
+        {(profile?.role === 'ADMIN' || profile?.role === 'STAFF') && (
+          <OwnerContactPicker
+            value={ownerContact}
+            onChange={setOwnerContact}
+          />
+        )}
+
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="filter-label">کۆدی موڵک (بۆ نموونە: 123)</label>

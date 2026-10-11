@@ -38,6 +38,15 @@ export interface Property {
   videoLink?: string | null;
   status: string;
   analytics?: Analytics;
+  owner?: CrmEntry | null;
+  ownerContact?: OwnerContact | null;
+}
+
+export interface OwnerContact {
+  id?: string;
+  customerName: string;
+  phone: string;
+  notes?: string | null;
 }
 
 export interface Analytics {

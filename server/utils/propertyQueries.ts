@@ -243,6 +243,15 @@ export function trimImagesForList<T extends { images?: string[] | null }>(p: T) 
 }
 
 export function maskPropertyForPublic<T extends Record<string, unknown>>(p: T) {
-  const { latitude, longitude, submitterId, ...rest } = p;
-  return { ...rest, latitude: undefined, longitude: undefined, submitterId: undefined };
+  const { latitude, longitude, submitterId, owner, ownerContact, ownerName, ownerPhone, ...rest } = p;
+  return {
+    ...rest,
+    latitude: undefined,
+    longitude: undefined,
+    submitterId: undefined,
+    owner: undefined,
+    ownerContact: undefined,
+    ownerName: undefined,
+    ownerPhone: undefined,
+  };
 }
