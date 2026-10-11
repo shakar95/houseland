@@ -91,39 +91,60 @@ export function PropertyDetailPage() {
         </section>
 
         <section className="property-detail-info">
-          <span className="text-sm text-gold-500">{property.code}</span>
-          <h1 className="property-detail-title">{title}</h1>
-          <p className="property-detail-price">{formatPrice(property.price, property.currency, lang)}</p>
+          <div className="flex items-center justify-between gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-gold-500/30 bg-gold-500/10 px-3 py-1 text-xs font-bold text-gold-300 shadow-sm">
+              <span className="h-1.5 w-1.5 rounded-full bg-gold-400 animate-pulse" />
+              #{property.code}
+            </span>
+            <span className="inline-flex items-center rounded-xl border border-royal-800 bg-royal-900/80 px-2.5 py-1 text-xs font-semibold text-royal-300">
+              {enumLabel(property.transactionType)}
+            </span>
+          </div>
+
+          <h1 className="property-detail-title mt-2.5">{title}</h1>
+          <p className="property-detail-price font-display text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-gold-300 via-gold-400 to-gold-500">
+            {formatPrice(property.price, property.currency, lang)}
+          </p>
           <p className="property-detail-meta text-royal-300">
             {enumLabel(property.transactionType)} · {enumLabel(property.propertyType)} · {getNeighborhoodLabelByName(property.neighborhood, neighborhoods, lang)}
           </p>
 
           <div className="property-detail-stats">
             <div className="property-detail-stat">
-              <Maximize className="shrink-0 text-gold-500" />
+              <div className="property-detail-stat-icon">
+                <Maximize className="h-4 w-4" />
+              </div>
               <span>{formatCountLabel(t.property.areaSqm, property.areaSqm, lang)}</span>
             </div>
             {property.bedrooms != null && (
               <div className="property-detail-stat">
-                <Bed className="shrink-0 text-gold-500" />
+                <div className="property-detail-stat-icon">
+                  <Bed className="h-4 w-4" />
+                </div>
                 <span>{pickCountLabel(property.bedrooms, t.property.bedroom, t.property.bedrooms, lang)}</span>
               </div>
             )}
             {property.bathrooms != null && (
               <div className="property-detail-stat">
-                <Bath className="shrink-0 text-gold-500" />
+                <div className="property-detail-stat-icon">
+                  <Bath className="h-4 w-4" />
+                </div>
                 <span>{pickCountLabel(property.bathrooms, t.property.bathroom, t.property.bathrooms, lang)}</span>
               </div>
             )}
             {property.floors != null && (
               <div className="property-detail-stat">
-                <Layers className="shrink-0 text-gold-500" />
+                <div className="property-detail-stat-icon">
+                  <Layers className="h-4 w-4" />
+                </div>
                 <span>{formatCountLabel(t.property.floors, property.floors, lang)}</span>
               </div>
             )}
             {property.facing && (
               <div className="property-detail-stat property-detail-stat--wide">
-                <Compass className="shrink-0 text-gold-500" />
+                <div className="property-detail-stat-icon">
+                  <Compass className="h-4 w-4" />
+                </div>
                 <span>
                   {t.property.facing}: {enumLabel(property.facing)}
                 </span>
@@ -131,7 +152,9 @@ export function PropertyDetailPage() {
             )}
             {property.frontageMeters != null && (
               <div className="property-detail-stat">
-                <Ruler className="shrink-0 text-gold-500" />
+                <div className="property-detail-stat-icon">
+                  <Ruler className="h-4 w-4" />
+                </div>
                 <span>
                   {t.property.frontage}: {formatNumber(property.frontageMeters, lang)} m
                 </span>
@@ -139,7 +162,9 @@ export function PropertyDetailPage() {
             )}
             {property.streetWidth != null && (
               <div className="property-detail-stat">
-                <Route className="shrink-0 text-gold-500" />
+                <div className="property-detail-stat-icon">
+                  <Route className="h-4 w-4" />
+                </div>
                 <span>
                   {t.property.streetWidth}: {formatNumber(property.streetWidth, lang)} m
                   {property.isCorner && property.streetWidth2 != null &&
@@ -150,7 +175,9 @@ export function PropertyDetailPage() {
             )}
             {property.nearestLandmark && (
               <div className="property-detail-stat property-detail-stat--wide">
-                <MapPin className="shrink-0 text-gold-500" />
+                <div className="property-detail-stat-icon">
+                  <MapPin className="h-4 w-4" />
+                </div>
                 <span>
                   {t.property.nearestLandmark}: {property.nearestLandmark}
                 </span>
@@ -171,14 +198,14 @@ export function PropertyDetailPage() {
               target="_blank"
               rel="noreferrer"
               onClick={() => track('whatsapp')}
-              className="btn-outline-gold property-detail-btn"
+              className="btn-whatsapp property-detail-btn"
             >
               <MessageCircle className="h-4 w-4" /> {t.property.whatsapp}
             </a>
           </div>
           <p className="mt-2 text-xs text-royal-500">{t.property.privacyNote}</p>
 
-          <div className="relative mt-5 sm:mt-6">
+          <div className="relative mt-6 rounded-2xl border border-royal-800/80 bg-royal-900/35 p-4 sm:p-5 shadow-sm backdrop-blur-sm">
             <div
               ref={descRef}
               onClick={() => {
@@ -209,7 +236,7 @@ export function PropertyDetailPage() {
                     descRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                   }
                 }}
-                className="mt-2.5 inline-flex items-center gap-1.5 rounded-lg border border-gold-500/30 bg-gold-500/10 px-3 py-1.5 text-xs font-semibold text-gold-400 hover:bg-gold-500/20 hover:text-gold-300 transition-all cursor-pointer"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-gold-500/30 bg-gold-500/10 px-3.5 py-2 text-xs font-semibold text-gold-400 hover:bg-gold-500/20 hover:text-gold-300 active:scale-95 transition-all cursor-pointer"
               >
                 {isExpanded ? (
                   <>
@@ -228,9 +255,19 @@ export function PropertyDetailPage() {
         </section>
       </div>
 
-      <section className="property-detail-map mt-10 sm:mt-12">
-        <h2 className="font-display text-xl text-gold-400 sm:text-2xl">{t.property.location}</h2>
-        <div className="mt-4">
+      <section className="property-detail-map mt-8 sm:mt-10 rounded-2xl border border-royal-800/80 bg-royal-900/35 p-4 sm:p-5 shadow-sm backdrop-blur-sm">
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-gold-500/20 bg-gold-500/10 text-gold-400">
+              <MapPin className="h-4 w-4" />
+            </div>
+            <h2 className="font-display text-lg font-bold text-gold-300 sm:text-xl">{t.property.location}</h2>
+          </div>
+          <span className="text-xs font-medium text-royal-400">
+            {getNeighborhoodLabelByName(property.neighborhood, neighborhoods, lang)}
+          </span>
+        </div>
+        <div className="overflow-hidden rounded-xl border border-royal-800/60 shadow-inner">
           <ObfuscatedMap neighborhood={property.neighborhood} />
         </div>
       </section>

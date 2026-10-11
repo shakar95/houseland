@@ -5,7 +5,7 @@ import path from 'path';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
-  const apiPort = env.PORT || '3002';
+  const apiTarget = env.VITE_API_URL || (env.DATABASE_URL ? `http://localhost:${env.PORT || '3002'}` : 'https://houseland-2kbm.onrender.com');
 
   return {
     plugins: [react(), tailwindcss()],
@@ -15,7 +15,11 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5173,
       proxy: {
-        '/api': { target: `http://localhost:${apiPort}`, changeOrigin: true },
+        '/api': {
+          target: apiTarget,
+          changeOrigin: true,
+          secure: false,
+        },
       },
     },
   };

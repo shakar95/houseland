@@ -50,6 +50,31 @@ body {
   overscroll-behavior-y: none;
 }
 
+*,
+*::before,
+*::after {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a,
+input,
+select,
+textarea,
+[role='button'] {
+  touch-action: manipulation;
+}
+
+button,
+a,
+[role='button'],
+.bottom-nav,
+.filter-pill,
+.filter-transaction-btn {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 /* Kurdish & Arabic: Noto — correct cursive joining for ڵ/ڕ/ێ/ە + ک */
 html[lang='ku'] body,
 html[lang='ar'] body,
@@ -182,7 +207,7 @@ html[dir='rtl'] * {
 }
 
 .bottom-nav-item {
-  @apply relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 py-1 text-[10px] font-medium text-royal-200 transition-colors duration-200;
+  @apply relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 py-1 text-[10px] font-medium text-royal-200 transition-all duration-150 active:scale-90;
 }
 
 .bottom-nav-item-pill {
@@ -190,16 +215,16 @@ html[dir='rtl'] * {
 }
 
 .bottom-nav-item-label {
-  @apply max-w-full truncate px-1;
+  @apply max-w-full truncate px-1 transition-colors duration-150;
 }
 
 .bottom-nav-item-active {
-  @apply text-gold-300;
+  @apply text-gold-300 font-semibold;
 }
 
 .bottom-nav-item-active .bottom-nav-item-pill {
-  background: rgb(212 160 23 / 0.18);
-  box-shadow: inset 0 0 0 1px rgb(212 160 23 / 0.12);
+  background: rgb(212 160 23 / 0.22);
+  box-shadow: inset 0 0 0 1px rgb(212 160 23 / 0.25), 0 0 12px rgb(212 160 23 / 0.15);
 }
 
 .bottom-nav-fab {
@@ -207,16 +232,16 @@ html[dir='rtl'] * {
 }
 
 .bottom-nav-fab-btn {
-  @apply flex flex-col items-center;
+  @apply flex flex-col items-center active:scale-90 transition-transform duration-150;
 }
 
 .bottom-nav-fab-circle {
-  @apply flex h-[3.25rem] w-[3.25rem] items-center justify-center rounded-full bg-gradient-to-br from-gold-400 to-gold-600 text-royal-950 shadow-lg shadow-gold-500/35 ring-[3px] ring-white/10 transition active:scale-95;
+  @apply flex h-[3.25rem] w-[3.25rem] items-center justify-center rounded-full bg-gradient-to-br from-gold-300 via-gold-400 to-gold-600 text-royal-950 shadow-lg shadow-gold-500/40 ring-[3px] ring-white/15 transition-all duration-150 active:scale-95 hover:scale-105;
   backdrop-filter: blur(8px);
 }
 
 .bottom-nav-fab-label {
-  @apply mt-1 max-w-full truncate px-1 text-[10px] font-semibold text-gold-300;
+  @apply mt-1 max-w-full truncate px-1 text-[10px] font-bold text-gold-300;
 }
 
 /* ——— Filter bar ——— */
@@ -606,29 +631,29 @@ html[dir='rtl'] * {
 
 /* ——— Property grid (Instagram profile style) ——— */
 .property-grid-tile {
-  @apply relative block aspect-square overflow-hidden bg-royal-900 transition active:opacity-90;
+  @apply relative block aspect-square overflow-hidden bg-royal-900 transition-all duration-150 active:scale-[0.97] active:opacity-90;
 }
 
 .property-grid-tile img {
-  @apply h-full w-full object-cover;
+  @apply h-full w-full object-cover transition-transform duration-300;
   font-size: 0;
   color: transparent;
 }
 
 .property-grid-tile-overlay {
-  @apply pointer-events-none absolute inset-0 bg-gradient-to-t from-royal-950/90 via-royal-950/10 to-transparent;
+  @apply pointer-events-none absolute inset-0 bg-gradient-to-t from-royal-950/95 via-royal-950/20 to-transparent;
 }
 
 .property-grid-tile-multi {
-  @apply absolute end-2 top-2 flex h-6 w-6 items-center justify-center rounded-md bg-royal-950/75 text-white backdrop-blur-sm;
+  @apply absolute end-2 top-2 flex h-6 w-6 items-center justify-center rounded-lg border border-white/15 bg-royal-950/80 text-white shadow-sm backdrop-blur-md;
 }
 
 .property-grid-tile-play {
-  @apply absolute start-0 end-0 top-0 bottom-0 z-[1] m-auto flex h-10 w-10 items-center justify-center rounded-full bg-royal-950/70 text-white shadow-lg backdrop-blur-sm;
+  @apply absolute start-0 end-0 top-0 bottom-0 z-[1] m-auto flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-royal-950/80 text-white shadow-xl backdrop-blur-md transition-transform group-active:scale-90;
 }
 
 .property-grid-tile-type {
-  @apply absolute start-2 top-2 max-w-[calc(100%-2.5rem)] truncate rounded-md bg-gold-500/95 px-1.5 py-0.5 text-[9px] font-bold text-royal-950;
+  @apply absolute start-2 top-2 max-w-[calc(100%-2.5rem)] truncate rounded-lg bg-gold-500/95 px-2 py-0.5 text-[9px] font-extrabold text-royal-950 shadow-sm backdrop-blur-sm;
 }
 
 .property-grid-tile-meta {
@@ -636,11 +661,11 @@ html[dir='rtl'] * {
 }
 
 .property-grid-tile-price {
-  @apply text-sm font-bold leading-tight text-gold-300;
+  @apply text-xs sm:text-sm font-extrabold leading-tight text-gold-300 drop-shadow-sm;
 }
 
 .property-grid-tile-code {
-  @apply rounded bg-royal-950/60 px-1 py-0.5 text-[9px] font-medium text-royal-200 backdrop-blur-sm;
+  @apply rounded-md border border-white/10 bg-royal-950/75 px-1.5 py-0.5 text-[9px] font-bold text-royal-200 backdrop-blur-md;
 }
 
 .property-grid-skeleton {
@@ -1089,11 +1114,15 @@ html[dir='rtl'] * {
 }
 
 .property-detail-stat {
-  @apply flex min-w-0 items-center gap-2 rounded-xl border border-royal-800/60 bg-royal-900/35 px-3 py-2.5;
+  @apply flex min-w-0 items-center gap-3 rounded-2xl border border-royal-800/70 bg-gradient-to-br from-royal-900/60 to-royal-950/80 p-3 shadow-sm transition hover:border-royal-700/80;
+}
+
+.property-detail-stat-icon {
+  @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-gold-500/20 bg-gold-500/10 text-gold-400 shadow-sm;
 }
 
 .property-detail-stat span {
-  @apply min-w-0 leading-snug;
+  @apply min-w-0 leading-snug font-medium text-royal-100;
 }
 
 .property-detail-stat--wide {
@@ -1107,11 +1136,15 @@ html[dir='rtl'] * {
 }
 /* ——— Legacy / shared ——— */
 .btn-gold {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-gold-400 to-gold-500 px-5 py-2.5 font-semibold text-royal-950 shadow-lg shadow-gold-500/20 transition active:scale-[0.98];
+  @apply inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-gold-400 via-gold-500 to-gold-600 px-5 py-2.5 font-bold text-royal-950 shadow-lg shadow-gold-500/25 transition-all duration-150 active:scale-[0.96] hover:brightness-105;
 }
 
 .btn-outline-gold {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl border border-gold-400/60 px-5 py-2.5 font-medium text-gold-300 transition active:scale-[0.98];
+  @apply inline-flex items-center justify-center gap-2 rounded-2xl border border-gold-400/50 bg-gold-500/10 px-5 py-2.5 font-semibold text-gold-300 shadow-sm backdrop-blur-sm transition-all duration-150 active:scale-[0.96] hover:bg-gold-500/20 hover:border-gold-400;
+}
+
+.btn-whatsapp {
+  @apply inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-500/40 bg-emerald-500/15 px-5 py-2.5 font-bold text-emerald-300 shadow-sm shadow-emerald-500/10 backdrop-blur-sm transition-all duration-150 active:scale-[0.96] hover:bg-emerald-500/25 hover:border-emerald-400;
 }
 
 .card-luxury {

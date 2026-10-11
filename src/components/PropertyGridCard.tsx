@@ -11,6 +11,7 @@ export function PropertyGridCard({ property }: { property: Property }) {
   const { enumLabel, propertyTitle, lang } = useLanguage();
   const rootRef = useRef<HTMLAnchorElement>(null);
   const [imgError, setImgError] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
 
   const rawImg = property.images?.[0] || property.thumbnailUrl;
   const img = resolveThumbnailUrl(rawImg, property.videoLink);
@@ -43,7 +44,7 @@ export function PropertyGridCard({ property }: { property: Property }) {
     <Link
       ref={rootRef}
       to={`/property/${property.code}`}
-      className="property-grid-tile"
+      className="property-grid-tile group"
       aria-label={title}
       onMouseEnter={() => {
         if (hasVideo) void prefetchPropertyVideo(property.videoLink);
@@ -57,19 +58,21 @@ export function PropertyGridCard({ property }: { property: Property }) {
         alt=""
         loading="lazy"
         referrerPolicy="no-referrer"
+        onLoad={() => setImgLoaded(true)}
         onError={() => {
           if (!imgError) setImgError(true);
         }}
+        className={`transition-opacity duration-300 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
       />
       <div className="property-grid-tile-overlay" />
       {hasVideo && (
         <span className="property-grid-tile-play" aria-hidden="true">
-          <Play className="h-4 w-4 fill-current" />
+          <Play className="h-4 w-4 fill-current translate-x-0.5 rtl:-translate-x-0.5" />
         </span>
       )}
       {hasMultipleImages && (
         <span className="property-grid-tile-multi" aria-hidden="true">
-          <Images className="h-3.5 w-3.5" />
+          <Images className="h-3 w-3" />
         </span>
       )}
       <span className="property-grid-tile-type">
@@ -77,7 +80,7 @@ export function PropertyGridCard({ property }: { property: Property }) {
       </span>
       <div className="property-grid-tile-meta">
         <span className="property-grid-tile-price">{formatPrice(property.price, property.currency, lang)}</span>
-        <span className="property-grid-tile-code">{property.code}</span>
+        <span className="property-grid-tile-code">#{property.code}</span>
       </div>
     </Link>
   );

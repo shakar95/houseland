@@ -8,3 +8,5 @@ dist-server
 prisma/*.db
 Readme.txt
 .chrome-session/
+houseland_posts.json
+houseland_photos.json
