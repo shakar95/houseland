@@ -23,20 +23,36 @@ type Props = {
 
 function buildSlides(images: string[], videoUrl?: string | null, imageCount?: number): Slide[] {
   const all = images.filter(Boolean).map((u) => u.replace(/&amp;/gi, '&'));
-  // imageCount===0 means images[] only holds a video poster — don't show it as a photo slide
-  const imgs = imageCount === 0 && videoUrl?.trim() ? [] : all;
   const url = videoUrl?.trim();
+
+  // If there is a video and the post does not have a separate multi-image photo gallery
+  // (e.g. imageCount is 0, or all.length <= 1, or images only hold the generated video poster)
+  const isVideoOnly = Boolean(
+    url && (
+      imageCount === 0 ||
+      all.length === 0 ||
+      all.length === 1 ||
+      all.every((img) => img.includes('video-poster') || img.includes('t15.'))
+    )
+  );
+
   const slides: Slide[] = [];
 
-  if (imgs.length > 0) {
-    for (let i = 0; i < imgs.length; i++) {
-      slides.push({ type: 'image', src: imgs[i], key: `img-${i}-${imgs[i]}` });
-    }
+  if (isVideoOnly && url) {
+    // Only video slide! Do not show the added thumbnail poster as a photo slide.
+    slides.push({ type: 'video', url, key: 'video' });
+    return slides;
   }
 
+  // If there's a video along with real photos: put video at index 0 so it's the primary media
   if (url) {
-    const at = imgs.length > 0 ? Math.min(1, slides.length) : 0;
-    slides.splice(at, 0, { type: 'video', url, key: 'video' });
+    slides.push({ type: 'video', url, key: 'video' });
+  }
+
+  if (all.length > 0) {
+    for (let i = 0; i < all.length; i++) {
+      slides.push({ type: 'image', src: all[i], key: `img-${i}-${all[i]}` });
+    }
   }
 
   if (slides.length === 0) {
@@ -81,42 +97,26 @@ export function PropertyImageGallery({ images, videoUrl, imageCount, alt, classN
   const isVideoOnly = useMemo(() => {
     if (!videoUrl?.trim()) return false;
     if (imageCount === 0) return true;
+    if (images.filter(Boolean).length <= 1) return true;
     return slides.length === 1 && slides[0]?.type === 'video';
-  }, [videoUrl, imageCount, slides]);
+  }, [videoUrl, imageCount, images, slides]);
   const prevIndexRef = useRef(index);
   const [videoKey, setVideoKey] = useState(0);
-  const autoFullscreenFor = useRef<string | null>(null);
   const videoIsActive = videoSlideIndex >= 0 && index === videoSlideIndex;
 
   useEffect(() => {
     if (videoUrl) void prefetchPropertyVideo(videoUrl);
   }, [videoUrl]);
 
+  // Immediately focus on the video slide and ensure it's loaded and autoplayed
   useEffect(() => {
-    setIndex(0);
-    if (!isVideoOnly) {
-      setIsVideoFullscreen(false);
-      autoFullscreenFor.current = null;
+    const targetIdx = videoSlideIndex >= 0 ? videoSlideIndex : 0;
+    setIndex(targetIdx);
+    setLoadedSlides((prev) => new Set(prev).add(targetIdx));
+    if (isVideoOnly) {
+      setVideoKey((k) => k + 1);
     }
-  }, [videoUrl, images, isVideoOnly]);
-
-  // Video-only listings: open immersive fullscreen with autoplay immediately
-  useEffect(() => {
-    if (!isVideoOnly || !videoUrl) return;
-    if (autoFullscreenFor.current === videoUrl) return;
-    autoFullscreenFor.current = videoUrl;
-
-    const videoIdx = videoSlideIndex >= 0 ? videoSlideIndex : 0;
-    setIndex(videoIdx);
-    setLoadedSlides((prev) => new Set(prev).add(videoIdx));
-    setIsVideoFullscreen(true);
-    setVideoKey((k) => k + 1);
-
-    const timer = window.setTimeout(() => {
-      void videoContainerRef.current?.requestFullscreen?.().catch(() => {});
-    }, 80);
-    return () => window.clearTimeout(timer);
-  }, [isVideoOnly, videoUrl, videoSlideIndex]);
+  }, [videoUrl, images, isVideoOnly, videoSlideIndex]);
 
   useEffect(() => {
     if (!isVideoFullscreen) return;
