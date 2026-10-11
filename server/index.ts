@@ -261,6 +261,24 @@ app.post('/api/admin/neighborhoods/merge', requireAuth, requireRole('ADMIN'), wr
 }));
 
 // ——— Properties (public) ———
+function getPropertyOrderClause(sortParam?: unknown) {
+  const s = String(sortParam || '').toLowerCase();
+  if (s === 'code_asc') {
+    return sql`CASE WHEN ${properties.code} ~ '^[0-9]+$' THEN (${properties.code})::bigint ELSE 999999999 END ASC, ${properties.code} ASC, ${properties.createdAt} ASC`;
+  }
+  if (s === 'price_asc') {
+    return sql`${properties.price} ASC`;
+  }
+  if (s === 'price_desc') {
+    return sql`${properties.price} DESC`;
+  }
+  if (s === 'created_desc') {
+    return desc(properties.createdAt);
+  }
+  // Default: Sort by property code numerically from largest to smallest (descending)
+  return sql`CASE WHEN ${properties.code} ~ '^[0-9]+$' THEN (${properties.code})::bigint ELSE 0 END DESC, ${properties.code} DESC, ${properties.createdAt} DESC`;
+}
+
 app.get('/api/properties', wrap(async (req, res) => {
   const isAdmin = req.query.status !== undefined;
   const whereCond = buildDrizzlePropertyWhere(req.query as Record<string, unknown>, isAdmin);
@@ -272,13 +290,15 @@ app.get('/api/properties', wrap(async (req, res) => {
   const page = Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 1;
   const offset = (page - 1) * take;
 
+  const orderClause = getPropertyOrderClause(req.query.sort);
+
   if (isAdmin) {
     let countQuery = db.select({ count: sql<number>`count(*)::int` }).from(properties);
     if (whereCond) countQuery = countQuery.where(whereCond) as any;
 
     let listQuery = db.select(ADMIN_LIST_COLUMNS).from(properties);
     if (whereCond) listQuery = listQuery.where(whereCond) as any;
-    listQuery = listQuery.orderBy(desc(properties.createdAt)).limit(take).offset(offset) as any;
+    listQuery = listQuery.orderBy(orderClause).limit(take).offset(offset) as any;
 
     // Run count + page fetch in parallel — sequential was making tab switches feel slow
     const [[{ count: totalCount }], results] = await Promise.all([countQuery, listQuery]);
@@ -303,7 +323,7 @@ app.get('/api/properties', wrap(async (req, res) => {
 
   let query = db.select(PUBLIC_LIST_COLUMNS).from(properties);
   if (whereCond) query = query.where(whereCond) as any;
-  query = query.orderBy(desc(properties.createdAt)).limit(take).offset(offset) as any;
+  query = query.orderBy(orderClause).limit(take).offset(offset) as any;
 
   const results = await query;
 
