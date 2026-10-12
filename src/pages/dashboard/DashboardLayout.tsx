@@ -47,9 +47,9 @@ export function DashboardLayout() {
   const BackIcon = rtl ? ChevronRight : ChevronLeft;
 
   return (
-    <div className="mx-auto flex min-h-[100dvh] max-w-7xl flex-col lg:flex-row lg:gap-8 lg:px-6 lg:py-8">
+    <div className="mx-auto flex min-h-[100dvh] w-full max-w-7xl flex-col overflow-x-hidden lg:flex-row lg:gap-8 lg:px-6 lg:py-8">
       {/* Mobile Sticky Header & Horizontal Tabs Navigation */}
-      <div className="sticky top-0 z-40 border-b border-royal-800/80 bg-royal-950/95 px-4 pt-3 pb-2 backdrop-blur-2xl lg:hidden">
+      <div className="sticky top-0 z-40 w-full max-w-full overflow-hidden border-b border-royal-800/80 bg-royal-950/95 px-4 pt-3 pb-2 backdrop-blur-2xl lg:hidden">
         <div className="flex items-center justify-between gap-3 pb-2.5">
           <div className="flex items-center gap-2">
             <Link
@@ -74,7 +74,7 @@ export function DashboardLayout() {
         </div>
 
         {/* Scrollable horizontal pills for mobile */}
-        <nav className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+        <nav className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none w-full max-w-full min-w-0">
           {links.map(({ to, label, icon: Icon, end }) => {
             const active = end ? location.pathname === '/dashboard' : location.pathname.startsWith(to);
             return (
@@ -162,7 +162,7 @@ export function DashboardLayout() {
       </aside>
 
       {/* Main Content Area */}
-      <main className="min-w-0 flex-1 px-4 py-4 lg:px-0 lg:py-0">
+      <main className="min-w-0 flex-1 px-4 py-4 lg:px-0 lg:py-0 w-full max-w-full overflow-x-hidden">
         <Outlet />
       </main>
     </div>

@@ -373,7 +373,7 @@ export function NeighborhoodsAdminPage() {
             {loading ? 'Refreshing...' : 'Refresh Data'}
           </button>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={openCreate}
@@ -467,8 +467,8 @@ export function NeighborhoodsAdminPage() {
         />
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-royal-800 bg-royal-900/30">
-        <table className="w-full text-left text-sm">
+      <div className="overflow-x-auto w-full max-w-full rounded-xl border border-royal-800 bg-royal-900/30">
+        <table className="w-full text-left text-sm min-w-[600px]">
           <thead className="border-b border-royal-800 text-royal-400">
             <tr>
               <th className="px-4 py-3">Name</th>

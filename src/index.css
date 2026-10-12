@@ -45,9 +45,23 @@
   --font-arabic: "Noto Naskh Arabic", "Noto Sans Arabic", "Segoe UI", Tahoma, sans-serif;
 }
 
+html {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
 body {
   @apply bg-royal-950 text-white font-sans antialiased;
   overscroll-behavior-y: none;
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+}
+
+#root {
+  overflow-x: hidden;
+  max-width: 100%;
+  width: 100%;
 }
 
 *,

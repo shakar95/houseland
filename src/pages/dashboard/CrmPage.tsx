@@ -566,33 +566,33 @@ export function CrmPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
           {/* View Mode Toggle */}
           <div className="flex items-center rounded-xl border border-royal-700 bg-royal-950 p-1">
             <button
               type="button"
               onClick={() => setViewMode('kanban')}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+              className={`flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs font-semibold transition ${
                 viewMode === 'kanban' ? 'bg-gold-500 text-royal-950 shadow-sm' : 'text-royal-300 hover:text-white'
               }`}
             >
               <Kanban className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">بۆرد (Kanban)</span>
+              <span className="hidden xs:inline">بۆرد</span>
             </button>
             <button
               type="button"
               onClick={() => setViewMode('list')}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+              className={`flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs font-semibold transition ${
                 viewMode === 'list' ? 'bg-gold-500 text-royal-950 shadow-sm' : 'text-royal-300 hover:text-white'
               }`}
             >
               <List className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">لیست (List)</span>
+              <span className="hidden xs:inline">لیست</span>
             </button>
             <button
               type="button"
               onClick={() => setViewMode('contacts')}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+              className={`flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs font-semibold transition ${
                 viewMode === 'contacts' ? 'bg-gold-500 text-royal-950 shadow-sm' : 'text-royal-300 hover:text-white'
               }`}
             >
@@ -608,7 +608,7 @@ export function CrmPage() {
             type="button"
             onClick={loadData}
             disabled={loading}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-royal-700 bg-royal-900/80 text-royal-200 transition hover:border-gold-500/50 hover:text-gold-300 active:scale-95 disabled:opacity-50"
+            className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl border border-royal-700 bg-royal-900/80 text-royal-200 transition hover:border-gold-500/50 hover:text-gold-300 active:scale-95 disabled:opacity-50"
             title="نوێکردنەوە"
           >
             <RotateCw className={`h-4 w-4 ${loading ? 'animate-spin text-gold-400' : ''}`} />
@@ -621,7 +621,7 @@ export function CrmPage() {
               setContactForm({ customerName: '', phone: '' });
               setShowAddContactModal(true);
             }}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-royal-700 bg-royal-900/80 px-3.5 py-2.5 text-xs font-semibold text-royal-200 transition hover:border-gold-500/50 hover:text-gold-300 active:scale-95"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-royal-700 bg-royal-900/80 px-2.5 py-2 sm:px-3.5 sm:py-2.5 text-xs font-semibold text-royal-200 transition hover:border-gold-500/50 hover:text-gold-300 active:scale-95"
             title="تۆمارکردنی خێرای کۆنتاکت بە تەنها ناو و تەلەفۆن"
           >
             <BookUser className="h-4 w-4 text-gold-400" />
@@ -650,7 +650,7 @@ export function CrmPage() {
               });
               setShowAddModal(true);
             }}
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-gold-400 to-gold-600 px-4 py-2.5 text-xs font-bold text-royal-950 shadow-md shadow-gold-500/20 transition hover:brightness-105 active:scale-95 shrink-0"
+            className="inline-flex items-center gap-1.5 sm:gap-2 rounded-xl bg-gradient-to-r from-gold-400 to-gold-600 px-3 py-2 sm:px-4 sm:py-2.5 text-xs font-bold text-royal-950 shadow-md shadow-gold-500/20 transition hover:brightness-105 active:scale-95 shrink-0"
           >
             <UserPlus className="h-4 w-4" />
             <span>داواکاری نوێ</span>
@@ -660,27 +660,27 @@ export function CrmPage() {
 
       {/* Summary KPI Strip */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
-        <div className="rounded-2xl border border-royal-800/80 bg-gradient-to-br from-royal-900/60 to-royal-950/80 p-3.5 shadow-sm">
-          <span className="text-xs font-medium text-royal-300">سەرجەم موشتەرییەکان</span>
+        <div className="rounded-2xl border border-royal-800/80 bg-gradient-to-br from-royal-900/60 to-royal-950/80 p-3 sm:p-3.5 shadow-sm min-w-0">
+          <span className="text-xs font-medium text-royal-300 truncate block">سەرجەم موشتەرییەکان</span>
           <p className="mt-2 text-2xl font-black text-white">{entries.length}</p>
         </div>
 
-        <div className="rounded-2xl border border-blue-500/30 bg-gradient-to-br from-blue-950/30 to-royal-950/80 p-3.5 shadow-sm">
-          <span className="text-xs font-medium text-blue-300">کڕیار و داواکاری</span>
+        <div className="rounded-2xl border border-blue-500/30 bg-gradient-to-br from-blue-950/30 to-royal-950/80 p-3 sm:p-3.5 shadow-sm min-w-0">
+          <span className="text-xs font-medium text-blue-300 truncate block">کڕیار و داواکاری</span>
           <p className="mt-2 text-2xl font-black text-blue-400">
             {entries.filter((e) => getClientRole(e) === 'BUYER' || getClientRole(e) === 'TENANT').length}
           </p>
         </div>
 
-        <div className="rounded-2xl border border-purple-500/30 bg-gradient-to-br from-purple-950/30 to-royal-950/80 p-3.5 shadow-sm">
-          <span className="text-xs font-medium text-purple-300">فرۆشیار و خاوەن موڵک</span>
+        <div className="rounded-2xl border border-purple-500/30 bg-gradient-to-br from-purple-950/30 to-royal-950/80 p-3 sm:p-3.5 shadow-sm min-w-0">
+          <span className="text-xs font-medium text-purple-300 truncate block">فرۆشیار و خاوەن موڵک</span>
           <p className="mt-2 text-2xl font-black text-purple-400">
             {entries.filter((e) => getClientRole(e) === 'SELLER' || getClientRole(e) === 'LANDLORD').length}
           </p>
         </div>
 
-        <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/30 to-royal-950/80 p-3.5 shadow-sm">
-          <span className="text-xs font-medium text-emerald-300">گرێبەستی سەرکەوتوو</span>
+        <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/30 to-royal-950/80 p-3 sm:p-3.5 shadow-sm min-w-0">
+          <span className="text-xs font-medium text-emerald-300 truncate block">گرێبەستی سەرکەوتوو</span>
           <p className="mt-2 text-2xl font-black text-emerald-400">
             {entries.filter((e) => e.status === 'CLOSED').length}
           </p>
@@ -688,7 +688,7 @@ export function CrmPage() {
       </div>
 
       {/* Filter Toolbar Card */}
-      <div className="rounded-3xl border border-royal-800/80 bg-royal-900/40 p-4 shadow-xl backdrop-blur-md space-y-3">
+      <div className="rounded-3xl border border-royal-800/80 bg-royal-900/40 p-3.5 sm:p-4 shadow-xl backdrop-blur-md space-y-3 min-w-0 w-full">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* Real-time search */}
           <div className="relative">
@@ -733,7 +733,7 @@ export function CrmPage() {
 
       {/* VIEW MODE 1: KANBAN PIPELINE BOARD */}
       {viewMode === 'kanban' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-start overflow-x-auto pb-4">
+        <div className="flex lg:grid lg:grid-cols-5 gap-4 items-start overflow-x-auto pb-4 w-full max-w-full min-w-0 snap-x">
           {STAGES.map((st) => {
             const stageLeads = getStageEntries(st.id);
             const stageLabel = lang === 'ar' ? st.labelAr : lang === 'en' ? st.labelEn : st.labelKu;
@@ -741,7 +741,7 @@ export function CrmPage() {
             return (
               <div
                 key={st.id}
-                className="rounded-3xl border border-royal-800/80 bg-royal-900/30 p-3.5 shadow-md flex flex-col min-w-[17rem]"
+                className="rounded-3xl border border-royal-800/80 bg-royal-900/30 p-3.5 shadow-md flex flex-col w-[85vw] sm:w-72 lg:w-auto shrink-0 lg:shrink min-w-0 snap-start"
               >
                 {/* Stage Header */}
                 <div className="flex items-center justify-between pb-3 border-b border-royal-800/60">
@@ -920,8 +920,8 @@ export function CrmPage() {
 
       {/* VIEW MODE 2: TABLE LIST VIEW */}
       {viewMode === 'list' && (
-        <div className="overflow-hidden rounded-3xl border border-royal-800/80 bg-royal-900/40 shadow-xl backdrop-blur-md">
-          <table className="w-full text-start text-xs">
+        <div className="overflow-x-auto w-full max-w-full rounded-3xl border border-royal-800/80 bg-royal-900/40 shadow-xl backdrop-blur-md">
+          <table className="w-full text-start text-xs min-w-[650px]">
             <thead className="border-b border-royal-800/80 bg-royal-950/70 text-royal-400 font-semibold uppercase">
               <tr>
                 <th className="py-3 px-4">ناوی کڕیار</th>

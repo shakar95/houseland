@@ -290,12 +290,12 @@ export function PropertiesPage() {
             چاودێری، پەسەندکردن، و دەستکاریکردنی هەموو موڵکە تۆمارکراوەکان لە سیستەمدا.
           </p>
         </div>
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
           <button
             type="button"
             onClick={reload}
             disabled={loading}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-royal-700 bg-royal-900/80 text-royal-200 transition hover:border-gold-500/50 hover:text-gold-300 active:scale-95 disabled:opacity-50"
+            className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl border border-royal-700 bg-royal-900/80 text-royal-200 transition hover:border-gold-500/50 hover:text-gold-300 active:scale-95 disabled:opacity-50"
             title="نوێکردنەوە"
           >
             <RotateCw className={`h-4 w-4 ${loading ? 'animate-spin text-gold-400' : ''}`} />
@@ -303,14 +303,14 @@ export function PropertiesPage() {
           <button
             type="button"
             onClick={() => setShowContractModal(true)}
-            className="inline-flex items-center gap-2 rounded-xl border border-gold-500/30 bg-gold-500/10 px-3.5 py-2.5 text-xs font-semibold text-gold-300 transition hover:bg-gold-500/20 active:scale-95"
+            className="inline-flex items-center gap-1.5 sm:gap-2 rounded-xl border border-gold-500/30 bg-gold-500/10 px-3 py-2 sm:px-3.5 sm:py-2.5 text-xs font-semibold text-gold-300 transition hover:bg-gold-500/20 active:scale-95"
           >
             <FileText className="h-4 w-4 text-gold-400" />
             <span className="hidden sm:inline">دروستکردنی گرێبەست</span>
           </button>
           <Link
             to="/submit"
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-gold-400 to-gold-600 px-4 py-2.5 text-xs font-bold text-royal-950 shadow-md shadow-gold-500/20 transition hover:brightness-105 active:scale-95"
+            className="inline-flex items-center gap-1.5 sm:gap-2 rounded-xl bg-gradient-to-r from-gold-400 to-gold-600 px-3 py-2 sm:px-4 sm:py-2.5 text-xs font-bold text-royal-950 shadow-md shadow-gold-500/20 transition hover:brightness-105 active:scale-95 shrink-0"
           >
             <PlusCircle className="h-4 w-4" />
             <span>موڵکی نوێ زیاد بکە</span>
@@ -319,44 +319,44 @@ export function PropertiesPage() {
       </div>
 
       {/* KPI Stats Widgets */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
-        <div className="rounded-2xl border border-royal-800/80 bg-gradient-to-br from-royal-900/60 to-royal-950/80 p-3.5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-royal-300">سەرجەم موڵکەکان</span>
-            <Building2 className="h-4 w-4 text-gold-400" />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4 w-full min-w-0">
+        <div className="rounded-2xl border border-royal-800/80 bg-gradient-to-br from-royal-900/60 to-royal-950/80 p-3 sm:p-3.5 shadow-sm min-w-0">
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-xs font-medium text-royal-300 truncate">سەرجەم موڵکەکان</span>
+            <Building2 className="h-4 w-4 text-gold-400 shrink-0" />
           </div>
           <p className="mt-2 text-2xl font-black text-white">{formatNum(statsSummary.total || meta.totalCount)}</p>
         </div>
 
-        <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/30 to-royal-950/80 p-3.5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-emerald-300">پەسەندکراو و چالاک</span>
-            <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+        <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/30 to-royal-950/80 p-3 sm:p-3.5 shadow-sm min-w-0">
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-xs font-medium text-emerald-300 truncate">پەسەندکراو و چالاک</span>
+            <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
           </div>
           <p className="mt-2 text-2xl font-black text-emerald-400">{formatNum(statsSummary.approved)}</p>
         </div>
 
-        <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-950/30 to-royal-950/80 p-3.5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-amber-300">چاوەڕوانی پەسەندکردن</span>
-            <Clock className="h-4 w-4 text-amber-400" />
+        <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-950/30 to-royal-950/80 p-3 sm:p-3.5 shadow-sm min-w-0">
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-xs font-medium text-amber-300 truncate">چاوەڕوانی پەسەندکردن</span>
+            <Clock className="h-4 w-4 text-amber-400 shrink-0" />
           </div>
           <p className="mt-2 text-2xl font-black text-amber-400">{formatNum(statsSummary.pending)}</p>
         </div>
 
-        <div className="rounded-2xl border border-blue-500/30 bg-gradient-to-br from-blue-950/30 to-royal-950/80 p-3.5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-blue-300">مامەڵەکراو (فرۆشراو/کرێ)</span>
-            <CheckSquare className="h-4 w-4 text-blue-400" />
+        <div className="rounded-2xl border border-blue-500/30 bg-gradient-to-br from-blue-950/30 to-royal-950/80 p-3 sm:p-3.5 shadow-sm min-w-0">
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-xs font-medium text-blue-300 truncate">مامەڵەکراو</span>
+            <CheckSquare className="h-4 w-4 text-blue-400 shrink-0" />
           </div>
           <p className="mt-2 text-2xl font-black text-blue-400">{formatNum(statsSummary.soldRented)}</p>
         </div>
       </div>
 
       {/* Filter Tabs & Search Controls Card */}
-      <div className="rounded-3xl border border-royal-800/80 bg-royal-900/40 p-4 shadow-xl backdrop-blur-md space-y-4">
+      <div className="rounded-3xl border border-royal-800/80 bg-royal-900/40 p-3.5 sm:p-4 shadow-xl backdrop-blur-md space-y-4 min-w-0 w-full">
         {/* Status Tabs Bar */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none w-full max-w-full min-w-0">
           {TABS.map((tTab) => {
             const active = tab === tTab.id;
             return (

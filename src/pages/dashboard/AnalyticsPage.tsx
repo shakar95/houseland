@@ -245,7 +245,7 @@ export function AnalyticsPage() {
         </div>
 
         {/* In-page Navigation Tabs */}
-        <div className="flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-royal-800 bg-royal-950/80 p-1.5 scrollbar-none">
+        <div className="flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-royal-800 bg-royal-950/80 p-1.5 scrollbar-none w-full sm:w-auto max-w-full min-w-0">
           <button
             type="button"
             onClick={() => setActiveTab('overview')}
@@ -294,57 +294,57 @@ export function AnalyticsPage() {
       </div>
 
       {/* Top Insights KPI Metric Cards */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4 w-full min-w-0">
         {/* Total Views */}
-        <div className="rounded-3xl border border-royal-800/80 bg-gradient-to-br from-royal-900/60 to-royal-950/80 p-4 shadow-sm backdrop-blur-md">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-royal-300">سەرجەم بینینەکان</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gold-500/15 text-gold-400 border border-gold-500/20">
-              <Eye className="h-4 w-4" />
+        <div className="rounded-3xl border border-royal-800/80 bg-gradient-to-br from-royal-900/60 to-royal-950/80 p-3.5 sm:p-4 shadow-sm backdrop-blur-md min-w-0">
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-xs font-medium text-royal-300 truncate">سەرجەم بینینەکان</span>
+            <div className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-xl bg-gold-500/15 text-gold-400 border border-gold-500/20">
+              <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </div>
           </div>
-          <p className="mt-3 text-2xl sm:text-3xl font-black text-white">{formatNum(totals.views)}</p>
-          <p className="mt-1 text-[11px] text-gold-400/90 font-medium">بینینی ڕاستەقینەی پۆستەکان</p>
+          <p className="mt-2 sm:mt-3 text-xl sm:text-3xl font-black text-white">{formatNum(totals.views)}</p>
+          <p className="mt-1 text-[10px] sm:text-[11px] text-gold-400/90 font-medium truncate">بینینی پۆستەکان</p>
         </div>
 
         {/* Total Inquiries */}
-        <div className="rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/30 to-royal-950/80 p-4 shadow-sm backdrop-blur-md">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-emerald-300">پەیوەندی کڕیاران</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
-              <MessageCircle className="h-4 w-4" />
+        <div className="rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/30 to-royal-950/80 p-3.5 sm:p-4 shadow-sm backdrop-blur-md min-w-0">
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-xs font-medium text-emerald-300 truncate">پەیوەندی کڕیاران</span>
+            <div className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
+              <MessageCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </div>
           </div>
-          <p className="mt-3 text-2xl sm:text-3xl font-black text-emerald-400">{formatNum(totalInquiries)}</p>
-          <p className="mt-1 text-[11px] text-emerald-300/80 font-medium">
+          <p className="mt-2 sm:mt-3 text-xl sm:text-3xl font-black text-emerald-400">{formatNum(totalInquiries)}</p>
+          <p className="mt-1 text-[10px] sm:text-[11px] text-emerald-300/80 font-medium truncate">
             تەلەفۆن ({totals.phone}) · واتسئاپ ({totals.whatsapp})
           </p>
         </div>
 
         {/* Engagement Rate */}
-        <div className="rounded-3xl border border-blue-500/30 bg-gradient-to-br from-blue-950/30 to-royal-950/80 p-4 shadow-sm backdrop-blur-md">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-blue-300">ڕێژەی بەشداری (Inquiry Rate)</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-500/15 text-blue-400 border border-blue-500/20">
-              <TrendingUp className="h-4 w-4" />
+        <div className="rounded-3xl border border-blue-500/30 bg-gradient-to-br from-blue-950/30 to-royal-950/80 p-3.5 sm:p-4 shadow-sm backdrop-blur-md min-w-0">
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-xs font-medium text-blue-300 truncate">ڕێژەی کارلێک</span>
+            <div className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-xl bg-blue-500/15 text-blue-400 border border-blue-500/20">
+              <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </div>
           </div>
-          <p className="mt-3 text-2xl sm:text-3xl font-black text-blue-400">{inquiryRate}%</p>
-          <p className="mt-1 text-[11px] text-blue-300/80 font-medium">ڕێژەی ئەوانەی پەیوەندی دەکەن</p>
+          <p className="mt-2 sm:mt-3 text-xl sm:text-3xl font-black text-blue-400">{inquiryRate}%</p>
+          <p className="mt-1 text-[10px] sm:text-[11px] text-blue-300/80 font-medium truncate">بەشداری موشتەری</p>
         </div>
 
         {/* Active Inventory */}
-        <div className="rounded-3xl border border-purple-500/30 bg-gradient-to-br from-purple-950/30 to-royal-950/80 p-4 shadow-sm backdrop-blur-md">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-purple-300">کۆی موڵکەکان</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-500/15 text-purple-400 border border-purple-500/20">
-              <Building2 className="h-4 w-4" />
+        <div className="rounded-3xl border border-purple-500/30 bg-gradient-to-br from-purple-950/30 to-royal-950/80 p-3.5 sm:p-4 shadow-sm backdrop-blur-md min-w-0">
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-xs font-medium text-purple-300 truncate">کۆی موڵکەکان</span>
+            <div className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-xl bg-purple-500/15 text-purple-400 border border-purple-500/20">
+              <Building2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </div>
           </div>
-          <p className="mt-3 text-2xl sm:text-3xl font-black text-purple-400">
+          <p className="mt-2 sm:mt-3 text-xl sm:text-3xl font-black text-purple-400">
             {formatNum(properties.length || data?.active || 0)}
           </p>
-          <p className="mt-1 text-[11px] text-purple-300/80 font-medium">
+          <p className="mt-1 text-[10px] sm:text-[11px] text-purple-300/80 font-medium truncate">
             چالاک ({data?.active || 0}) · فرۆشراو ({data?.sold || 0})
           </p>
         </div>
@@ -364,7 +364,7 @@ export function AnalyticsPage() {
                 </div>
                 <span className="text-[11px] text-royal-400 font-medium">سەرجەم تۆمارەکان</span>
               </div>
-              <div className="h-64">
+              <div className="h-64 min-w-0 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={engagementChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#152550" />
@@ -389,7 +389,7 @@ export function AnalyticsPage() {
                 </div>
                 <span className="text-[11px] text-royal-400 font-medium">{properties.length} موڵک</span>
               </div>
-              <div className="h-64 flex items-center justify-center">
+              <div className="h-64 min-w-0 w-full flex items-center justify-center">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -425,7 +425,7 @@ export function AnalyticsPage() {
                 </div>
                 <span className="text-[11px] text-royal-400 font-medium">فرۆشتن و کرێ</span>
               </div>
-              <div className="h-64 flex items-center justify-center">
+              <div className="h-64 min-w-0 w-full flex items-center justify-center">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -654,8 +654,8 @@ export function AnalyticsPage() {
             </div>
 
             {/* Posts Ledger Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-start text-xs">
+            <div className="overflow-x-auto w-full max-w-full">
+              <table className="w-full text-start text-xs min-w-[650px]">
                 <thead className="border-b border-royal-800/80 text-royal-400 font-semibold uppercase">
                   <tr>
                     <th className="py-2.5 px-3">کۆد</th>
@@ -732,7 +732,7 @@ export function AnalyticsPage() {
                 </div>
                 <span className="text-[11px] text-royal-400 font-medium">{crmEntries.length} کڕیار</span>
               </div>
-              <div className="h-64">
+              <div className="h-64 min-w-0 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={leadPipelineStats} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#152550" />
@@ -757,7 +757,7 @@ export function AnalyticsPage() {
                 </div>
                 <span className="text-[11px] text-royal-400 font-medium">پشکنینی بودجە</span>
               </div>
-              <div className="h-64 flex items-center justify-center">
+              <div className="h-64 min-w-0 w-full flex items-center justify-center">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
