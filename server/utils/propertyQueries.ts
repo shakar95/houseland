@@ -7,10 +7,12 @@ import {
   ilike,
   inArray,
   lte,
+  or,
   type SQL,
 } from 'drizzle-orm';
 import {
   properties,
+  type FacingDirection,
   type PropertyStatus,
   type PropertyType,
   type TransactionType,
@@ -31,6 +33,8 @@ export const PUBLIC_LIST_COLUMNS = {
   currency: properties.currency,
   bedrooms: properties.bedrooms,
   bathrooms: properties.bathrooms,
+  floors: properties.floors,
+  facing: properties.facing,
   neighborhood: properties.neighborhood,
   status: properties.status,
   thumbnailUrl: properties.thumbnailUrl,
@@ -69,6 +73,8 @@ export const PUBLIC_LIST_SELECT = {
   currency: true,
   bedrooms: true,
   bathrooms: true,
+  floors: true,
+  facing: true,
   neighborhood: true,
   status: true,
   thumbnailUrl: true,
@@ -116,6 +122,11 @@ export function buildDrizzlePropertyConditions(
     maxPrice,
     neighborhood,
     floor,
+    floors: floorsParam,
+    facing,
+    streetWidth,
+    minStreetWidth,
+    maxStreetWidth,
     propertyType,
     transactionType,
     status,
@@ -124,6 +135,7 @@ export function buildDrizzlePropertyConditions(
   const neighborhoods = parseMulti(neighborhood);
   const propertyTypes = parseMulti(propertyType) as PropertyType[];
   const transactionTypes = parseMulti(transactionType) as TransactionType[];
+  const facings = parseMulti(facing) as FacingDirection[];
 
   const conditions: (SQL | undefined)[] = [];
 
@@ -145,8 +157,97 @@ export function buildDrizzlePropertyConditions(
   if (transactionTypes.length > 0) {
     conditions.push(inArray(properties.transactionType, transactionTypes));
   }
-  if (floor) {
-    conditions.push(eq(properties.floors, Number(floor)));
+  if (facings.length > 0) {
+    conditions.push(inArray(properties.facing, facings));
+  }
+
+  // Floors filter — supports exact chips (e.g. 1, 2) or plus threshold (e.g. 5+ or 6+)
+  const floorItems = parseMulti(floor || floorsParam);
+  if (floorItems.length > 0) {
+    const hasPlus = floorItems.some((s) => s.includes('+'));
+    const plusThreshold = hasPlus
+      ? Math.min(
+          ...floorItems
+            .filter((s) => s.includes('+'))
+            .map((s) => Number(s.replace('+', '')))
+            .filter((n) => !isNaN(n))
+        )
+      : null;
+    const exactFloors = floorItems
+      .filter((s) => !s.includes('+'))
+      .map(Number)
+      .filter((n) => !isNaN(n));
+
+    const floorConds: SQL[] = [];
+    if (exactFloors.length > 0) {
+      floorConds.push(inArray(properties.floors, exactFloors));
+    }
+    if (plusThreshold != null && !isNaN(plusThreshold)) {
+      floorConds.push(gte(properties.floors, plusThreshold));
+    }
+    if (floorConds.length === 1) {
+      conditions.push(floorConds[0]);
+    } else if (floorConds.length > 1) {
+      const combined = or(...floorConds);
+      if (combined) conditions.push(combined);
+    }
+  }
+
+  // Street width filters (checks streetWidth and corner streetWidth2)
+  if (minStreetWidth) {
+    const minW = Number(minStreetWidth);
+    if (!isNaN(minW)) {
+      const cond = or(
+        gte(properties.streetWidth, minW),
+        and(eq(properties.isCorner, true), gte(properties.streetWidth2, minW))
+      );
+      if (cond) conditions.push(cond);
+    }
+  }
+  if (maxStreetWidth) {
+    const maxW = Number(maxStreetWidth);
+    if (!isNaN(maxW)) {
+      conditions.push(lte(properties.streetWidth, maxW));
+    }
+  }
+
+  const streetWidthItems = parseMulti(streetWidth);
+  if (streetWidthItems.length > 0) {
+    const hasPlusWidth = streetWidthItems.some((s) => s.includes('+'));
+    const plusThreshold = hasPlusWidth
+      ? Math.min(
+          ...streetWidthItems
+            .filter((s) => s.includes('+'))
+            .map((s) => Number(s.replace('+', '')))
+            .filter((n) => !isNaN(n))
+        )
+      : null;
+    const exactWidths = streetWidthItems
+      .filter((s) => !s.includes('+'))
+      .map(Number)
+      .filter((n) => !isNaN(n));
+
+    const widthConds: SQL[] = [];
+    if (exactWidths.length > 0) {
+      const c = or(
+        inArray(properties.streetWidth, exactWidths),
+        and(eq(properties.isCorner, true), inArray(properties.streetWidth2, exactWidths))
+      );
+      if (c) widthConds.push(c);
+    }
+    if (plusThreshold != null && !isNaN(plusThreshold)) {
+      const c = or(
+        gte(properties.streetWidth, plusThreshold),
+        and(eq(properties.isCorner, true), gte(properties.streetWidth2, plusThreshold))
+      );
+      if (c) widthConds.push(c);
+    }
+    if (widthConds.length === 1) {
+      conditions.push(widthConds[0]);
+    } else if (widthConds.length > 1) {
+      const combined = or(...widthConds);
+      if (combined) conditions.push(combined);
+    }
   }
 
   if (minArea) {
@@ -186,6 +287,11 @@ export function buildPropertyWhere(
     maxPrice,
     neighborhood,
     floor,
+    floors: floorsParam,
+    facing,
+    streetWidth,
+    minStreetWidth,
+    maxStreetWidth,
     propertyType,
     transactionType,
     status,
@@ -194,6 +300,7 @@ export function buildPropertyWhere(
   const neighborhoods = parseMulti(neighborhood);
   const propertyTypes = parseMulti(propertyType);
   const transactionTypes = parseMulti(transactionType);
+  const facings = parseMulti(facing);
 
   const where: Prisma.PropertyWhereInput = {};
 
@@ -215,8 +322,30 @@ export function buildPropertyWhere(
   if (transactionTypes.length > 0) {
     where.transactionType = { in: transactionTypes as Prisma.EnumTransactionTypeFilter['in'] };
   }
-  if (floor) {
-    where.floors = Number(floor);
+  if (facings.length > 0) {
+    where.facing = { in: facings as any };
+  }
+
+  const floorItems = parseMulti(floor || floorsParam);
+  if (floorItems.length > 0) {
+    const exactFloors = floorItems
+      .filter((s) => !s.includes('+'))
+      .map(Number)
+      .filter((n) => !isNaN(n));
+    if (exactFloors.length > 0) {
+      where.floors = { in: exactFloors };
+    }
+  }
+
+  if (minStreetWidth || maxStreetWidth) {
+    where.streetWidth = {};
+    if (minStreetWidth) where.streetWidth.gte = Number(minStreetWidth);
+    if (maxStreetWidth) where.streetWidth.lte = Number(maxStreetWidth);
+  } else if (streetWidth) {
+    const streetWidthItems = parseMulti(streetWidth).map(Number).filter((n) => !isNaN(n));
+    if (streetWidthItems.length > 0) {
+      where.streetWidth = { in: streetWidthItems };
+    }
   }
 
   if (minArea || maxArea) {

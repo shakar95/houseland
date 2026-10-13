@@ -57,6 +57,12 @@ export type TranslationDict = {
     minPrice: string;
     maxPrice: string;
     floor: string;
+    facing: string;
+    streetWidth: string;
+    minStreetWidth: string;
+    maxStreetWidth: string;
+    meterShort: string;
+    specificFloorPlaceholder: string;
     allAreas: string;
     allTypes: string;
     saleRent: string;

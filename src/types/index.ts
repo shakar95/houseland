@@ -105,6 +105,10 @@ export interface PropertyFilters {
   maxPrice?: string;
   neighborhood?: string;
   floor?: string;
+  facing?: string;
+  streetWidth?: string;
+  minStreetWidth?: string;
+  maxStreetWidth?: string;
   propertyType?: string;
   transactionType?: string;
 }

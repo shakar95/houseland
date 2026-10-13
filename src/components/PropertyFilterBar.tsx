@@ -23,6 +23,9 @@ type PopupKey = 'type' | 'neighborhood' | 'price' | 'area';
 const types = ['HOUSE', 'APARTMENT', 'VILLA', 'LAND', 'COMMERCIAL', 'SHOP', 'FARM'] as const;
 const quickTransactionFilters = ['FOR_SALE', 'FOR_RENT'] as const;
 const transactionFilters = ['FOR_SALE', 'FOR_RENT', 'FOR_EXCHANGE'] as const;
+const facingDirections = ['NORTH', 'SOUTH', 'EAST', 'WEST'] as const;
+const floorPresets = ['1', '2', '3', '4', '5', '6+'] as const;
+const streetWidthPresets = ['6', '8', '10', '12', '15', '20', '30+'] as const;
 
 type DraftFilters = {
   transactionTypes: string[];
@@ -32,9 +35,20 @@ type DraftFilters = {
   maxPrice: string;
   minArea: string;
   maxArea: string;
+  floors: string[];
+  customFloor: string;
+  facings: string[];
+  streetWidths: string[];
+  minStreetWidth: string;
+  maxStreetWidth: string;
 };
 
 function toDraft(filters: PropertyFilters): DraftFilters {
+  const allFloors = parseFilterList(filters.floor);
+  const presetFloorSet = new Set<string>(floorPresets);
+  const chipFloors = allFloors.filter((f) => presetFloorSet.has(f));
+  const customFloors = allFloors.filter((f) => !presetFloorSet.has(f));
+
   return {
     transactionTypes: parseFilterList(filters.transactionType),
     propertyTypes: parseFilterList(filters.propertyType),
@@ -43,6 +57,12 @@ function toDraft(filters: PropertyFilters): DraftFilters {
     maxPrice: filters.maxPrice ?? '',
     minArea: filters.minArea ?? '',
     maxArea: filters.maxArea ?? '',
+    floors: chipFloors,
+    customFloor: customFloors.join(', '),
+    facings: parseFilterList(filters.facing),
+    streetWidths: parseFilterList(filters.streetWidth),
+    minStreetWidth: filters.minStreetWidth ?? '',
+    maxStreetWidth: filters.maxStreetWidth ?? '',
   };
 }
 
@@ -122,8 +142,20 @@ export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
   const neighborhoodActive = selectedNeighborhoods.length > 0;
   const priceActive = Boolean(filters.minPrice || filters.maxPrice);
   const areaActive = Boolean(filters.minArea || filters.maxArea);
+  const floorActive = Boolean(filters.floor);
+  const facingActive = Boolean(filters.facing);
+  const streetWidthActive = Boolean(
+    filters.streetWidth || filters.minStreetWidth || filters.maxStreetWidth
+  );
   const hasSecondaryFilters =
-    transactionActive || typeActive || neighborhoodActive || priceActive || areaActive;
+    transactionActive ||
+    typeActive ||
+    neighborhoodActive ||
+    priceActive ||
+    areaActive ||
+    floorActive ||
+    facingActive ||
+    streetWidthActive;
   const hasAnyFilter = hasSecondaryFilters || Boolean(filters.code);
 
   useEffect(() => {
@@ -183,6 +215,31 @@ export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
     next.maxPrice = draft.maxPrice;
     next.minArea = draft.minArea;
     next.maxArea = draft.maxArea;
+
+    // Floors
+    const floorList = [...draft.floors];
+    const custom = draft.customFloor.trim();
+    if (custom && !floorList.includes(custom)) {
+      floorList.push(custom);
+    }
+    const floorValue = joinFilterList(floorList);
+    if (floorValue) next.floor = floorValue;
+    else delete next.floor;
+
+    // Facing
+    const facingValue = joinFilterList(draft.facings);
+    if (facingValue) next.facing = facingValue;
+    else delete next.facing;
+
+    // Street width
+    const streetWidthValue = joinFilterList(draft.streetWidths);
+    if (streetWidthValue) next.streetWidth = streetWidthValue;
+    else delete next.streetWidth;
+    if (draft.minStreetWidth) next.minStreetWidth = draft.minStreetWidth;
+    else delete next.minStreetWidth;
+    if (draft.maxStreetWidth) next.maxStreetWidth = draft.maxStreetWidth;
+    else delete next.maxStreetWidth;
+
     onChange(next);
     setModalOpen(false);
   };
@@ -196,6 +253,12 @@ export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
       maxPrice: '',
       minArea: '',
       maxArea: '',
+      floors: [],
+      customFloor: '',
+      facings: [],
+      streetWidths: [],
+      minStreetWidth: '',
+      maxStreetWidth: '',
     });
   };
 
@@ -209,6 +272,11 @@ export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
       maxPrice: '',
       minArea: '',
       maxArea: '',
+      floor: undefined,
+      facing: undefined,
+      streetWidth: undefined,
+      minStreetWidth: undefined,
+      maxStreetWidth: undefined,
     });
   };
 
@@ -521,6 +589,109 @@ export function PropertyFilterBar({ filters, onChange, resultCount }: Props) {
                   placeholder="∞"
                   value={draft.maxArea}
                   onChange={(e) => setDraft((prev) => ({ ...prev, maxArea: e.target.value }))}
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* 1. بەپێی نهۆم (Floor / Stories) */}
+          <section className="filter-sheet-section">
+            <h4 className="filter-sheet-heading">{t.filters.floor}</h4>
+            <div className="filter-sheet-chips">
+              {floorPresets.map((fl) => (
+                <button
+                  key={fl}
+                  type="button"
+                  className={`filter-chip ${draft.floors.includes(fl) ? 'filter-chip-active' : ''}`}
+                  onClick={() =>
+                    setDraft((prev) => ({
+                      ...prev,
+                      floors: toggleFilterList(prev.floors, fl),
+                    }))
+                  }
+                >
+                  {formatNum(Number(fl.replace('+', '')) || 0)}
+                  {fl.includes('+') ? '+' : ''}
+                </button>
+              ))}
+            </div>
+            <div className="mt-2">
+              <input
+                type="number"
+                className="input-app"
+                placeholder={t.filters.specificFloorPlaceholder}
+                value={draft.customFloor}
+                onChange={(e) => setDraft((prev) => ({ ...prev, customFloor: e.target.value }))}
+              />
+            </div>
+          </section>
+
+          {/* 2. بەپێی ڕوو (Facing / Direction) */}
+          <section className="filter-sheet-section">
+            <h4 className="filter-sheet-heading">{t.filters.facing}</h4>
+            <div className="filter-sheet-chips">
+              {facingDirections.map((dir) => (
+                <button
+                  key={dir}
+                  type="button"
+                  className={`filter-chip ${draft.facings.includes(dir) ? 'filter-chip-active' : ''}`}
+                  onClick={() =>
+                    setDraft((prev) => ({
+                      ...prev,
+                      facings: toggleFilterList(prev.facings, dir),
+                    }))
+                  }
+                >
+                  {enumLabel(dir)}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          {/* 3. کۆڵانی چەند مەتری (Street Width) */}
+          <section className="filter-sheet-section">
+            <h4 className="filter-sheet-heading">{t.filters.streetWidth}</h4>
+            <div className="filter-sheet-chips mb-2">
+              {streetWidthPresets.map((sw) => (
+                <button
+                  key={sw}
+                  type="button"
+                  className={`filter-chip ${draft.streetWidths.includes(sw) ? 'filter-chip-active' : ''}`}
+                  onClick={() =>
+                    setDraft((prev) => ({
+                      ...prev,
+                      streetWidths: toggleFilterList(prev.streetWidths, sw),
+                    }))
+                  }
+                >
+                  {formatNum(Number(sw.replace('+', '')) || 0)}
+                  {sw.includes('+') ? '+' : ''} {t.filters.meterShort}
+                </button>
+              ))}
+            </div>
+            <div className="filter-sheet-range">
+              <div>
+                <label className="filter-label">{t.filters.minStreetWidth}</label>
+                <input
+                  type="number"
+                  className="input-app"
+                  placeholder="0"
+                  value={draft.minStreetWidth}
+                  onChange={(e) =>
+                    setDraft((prev) => ({ ...prev, minStreetWidth: e.target.value }))
+                  }
+                />
+              </div>
+              <div>
+                <label className="filter-label">{t.filters.maxStreetWidth}</label>
+                <input
+                  type="number"
+                  className="input-app"
+                  placeholder="∞"
+                  value={draft.maxStreetWidth}
+                  onChange={(e) =>
+                    setDraft((prev) => ({ ...prev, maxStreetWidth: e.target.value }))
+                  }
                 />
               </div>
             </div>
