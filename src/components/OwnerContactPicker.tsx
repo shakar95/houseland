@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Search, UserCheck, ShieldCheck, X, Phone, UserPlus, User } from 'lucide-react';
 import { api } from '@/lib/api';
 import type { CrmEntry } from '@/types';
@@ -26,6 +26,17 @@ export function OwnerContactPicker({ value, onChange, className = '' }: Props) {
   const [manualMode, setManualMode] = useState(false);
   const [manualName, setManualName] = useState('');
   const [manualPhone, setManualPhone] = useState('');
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -153,7 +164,7 @@ export function OwnerContactPicker({ value, onChange, className = '' }: Props) {
         ) : !manualMode ? (
           /* Searchable Contact Picker */
           <div className="space-y-2">
-            <div className="relative">
+            <div ref={dropdownRef} className="relative">
               <div className="flex items-center gap-2">
                 <div className="relative flex-1">
                   <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-royal-400" />

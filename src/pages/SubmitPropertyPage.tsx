@@ -163,13 +163,6 @@ export function SubmitPropertyPage() {
           onChange={(e) => setForm({ ...form, description: e.target.value })}
         />
 
-        {(profile?.role === 'ADMIN' || profile?.role === 'STAFF') && (
-          <OwnerContactPicker
-            value={ownerContact}
-            onChange={setOwnerContact}
-          />
-        )}
-
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="filter-label">کۆدی موڵک (بۆ نموونە: 123)</label>
@@ -416,6 +409,12 @@ export function SubmitPropertyPage() {
             }
           }}
         />
+        {(profile?.role === 'ADMIN' || profile?.role === 'STAFF') && (
+          <OwnerContactPicker
+            value={ownerContact}
+            onChange={setOwnerContact}
+          />
+        )}
         {message && (
           <p className={messageIsError ? 'text-red-300' : 'text-gold-300'}>{message}</p>
         )}

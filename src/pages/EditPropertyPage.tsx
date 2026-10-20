@@ -279,13 +279,6 @@ export function EditPropertyPage() {
       </div>
 
       <form onSubmit={handleSave} className="mt-6 space-y-6">
-        {isAdmin && (
-          <OwnerContactPicker
-            value={ownerContact}
-            onChange={setOwnerContact}
-          />
-        )}
-
         {/* Status & Featured selector for Admin */}
         <div className="rounded-xl border border-gold-500/30 bg-gold-950/20 p-4">
           <div className="grid gap-4 sm:grid-cols-2">
@@ -647,6 +640,13 @@ export function EditPropertyPage() {
             }}
           />
         </div>
+
+        {isAdmin && (
+          <OwnerContactPicker
+            value={ownerContact}
+            onChange={setOwnerContact}
+          />
+        )}
 
         {message && (
           <p className={`text-sm font-medium ${messageIsError ? 'text-red-400' : 'text-green-400'}`}>
