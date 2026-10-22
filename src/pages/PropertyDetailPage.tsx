@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   UserPlus,
   X,
+  Users,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
@@ -29,6 +30,61 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useNeighborhoods, getNeighborhoodLabelByName } from '@/hooks/useNeighborhoods';
 import { OwnerContactPicker, type OwnerContactData } from '@/components/OwnerContactPicker';
 import { getOwnerContact, saveOwnerContact } from '@/lib/ownerContactService';
+
+/* ── Fixed team contacts ───────────────────────────────────────────────── */
+const TEAM_CONTACTS = [
+  { name: 'حاجـی مـەهـدی',  phone: '07701524612' },
+  { name: 'کــــــــــاروان', phone: '07701529512' },
+  { name: 'هــــــــەوراز',  phone: '07701528112' },
+  { name: 'ڕاژانـــــــــ',  phone: '07701534612' },
+  { name: 'ڕەهـێـــــــڵ',  phone: '07701536312' },
+  { name: 'حـاجـی بـەرزان', phone: '07701532193' },
+];
+
+function TeamContactList() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="mt-4 rounded-2xl border border-royal-700/60 bg-royal-900/40 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((p) => !p)}
+        className="flex w-full items-center justify-between px-4 py-3 text-sm font-semibold text-royal-200 hover:text-white hover:bg-royal-800/40 transition-colors"
+      >
+        <span className="flex items-center gap-2">
+          <Users className="h-4 w-4 text-gold-400" />
+          <span>تیمی فرۆشتن</span>
+        </span>
+        {open ? (
+          <ChevronUp className="h-4 w-4 text-royal-400" />
+        ) : (
+          <ChevronDown className="h-4 w-4 text-royal-400" />
+        )}
+      </button>
+
+      {open && (
+        <ul className="divide-y divide-royal-800/60 border-t border-royal-700/60">
+          {TEAM_CONTACTS.map((c) => (
+            <li key={c.phone}>
+              <a
+                href={`tel:${c.phone}`}
+                className="flex items-center justify-between px-4 py-3 text-sm hover:bg-royal-800/50 transition-colors group"
+              >
+                <span className="font-medium text-royal-100 group-hover:text-white transition-colors">
+                  {c.name}
+                </span>
+                <span className="flex items-center gap-2 rounded-xl border border-gold-500/20 bg-gold-500/10 px-3 py-1.5 text-xs font-mono font-bold text-gold-300 group-hover:bg-gold-500/20 group-hover:text-gold-200 transition-all dir-ltr">
+                  <Phone className="h-3 w-3" />
+                  {c.phone}
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 export function PropertyDetailPage() {
   const { t, lang, enumLabel, propertyDescription } = useLanguage();
@@ -217,6 +273,9 @@ export function PropertyDetailPage() {
             </a>
           </div>
           <p className="mt-2 text-xs text-royal-500">{t.property.privacyNote}</p>
+
+          {/* Team Contact List */}
+          <TeamContactList />
 
           <div className="relative mt-6 rounded-2xl border border-royal-800/80 bg-royal-900/35 p-4 sm:p-5 shadow-sm backdrop-blur-sm">
             <div
