@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import type { Lang } from '@/i18n';
-import { DEFAULT_CITY_ID, getCityLabel } from '@/lib/cities';
 
 export interface Neighborhood {
   id: string;
@@ -27,15 +26,34 @@ function getNeighborhoodLocalName(n: Neighborhood, lang: Lang): string {
   return n.nameKu || n.name;
 }
 
+/** Helper to strip any legacy city prefix ("سلێمانی ", "چەمچەماڵ ", etc.) */
+function stripCityPrefix(str: string): string {
+  if (!str) return '';
+  // Preserve "سلێمانی تازە" (New Sulaymaniyah is an actual neighborhood name)
+  if (
+    str === 'سلێمانی تازە' ||
+    str === 'شەقامی سلێمانی تازە' ||
+    str === 'New Sulaymaniyah' ||
+    str === 'السليمانية الجديدة'
+  ) {
+    return str;
+  }
+  return str
+    .replace(
+      /^(?:سلێمانی|چەمچەماڵ|کەلار|ڕانیە|دووکان|دوکان|پێنجوێن|سەید سادق|هەڵەبجە|Sulaymaniyah|Chamchamal|Kalar|Ranya|Dukan|Penjwen|Said Sadiq|Halabja|السليمانية|چمچمال|كلار|رانية|دوكان|بنجوين|سيد صادق|حلبجة)\s+/i,
+      ''
+    )
+    .replace(/^(?:گەرەکی|گەڕەکی)\s+/i, '')
+    .trim();
+}
+
 /**
- * Localized label with city prefix — e.g. "سلێمانی ئازادی" / "چەمچەماڵ ئاشتی".
+ * Localized label — returns ONLY the clean neighborhood name without any city prefix.
  */
 export function getNeighborhoodLabel(n: Neighborhood | undefined | null, lang: Lang): string {
   if (!n) return '';
-  const city = getCityLabel(n.city || DEFAULT_CITY_ID, lang);
   const local = getNeighborhoodLocalName(n, lang);
-  if (local.startsWith(city)) return local;
-  return `${city} ${local}`;
+  return stripCityPrefix(local);
 }
 
 export function getNeighborhoodLabelByName(
@@ -43,8 +61,15 @@ export function getNeighborhoodLabelByName(
   neighborhoods: Neighborhood[],
   lang: Lang,
 ): string {
-  const found = neighborhoods.find((n) => n.name === name);
-  return found ? getNeighborhoodLabel(found, lang) : name;
+  if (!name) return '';
+  const found = neighborhoods.find(
+    (n) =>
+      n.name === name ||
+      (n as any).aliases?.includes(name) ||
+      stripCityPrefix(n.name) === stripCityPrefix(name)
+  );
+  if (found) return getNeighborhoodLabel(found, lang);
+  return stripCityPrefix(name);
 }
 
 /** Clear in-memory cache (e.g. after admin edits). */

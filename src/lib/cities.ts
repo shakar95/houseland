@@ -8,48 +8,6 @@ export const CITIES = [
     ku: 'سلێمانی',
     ar: 'السليمانية',
   },
-  {
-    id: 'chamchamal',
-    en: 'Chamchamal',
-    ku: 'چەمچەماڵ',
-    ar: 'چمچمال',
-  },
-  {
-    id: 'kalar',
-    en: 'Kalar',
-    ku: 'کەلار',
-    ar: 'كلار',
-  },
-  {
-    id: 'ranya',
-    en: 'Ranya',
-    ku: 'ڕانیە',
-    ar: 'رانية',
-  },
-  {
-    id: 'penjwen',
-    en: 'Penjwen',
-    ku: 'پێنجوێن',
-    ar: 'بنجوين',
-  },
-  {
-    id: 'dukan',
-    en: 'Dukan',
-    ku: 'دووکان',
-    ar: 'دوكان',
-  },
-  {
-    id: 'said_sadiq',
-    en: 'Said Sadiq',
-    ku: 'سەید سادق',
-    ar: 'سيد صادق',
-  },
-  {
-    id: 'halabja',
-    en: 'Halabja',
-    ku: 'هەڵەبجە',
-    ar: 'حلبجة',
-  },
 ] as const;
 
 export type CityId = (typeof CITIES)[number]['id'];

@@ -33,7 +33,7 @@ export function EditNeighborhoodModal({
     onSave(editForm);
   };
 
-  const previewKu = `${getCityLabel(editForm.city, 'ku')} ${editForm.nameKu || editForm.name}`.trim();
+  const previewKu = (editForm.nameKu || editForm.name).trim();
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
@@ -57,9 +57,6 @@ export function EditNeighborhoodModal({
                 </option>
               ))}
             </select>
-            <p className="mt-1 text-xs text-royal-500">
-              بۆ جیاکردنەوەی گەڕەکی هاوشێوە: سلێمانی ئازادی ≠ کەلار ئازادی
-            </p>
           </div>
 
           <div>

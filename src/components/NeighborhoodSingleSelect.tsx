@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, Search } from 'lucide-react';
 import { useNeighborhoods, getNeighborhoodLabel, getNeighborhoodLabelByName } from '@/hooks/useNeighborhoods';
 import { useLanguage } from '@/context/LanguageContext';
-import { DEFAULT_CITY_ID } from '@/lib/cities';
 
 type Props = {
   value: string;
@@ -25,21 +24,16 @@ export function NeighborhoodSingleSelect({ value, onChange, placeholder, classNa
       ? neighborhoods
       : neighborhoods.filter((n) => {
           const label = getNeighborhoodLabel(n, lang).toLowerCase();
-          const city = (n.city || '').toLowerCase();
           return (
             label.includes(q) ||
             n.name.toLowerCase().includes(q) ||
-            city.includes(q) ||
             (n.nameKu || '').toLowerCase().includes(q) ||
-            (n.nameEn || '').toLowerCase().includes(q)
+            (n.nameEn || '').toLowerCase().includes(q) ||
+            (n.nameAr || '').toLowerCase().includes(q)
           );
         });
 
-    // Prefer Sulaymaniyah matches first when searching, then sort by label
     return [...list].sort((a, b) => {
-      const aSuli = (a.city || DEFAULT_CITY_ID) === 'sulaymaniyah' ? 0 : 1;
-      const bSuli = (b.city || DEFAULT_CITY_ID) === 'sulaymaniyah' ? 0 : 1;
-      if (q && aSuli !== bSuli) return aSuli - bSuli;
       return getNeighborhoodLabel(a, lang).localeCompare(getNeighborhoodLabel(b, lang), 'ku');
     });
   }, [search, neighborhoods, lang]);
