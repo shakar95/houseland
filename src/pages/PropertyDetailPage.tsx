@@ -24,7 +24,7 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { PropertyImageGallery } from '@/components/PropertyImageGallery';
 import { ObfuscatedMap } from '@/components/maps/ObfuscatedMap';
-import type { AgencySettings, Property } from '@/types';
+import type { Property } from '@/types';
 import { formatPrice, formatCountLabel, pickCountLabel, formatNumber } from '@/lib/format';
 import { useLanguage } from '@/context/LanguageContext';
 import { useNeighborhoods, getNeighborhoodLabelByName } from '@/hooks/useNeighborhoods';
@@ -34,54 +34,80 @@ import { getOwnerContact, saveOwnerContact } from '@/lib/ownerContactService';
 /* ── Fixed team contacts ───────────────────────────────────────────────── */
 const TEAM_CONTACTS = [
   { name: 'حاجـی مـەهـدی',  phone: '07701524612' },
-  { name: 'کــــــــــاروان', phone: '07701529512' },
-  { name: 'هــــــــەوراز',  phone: '07701528112' },
-  { name: 'ڕاژانـــــــــ',  phone: '07701534612' },
-  { name: 'ڕەهـێـــــــڵ',  phone: '07701536312' },
-  { name: 'حـاجـی بـەرزان', phone: '07701532193' },
+  { name: 'کــــــکاروان',   phone: '07701529512' },
+  { name: 'هەوراز',          phone: '07701528112' },
+  { name: 'ڕاژان',           phone: '07701534612' },
+  { name: 'ڕەهێڵ',           phone: '07701536312' },
+  { name: 'حاجی بەرزان',    phone: '07701532193' },
 ];
 
-function TeamContactList() {
-  const [open, setOpen] = useState(false);
-
+function TeamContactModal({ isOpen, onClose, title }: {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+}) {
+  if (!isOpen) return null;
   return (
-    <div className="mt-4 rounded-2xl border border-royal-700/60 bg-royal-900/40 overflow-hidden">
-      <button
-        type="button"
-        onClick={() => setOpen((p) => !p)}
-        className="flex w-full items-center justify-between px-4 py-3 text-sm font-semibold text-royal-200 hover:text-white hover:bg-royal-800/40 transition-colors"
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-royal-950/80 backdrop-blur-sm p-4"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-sm rounded-3xl border border-royal-700 bg-gradient-to-b from-royal-900 to-royal-950 shadow-2xl overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
       >
-        <span className="flex items-center gap-2">
-          <Users className="h-4 w-4 text-gold-400" />
-          <span>تیمی فرۆشتن</span>
-        </span>
-        {open ? (
-          <ChevronUp className="h-4 w-4 text-royal-400" />
-        ) : (
-          <ChevronDown className="h-4 w-4 text-royal-400" />
-        )}
-      </button>
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-royal-800">
+          <div className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-gold-400" />
+            <h3 className="font-display text-base font-bold text-white">تیمی فرۆشتن</h3>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-xl border border-royal-700 text-royal-400 hover:text-white hover:border-royal-500 transition"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
 
-      {open && (
-        <ul className="divide-y divide-royal-800/60 border-t border-royal-700/60">
+        {/* Contact rows */}
+        <ul className="divide-y divide-royal-800/60">
           {TEAM_CONTACTS.map((c) => (
-            <li key={c.phone}>
-              <a
-                href={`tel:${c.phone}`}
-                className="flex items-center justify-between px-4 py-3 text-sm hover:bg-royal-800/50 transition-colors group"
-              >
-                <span className="font-medium text-royal-100 group-hover:text-white transition-colors">
-                  {c.name}
-                </span>
-                <span className="flex items-center gap-2 rounded-xl border border-gold-500/20 bg-gold-500/10 px-3 py-1.5 text-xs font-mono font-bold text-gold-300 group-hover:bg-gold-500/20 group-hover:text-gold-200 transition-all dir-ltr">
-                  <Phone className="h-3 w-3" />
+            <li key={c.phone} className="flex items-center justify-between gap-3 px-5 py-3.5">
+              <span className="font-semibold text-sm text-white">{c.name}</span>
+              <div className="flex items-center gap-2 shrink-0">
+                <a
+                  href={`https://wa.me/964${c.phone.slice(1)}?text=${encodeURIComponent(title)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-1.5 rounded-xl bg-emerald-500/20 border border-emerald-500/30 px-3 py-2 text-xs font-bold text-emerald-300 hover:bg-emerald-500/30 transition"
+                >
+                  <MessageCircle className="h-3.5 w-3.5" />
+                </a>
+                <a
+                  href={`tel:${c.phone}`}
+                  className="flex items-center gap-1.5 rounded-xl bg-gold-500/15 border border-gold-500/30 px-3 py-2 text-xs font-mono font-bold text-gold-300 hover:bg-gold-500/25 transition dir-ltr"
+                >
+                  <Phone className="h-3.5 w-3.5" />
                   {c.phone}
-                </span>
-              </a>
+                </a>
+              </div>
             </li>
           ))}
         </ul>
-      )}
+
+        {/* Footer close */}
+        <div className="px-5 py-3.5 border-t border-royal-800">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full rounded-2xl border border-royal-700 py-2.5 text-sm font-semibold text-royal-300 hover:text-white transition"
+          >
+            داخستن
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -92,9 +118,9 @@ export function PropertyDetailPage() {
   const { profile } = useAuth();
   const { code } = useParams();
   const [property, setProperty] = useState<Property | null>(null);
-  const [agency, setAgency] = useState<AgencySettings | null>(null);
   const [ownerContact, setOwnerContact] = useState<OwnerContactData | null>(null);
   const [showOwnerModal, setShowOwnerModal] = useState(false);
+  const [showTeamModal, setShowTeamModal] = useState(false);
   const [editingOwner, setEditingOwner] = useState<OwnerContactData | null>(null);
   const [savingOwner, setSavingOwner] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -108,7 +134,6 @@ export function PropertyDetailPage() {
   useEffect(() => {
     if (!code) return;
     api.get<Property>(`/api/properties/${code}`, { auth: false, cacheMs: 30_000 }).then(setProperty).catch(() => {});
-    api.get<AgencySettings>('/api/agency').then(setAgency).catch(() => {});
 
     if (profile?.role === 'ADMIN' || profile?.role === 'STAFF') {
       getOwnerContact(code).then(setOwnerContact).catch(() => {});
@@ -122,7 +147,6 @@ export function PropertyDetailPage() {
 
   const title = property ? `${enumLabel(property.propertyType)} — ${getNeighborhoodLabelByName(property.neighborhood, neighborhoods, lang)}` : '';
   const description = property ? propertyDescription(property.code, property.description ?? '') : '';
-  const wa = agency?.whatsapp?.replace(/\D/g, '') ?? '';
 
   useEffect(() => {
     const el = descRef.current;
@@ -255,27 +279,29 @@ export function PropertyDetailPage() {
           </div>
 
           <div className="property-detail-actions">
-            <a
-              href={`tel:${agency?.phonePrimary}`}
-              onClick={() => track('phone')}
+            <button
+              type="button"
+              onClick={() => { track('phone'); setShowTeamModal(true); }}
               className="btn-gold property-detail-btn"
             >
               <Phone className="h-4 w-4" /> {t.property.call}
-            </a>
-            <a
-              href={`https://wa.me/${wa}?text=${encodeURIComponent(`${property.code}: ${title}`)}`}
-              target="_blank"
-              rel="noreferrer"
-              onClick={() => track('whatsapp')}
+            </button>
+            <button
+              type="button"
+              onClick={() => { track('whatsapp'); setShowTeamModal(true); }}
               className="btn-whatsapp property-detail-btn"
             >
               <MessageCircle className="h-4 w-4" /> {t.property.whatsapp}
-            </a>
+            </button>
           </div>
           <p className="mt-2 text-xs text-royal-500">{t.property.privacyNote}</p>
 
-          {/* Team Contact List */}
-          <TeamContactList />
+          {/* Team Contact Modal */}
+          <TeamContactModal
+            isOpen={showTeamModal}
+            onClose={() => setShowTeamModal(false)}
+            title={`${property.code}: ${title}`}
+          />
 
           <div className="relative mt-6 rounded-2xl border border-royal-800/80 bg-royal-900/35 p-4 sm:p-5 shadow-sm backdrop-blur-sm">
             <div
